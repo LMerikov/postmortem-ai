@@ -1,0 +1,13 @@
+{
+  "language": "python",
+  "build": {
+    "command": "bash start.sh"
+  },
+  "run": {
+    "command": "cd backend && gunicorn -c gunicorn.conf.py app:app"
+  },
+  "env": {
+    "FLASK_ENV": "production",
+    "PYTHONUNBUFFERED": "1"
+  }
+}
