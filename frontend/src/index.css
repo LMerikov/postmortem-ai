@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-bg text-text antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+  * {
+    @apply border-border;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-bg;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent hover:bg-accent/80 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-card hover:bg-border text-text font-medium px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 border border-border;
+  }
+  .card {
+    @apply bg-card border border-border rounded-xl p-6;
+  }
+  .input-base {
+    @apply bg-input border border-border rounded-lg px-4 py-3 text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all duration-200;
+  }
+  .severity-badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-accent to-cyan bg-clip-text text-transparent;
+  }
+  .glow-accent {
+    box-shadow: 0 0 20px rgba(108, 92, 231, 0.3);
+  }
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(0, 210, 211, 0.3);
+  }
+}
+
+/* Terminal/typing cursor */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.cursor-blink::after {
+  content: '▋';
+  animation: blink 1s infinite;
+  @apply text-accent;
+}
+
+/* Drag & drop border pulse */
+@keyframes borderPulse {
+  0% { border-color: rgba(108, 92, 231, 0.4); }
+  50% { border-color: rgba(108, 92, 231, 1); box-shadow: 0 0 20px rgba(108, 92, 231, 0.4); }
+  100% { border-color: rgba(108, 92, 231, 0.4); }
+}
+.drag-active {
+  animation: borderPulse 1.5s ease-in-out infinite;
+}
+
+/* Code block */
+pre {
+  @apply bg-code rounded-lg p-4 overflow-x-auto font-mono text-sm;
+}
+code {
+  @apply font-mono text-cyan;
+}

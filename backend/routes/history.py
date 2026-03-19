@@ -1,0 +1,25 @@
+from flask import Blueprint, jsonify
+from models.postmortem import get_all_postmortems, get_postmortem_by_id, delete_postmortem
+
+history_bp = Blueprint("history", __name__)
+
+
+@history_bp.route("/api/postmortems", methods=["GET"])
+def list_postmortems():
+    return jsonify(get_all_postmortems())
+
+
+@history_bp.route("/api/postmortems/<postmortem_id>", methods=["GET"])
+def get_postmortem(postmortem_id):
+    pm = get_postmortem_by_id(postmortem_id)
+    if not pm:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify(pm)
+
+
+@history_bp.route("/api/postmortems/<postmortem_id>", methods=["DELETE"])
+def delete(postmortem_id):
+    deleted = delete_postmortem(postmortem_id)
+    if not deleted:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify({"message": "Deleted successfully"})

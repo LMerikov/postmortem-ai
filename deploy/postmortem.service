@@ -1,0 +1,15 @@
+[Unit]
+Description=Postmortem.ai Flask Backend
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+WorkingDirectory=/opt/postmortem-ai/backend
+Environment=PATH=/opt/postmortem-ai/backend/venv/bin
+ExecStart=/opt/postmortem-ai/backend/venv/bin/gunicorn -c gunicorn.conf.py app:app
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
