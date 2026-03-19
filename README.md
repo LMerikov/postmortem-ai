@@ -1,4 +1,4 @@
-# 🔥 Postmortem.ai
+# 🔥 Postmortem.ia
 
 > De logs caóticos a postmortems profesionales en segundos.
 
