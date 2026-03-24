@@ -11,39 +11,40 @@ from reportlab.lib.enums import TA_LEFT, TA_CENTER
 
 
 SEVERITY_COLORS = {
-    "P0": colors.HexColor("#FF6B6B"),
-    "P1": colors.HexColor("#FFA502"),
-    "P2": colors.HexColor("#FECA57"),
-    "P3": colors.HexColor("#48DBFB"),
-    "P4": colors.HexColor("#A4B0BD"),
+    "P0": colors.HexColor("#D63031"),  # Rojo más oscuro
+    "P1": colors.HexColor("#E17055"),  # Naranja oscuro
+    "P2": colors.HexColor("#FDCB6E"),  # Amarillo oscuro
+    "P3": colors.HexColor("#0984E3"),  # Azul más oscuro
+    "P4": colors.HexColor("#636E72"),  # Gris oscuro
 }
 
 SEVERITY_HEX = {
-    "P0": "FF6B6B",
-    "P1": "FFA502",
-    "P2": "FECA57",
-    "P3": "48DBFB",
-    "P4": "A4B0BD",
+    "P0": "D63031",
+    "P1": "E17055",
+    "P2": "FDCB6E",
+    "P3": "0984E3",
+    "P4": "636E72",
 }
 
 PRIORITY_COLORS = {
-    "HIGH": colors.HexColor("#FF6B6B"),
-    "MEDIUM": colors.HexColor("#FECA57"),
-    "LOW": colors.HexColor("#00E676"),
+    "HIGH": colors.HexColor("#D63031"),  # Rojo oscuro
+    "MEDIUM": colors.HexColor("#FDCB6E"),  # Amarillo oscuro
+    "LOW": colors.HexColor("#27AE60"),  # Verde oscuro
 }
 
 PRIORITY_HEX = {
-    "HIGH": "FF6B6B",
-    "MEDIUM": "FECA57",
-    "LOW": "00E676",
+    "HIGH": "D63031",
+    "MEDIUM": "FDCB6E",
+    "LOW": "27AE60",
 }
 
-BG = colors.HexColor("#0F1117")
-CARD_BG = colors.HexColor("#1A1D27")
-ACCENT = colors.HexColor("#6C5CE7")
-TEXT = colors.HexColor("#E4E6EB")
-TEXT_SEC = colors.HexColor("#8B95A5")
-BORDER = colors.HexColor("#2D3142")
+# Colores optimizados para PDF (compatible con light/dark mode)
+BG = colors.HexColor("#FFFFFF")  # Blanco puro
+CARD_BG = colors.HexColor("#F5F5F5")  # Gris muy claro
+ACCENT = colors.HexColor("#5B3FB0")  # Violeta más oscuro
+TEXT = colors.HexColor("#1A1A1A")  # Negro muy oscuro
+TEXT_SEC = colors.HexColor("#666666")  # Gris oscuro
+BORDER = colors.HexColor("#CCCCCC")  # Gris claro
 
 
 def generate_pdf(postmortem: dict) -> bytes:
@@ -62,7 +63,7 @@ def generate_pdf(postmortem: dict) -> bytes:
     heading_style = ParagraphStyle("Heading", parent=styles["Normal"], fontSize=13, textColor=ACCENT, spaceAfter=4, spaceBefore=12, fontName="Helvetica-Bold")
     body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=10, textColor=TEXT, spaceAfter=4, leading=14)
     small_style = ParagraphStyle("Small", parent=styles["Normal"], fontSize=8, textColor=TEXT_SEC)
-    code_style = ParagraphStyle("Code", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#00D2D3"), fontName="Courier", backColor=colors.HexColor("#0D0F15"), spaceAfter=2)
+    code_style = ParagraphStyle("Code", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#0984E3"), fontName="Courier", backColor=colors.HexColor("#F0F0F0"), spaceAfter=2)
 
     severity = postmortem.get("severity", "P3")
     sev_color = SEVERITY_COLORS.get(severity, TEXT_SEC)
