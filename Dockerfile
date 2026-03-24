@@ -2,7 +2,7 @@
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm install --ci
+RUN npm ci
 COPY frontend ./
 RUN npm run build
 
@@ -35,9 +35,9 @@ ENV PYTHONUNBUFFERED=1
 # Expose port
 EXPOSE 5000
 
-# Health check
+# Health check without external dependencies
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD python -c "import requests; requests.get('http://localhost:5000/api/health')" || exit 1
+  CMD python -c "from urllib.request import urlopen; urlopen('http://localhost:5000/api/health').read()" || exit 1
 
 # Start with gunicorn
 CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]

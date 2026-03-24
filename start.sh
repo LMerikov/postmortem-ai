@@ -11,7 +11,7 @@ pip install -r requirements.txt
 # Frontend - Node
 cd ../frontend
 echo "📦 Instalando dependencias del frontend..."
-npm install --ci
+npm ci
 npm run build
 
 # Volver a backend
