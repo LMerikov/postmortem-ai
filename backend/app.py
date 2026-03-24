@@ -2,6 +2,8 @@ from pathlib import Path
 
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from config import Config
 from models.postmortem import init_db
 from routes.analyze import analyze_bp
@@ -20,13 +22,26 @@ app.config.from_object(Config)
 
 CORS(app, origins=Config.CORS_ORIGINS)
 
+# Rate limiting para prevenir abuso
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
 app.register_blueprint(analyze_bp)
 app.register_blueprint(simulate_bp)
 app.register_blueprint(history_bp)
 app.register_blueprint(export_bp)
 
+# Aplicar rate limits específicos a rutas críticas
+limiter.limit("10 per hour")(app.view_functions['analyze.analyze'])
+limiter.limit("10 per hour")(app.view_functions['simulate.simulate'])
+
 
 @app.route("/api/health")
+@limiter.exempt
 def health():
     return jsonify({"status": "ok", "model": Config.CLAUDE_MODEL})
 

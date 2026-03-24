@@ -10,4 +10,4 @@ class Config:
     DATABASE_PATH = os.getenv("DATABASE_PATH", "postmortems.db")
     MAX_LOG_TOKENS = int(os.getenv("MAX_LOG_TOKENS", "4000"))
     DEBUG = os.getenv("FLASK_ENV", "production") == "development"
-    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
+    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "https://postmortem-ai.xyz")
