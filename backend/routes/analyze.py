@@ -4,10 +4,13 @@ Route /api/analyze — Phase 1+3 integrados:
 - Phase 3: Multi-provider via llm_service (Kimi → Anthropic fallback)
 """
 import json
+import logging
 from flask import Blueprint, request, jsonify, Response, stream_with_context
 from services.llm_service import analyze_logs, analyze_logs_stream
 from services.local_filtering import process_with_local_filter
 from models.postmortem import save_postmortem
+
+logger = logging.getLogger(__name__)
 
 analyze_bp = Blueprint("analyze", __name__)
 
@@ -22,8 +25,14 @@ def analyze():
         return jsonify({"error": "content is required"}), 400
 
     # ─── PHASE 1: Filtrado local ──────────────────────────────────────────
-    postmortem_local, should_call_llm, severity_local, cleaned_content = \
-        process_with_local_filter(content)
+    try:
+        postmortem_local, should_call_llm, severity_local, cleaned_content = \
+            process_with_local_filter(content)
+        logger.info(f"Phase1: should_call_llm={should_call_llm} severity={severity_local} "
+                    f"content_len={len(content)} filtered_len={len(cleaned_content)}")
+    except Exception as e:
+        logger.error(f"Phase1 error: {e}", exc_info=True)
+        should_call_llm = True  # fallback: enviar al LLM si Phase 1 falla
 
     if not should_call_llm:
         # Respuesta local <200ms — sin LLM, sin DB (ruido no requiere persistencia)
