@@ -62,29 +62,51 @@ def generate_pdf(postmortem: dict) -> bytes:
 
     styles = getSampleStyleSheet()
 
-    title_style   = ParagraphStyle("Title",   parent=styles["Normal"], fontSize=18, textColor=TEXT,     spaceAfter=4,  fontName="Helvetica-Bold", leading=22)
-    heading_style = ParagraphStyle("Heading", parent=styles["Normal"], fontSize=12, textColor=ACCENT,   spaceAfter=4,  spaceBefore=14, fontName="Helvetica-Bold")
+    title_style   = ParagraphStyle("Title",   parent=styles["Normal"], fontSize=15, textColor=TEXT,     spaceAfter=4,  fontName="Helvetica-Bold", leading=19, wordWrap='CJK')
+    heading_style = ParagraphStyle("Heading", parent=styles["Normal"], fontSize=11, textColor=ACCENT,   spaceAfter=4,  spaceBefore=14, fontName="Helvetica-Bold")
     body_style    = ParagraphStyle("Body",    parent=styles["Normal"], fontSize=9,  textColor=TEXT,     spaceAfter=4,  leading=13)
     small_style   = ParagraphStyle("Small",   parent=styles["Normal"], fontSize=8,  textColor=TEXT_SEC, spaceAfter=2)
     cell_style    = ParagraphStyle("Cell",    parent=styles["Normal"], fontSize=8,  textColor=TEXT,     leading=11,    wordWrap='CJK')
     cell_hdr      = ParagraphStyle("CellHdr", parent=styles["Normal"], fontSize=8,  textColor=colors.white, fontName="Helvetica-Bold", leading=11)
     cell_lbl      = ParagraphStyle("CellLbl", parent=styles["Normal"], fontSize=8,  textColor=ACCENT,   fontName="Helvetica-Bold", leading=11)
+    brand_style   = ParagraphStyle("Brand",   parent=styles["Normal"], fontSize=8,  textColor=ACCENT,   fontName="Helvetica-Bold")
+    sev_badge     = ParagraphStyle("SevBadge",parent=styles["Normal"], fontSize=9,  textColor=colors.white, fontName="Helvetica-Bold", alignment=TA_CENTER)
 
     severity  = postmortem.get("severity", "P3")
     sev_hex   = SEVERITY_HEX.get(severity, "636E72")
+    sev_color = SEVERITY_COLORS.get(severity, colors.HexColor("#636E72"))
 
     story = []
 
     # ── Header ──────────────────────────────────────────────────────
-    story.append(Paragraph("POSTMORTEM.AI", ParagraphStyle(
-        "Brand", parent=styles["Normal"], fontSize=8, textColor=ACCENT,
-        fontName="Helvetica-Bold", spaceAfter=4)))
+    # Fila superior: marca izquierda, severidad derecha
+    header_top = Table(
+        [[Paragraph("POSTMORTEM.AI", brand_style),
+          Paragraph(f"<b>{severity}</b>", sev_badge)]],
+        colWidths=[PAGE_WIDTH - 1.5 * cm, 1.5 * cm]
+    )
+    header_top.setStyle(TableStyle([
+        ("BACKGROUND",   (1, 0), (1, 0), sev_color),
+        ("ROUNDEDCORNERS", [4]),
+        ("VALIGN",       (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING",  (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING",   (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING",(0, 0), (-1, -1), 4),
+        ("LEFTPADDING",  (1, 0), (1, 0), 4),
+        ("RIGHTPADDING", (1, 0), (1, 0), 4),
+    ]))
+    story.append(header_top)
+    story.append(Spacer(1, 4))
+
+    # Título del incidente
     story.append(Paragraph(postmortem.get("title", "Incidente sin título"), title_style))
+
+    # Fecha generada
     story.append(Paragraph(
-        f"<font color='#{sev_hex}'><b>{severity}</b></font>"
-        f"  •  Generado {datetime.utcnow().strftime('%Y-%m-%d %H:%M')} UTC",
+        f"Generado {datetime.utcnow().strftime('%Y-%m-%d %H:%M')} UTC",
         small_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=BORDER, spaceAfter=10))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=sev_color, spaceAfter=10))
 
     # ── Resumen Ejecutivo ────────────────────────────────────────────
     story.append(Paragraph("Resumen Ejecutivo", heading_style))
