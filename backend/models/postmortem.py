@@ -17,7 +17,8 @@ else:
 
 def get_db():
     if USE_POSTGRES:
-        conn = psycopg2.connect(Config.DATABASE_URL)
+        # connect_timeout=5 evita hang infinito si PostgreSQL no responde
+        conn = psycopg2.connect(Config.DATABASE_URL, connect_timeout=5)
         return conn
     else:
         conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -60,7 +61,14 @@ def init_db():
 def save_postmortem(postmortem_data: dict, source: str = "analyze") -> str:
     postmortem_id = str(uuid.uuid4())
     now = datetime.utcnow().isoformat()
-    conn = get_db()
+    try:
+        conn = get_db()
+    except Exception as e:
+        # Si DB no está disponible, retornar ID sin persistir (no bloquear respuesta)
+        import logging
+        logging.getLogger(__name__).warning(f"DB unavailable, skipping save: {e}")
+        return postmortem_id
+
     cur = conn.cursor()
     if USE_POSTGRES:
         cur.execute(
