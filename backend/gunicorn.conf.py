@@ -6,8 +6,7 @@ keepalive = 5
 accesslog = "-"
 errorlog = "-"
 loglevel = "info"
-# Cargar la app en el master process — evita init_db() por worker
-preload_app = True
+# NO usar preload_app=True — causa deadlock con flask-limiter memory storage (fork-lock issue)
 # Restart workers after N requests to prevent memory leaks / stuck workers
 max_requests = 100
 max_requests_jitter = 20
