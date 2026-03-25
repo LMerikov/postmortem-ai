@@ -60,7 +60,11 @@ def serve_frontend(path):
 
 
 with app.app_context():
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"init_db failed (DB may be unavailable): {e}")
 
 if __name__ == "__main__":
     app.run(debug=Config.DEBUG, host="0.0.0.0", port=5000)
