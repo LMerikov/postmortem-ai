@@ -46,6 +46,31 @@ def health():
     return jsonify({"status": "ok", "model": Config.CLAUDE_MODEL})
 
 
+@app.route("/api/debug/phase1")
+@limiter.exempt
+def debug_phase1():
+    """Diagnóstico temporal de Phase 1 — ELIMINAR después de debuggear."""
+    import traceback
+    try:
+        from services.local_filtering import process_with_local_filter
+        test_content = "[INFO] Server started OK\n[DEBUG] Ready"
+        postmortem_local, should_call_llm, severity_local, cleaned_content = \
+            process_with_local_filter(test_content)
+        return jsonify({
+            "ok": True,
+            "should_call_llm": should_call_llm,
+            "severity_local": severity_local,
+            "cleaned_content_len": len(cleaned_content),
+            "cleaned_content": repr(cleaned_content),
+        })
+    except Exception as e:
+        return jsonify({
+            "ok": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        })
+
+
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve_frontend(path):
