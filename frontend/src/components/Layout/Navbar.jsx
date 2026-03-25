@@ -51,10 +51,11 @@ export function Navbar() {
         </div>
 
         <a
-          href="https://github.com"
+          href="https://github.com/LMerikov/postmortem-ai"
           target="_blank"
           rel="noopener noreferrer"
           className="text-muted hover:text-text transition-colors p-2 rounded-lg hover:bg-card"
+          title="Ver en GitHub"
         >
           <Github className="w-5 h-5" />
         </a>
