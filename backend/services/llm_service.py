@@ -1,44 +1,53 @@
+"""
+LLM Service — Phase 3: Multi-Provider (Kimi primary, Anthropic fallback)
+"""
+import re
 import json
-import anthropic
+import logging
 from config import Config
 from prompts.analyze import ANALYZE_SYSTEM_PROMPT, ANALYZE_USER_PROMPT
 from prompts.simulate import SIMULATE_SYSTEM_PROMPT, SIMULATE_USER_PROMPT
 from services.log_parser import preprocess
+from services.providers.factory import ProviderFactory
+
+logger = logging.getLogger(__name__)
 
 
-client = anthropic.Anthropic(api_key=Config.ANTHROPIC_API_KEY)
+def _call_llm(system: str, user: str, max_tokens: int = 4096) -> dict:
+    """
+    Llama al LLM via provider factory con fallback automático.
+    Kimi primario → Anthropic fallback si Kimi falla.
+    """
+    provider = ProviderFactory.get_primary_provider()
 
-
-def _call_claude(system: str, user: str, max_tokens: int = 4096) -> dict:
-    """Call Claude and parse JSON response. Retries once on JSON parse error."""
     for attempt in range(2):
-        message = client.messages.create(
-            model=Config.CLAUDE_MODEL,
-            max_tokens=max_tokens,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-        )
-        raw = message.content[0].text.strip()
-        # Strip markdown fences if present
-        if raw.startswith("```"):
-            raw = re.sub(r"^```[a-z]*\n?", "", raw)
-            raw = re.sub(r"\n?```$", "", raw)
-        try:
-            return json.loads(raw)
-        except json.JSONDecodeError:
-            if attempt == 1:
-                raise ValueError(f"LLM returned invalid JSON after 2 attempts: {raw[:200]}")
-    return {}
+        result = provider.call(system=system, user=user, max_tokens=max_tokens)
 
+        if result['error'] is None:
+            logger.info(f"LLM call OK via {result.get('provider','?')} | "
+                        f"tokens: {result.get('tokens_input',0)} in / {result.get('tokens_output',0)} out")
+            return result['content']
 
-import re
+        logger.warning(f"Provider {provider.name} error (attempt {attempt+1}): {result['error']}")
+
+        # En primer error, intentar el fallback
+        if attempt == 0:
+            fallback = ProviderFactory.get_fallback_provider(exclude_name=provider.name)
+            if fallback:
+                logger.info(f"Switching to fallback provider: {fallback.name}")
+                provider = fallback
+            else:
+                # No hay fallback, reintentar con el mismo
+                continue
+
+    raise ValueError(f"All LLM providers failed. Last error: {result['error']}")
 
 
 def analyze_logs(content: str) -> dict:
-    """Analyze logs and return postmortem dict."""
+    """Analyze logs and return postmortem dict. Uses multi-provider (Phase 3)."""
     parsed = preprocess(content)
     user_prompt = ANALYZE_USER_PROMPT.format(user_input=parsed["content"])
-    return _call_claude(ANALYZE_SYSTEM_PROMPT, user_prompt)
+    return _call_llm(ANALYZE_SYSTEM_PROMPT, user_prompt)
 
 
 def generate_simulation(
@@ -56,26 +65,30 @@ def generate_simulation(
         infrastructure=infrastructure,
         complexity=complexity,
     )
-    return _call_claude(SIMULATE_SYSTEM_PROMPT, user_prompt, max_tokens=6000)
+    return _call_llm(SIMULATE_SYSTEM_PROMPT, user_prompt, max_tokens=6000)
 
 
 def analyze_logs_stream(content: str):
-    """Generator that yields SSE chunks while streaming from Claude."""
+    """
+    Generator that yields SSE chunks while streaming from Claude.
+    Streaming siempre usa Anthropic (Kimi no tiene streaming API compatible).
+    """
     parsed = preprocess(content)
     user_prompt = ANALYZE_USER_PROMPT.format(user_input=parsed["content"])
 
-    accumulated = ""
-    with client.messages.stream(
-        model=Config.CLAUDE_MODEL,
-        max_tokens=4096,
-        system=ANALYZE_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_prompt}],
-    ) as stream:
-        for text in stream.text_stream:
-            accumulated += text
-            yield json.dumps({"chunk": text, "status": "generating"})
+    # Streaming solo con Anthropic
+    anthropic_provider = ProviderFactory.get_anthropic_provider()
 
-    # Try to parse at the end
+    accumulated = ""
+    for text in anthropic_provider.stream(
+        system=ANALYZE_SYSTEM_PROMPT,
+        user=user_prompt,
+        max_tokens=4096
+    ):
+        accumulated += text
+        yield json.dumps({"chunk": text, "status": "generating"})
+
+    # Parsear al final
     clean = accumulated.strip()
     if clean.startswith("```"):
         clean = re.sub(r"^```[a-z]*\n?", "", clean)

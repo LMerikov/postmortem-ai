@@ -1,6 +1,12 @@
+"""
+Route /api/analyze — Phase 1+3 integrados:
+- Phase 1: Filtrado local (ruido → respuesta <200ms, sin LLM)
+- Phase 3: Multi-provider via llm_service (Kimi → Anthropic fallback)
+"""
 import json
 from flask import Blueprint, request, jsonify, Response, stream_with_context
 from services.llm_service import analyze_logs, analyze_logs_stream
+from services.local_filtering import process_with_local_filter
 from models.postmortem import save_postmortem
 
 analyze_bp = Blueprint("analyze", __name__)
@@ -15,9 +21,23 @@ def analyze():
     if not content:
         return jsonify({"error": "content is required"}), 400
 
+    # ─── PHASE 1: Filtrado local ──────────────────────────────────────────
+    postmortem_local, should_call_llm, severity_local, cleaned_content = \
+        process_with_local_filter(content)
+
+    if not should_call_llm:
+        # Respuesta local <200ms — sin LLM
+        postmortem_id = save_postmortem(postmortem_local, source="local_filter")
+        return jsonify({
+            "id": postmortem_id,
+            "status": "complete",
+            "postmortem": postmortem_local,
+            "_source": "local_filter"
+        })
+    # ─────────────────────────────────────────────────────────────────────
+
     if stream:
         def generate():
-            postmortem_data = None
             for chunk in analyze_logs_stream(content):
                 parsed = json.loads(chunk)
                 if parsed.get("status") == "complete":
