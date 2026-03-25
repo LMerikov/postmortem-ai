@@ -9,7 +9,8 @@ class AnthropicProvider(LLMProvider):
     """Provider para Anthropic Claude API."""
 
     def __init__(self, api_key: str, model: str = "claude-sonnet-4-6"):
-        self.client = anthropic.Anthropic(api_key=api_key)
+        # timeout=40s: 2 intentos × 40s = 80s < gunicorn timeout(90s) → workers se liberan
+        self.client = anthropic.Anthropic(api_key=api_key, timeout=40.0)
         self.model = model
 
     def call(self, system: str, user: str, max_tokens: int = 4096, **kwargs) -> dict:
