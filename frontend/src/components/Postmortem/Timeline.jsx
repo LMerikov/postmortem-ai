@@ -28,14 +28,17 @@ export function Timeline({ entries = [] }) {
             </div>
             {/* Content */}
             <div className={`flex-1 border rounded-lg px-4 py-2.5 ${cfg.color}`}>
-              <div className="flex items-center gap-3 flex-wrap">
+              {/* Fila 1: tiempo + badge tipo */}
+              <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
                 <span className="font-mono text-xs text-muted bg-code px-2 py-0.5 rounded">
                   {entry.time}
                 </span>
-                <span className="text-sm">{cfg.icon}</span>
-                <span className="text-sm text-text">{entry.event}</span>
-                <span className="ml-auto text-xs text-muted capitalize">{entry.type}</span>
+                <span className="text-xs text-muted capitalize flex items-center gap-1">
+                  {cfg.icon} {entry.type}
+                </span>
               </div>
+              {/* Fila 2: evento */}
+              <p className="text-sm text-text leading-snug">{entry.event}</p>
             </div>
           </motion.div>
         )

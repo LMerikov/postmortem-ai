@@ -153,20 +153,22 @@ export function HomePage() {
       </motion.div>
 
       {/* Features grid */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-      >
-        {FEATURES.map(({ icon, title, desc }) => (
-          <div key={title} className="card text-center space-y-2 hover:border-accent/30 transition-colors">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {FEATURES.map(({ icon, title, desc }, i) => (
+          <motion.div
+            key={title}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 + i * 0.08 }}
+            whileHover={{ scale: 1.03, y: -2 }}
+            className="card text-center space-y-2 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(108,92,231,0.15)] transition-all duration-300 cursor-default"
+          >
             <div className="flex justify-center">{icon}</div>
             <p className="font-semibold text-sm">{title}</p>
             <p className="text-xs text-muted">{desc}</p>
-          </div>
+          </motion.div>
         ))}
-      </motion.div>
+      </div>
     </div>
   )
 }
