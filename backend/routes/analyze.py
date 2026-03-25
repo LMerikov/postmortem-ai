@@ -25,13 +25,16 @@ def analyze():
         return jsonify({"error": "content is required"}), 400
 
     # ─── PHASE 1: Filtrado local ──────────────────────────────────────────
+    _phase1_error = None
     try:
         postmortem_local, should_call_llm, severity_local, cleaned_content = \
             process_with_local_filter(content)
         logger.info(f"Phase1: should_call_llm={should_call_llm} severity={severity_local} "
                     f"content_len={len(content)} filtered_len={len(cleaned_content)}")
     except Exception as e:
-        logger.error(f"Phase1 error: {e}", exc_info=True)
+        import traceback as _tb
+        _phase1_error = f"{type(e).__name__}: {e}\n{_tb.format_exc()}"
+        logger.error(f"Phase1 EXCEPTION: {_phase1_error}")
         should_call_llm = True  # fallback: enviar al LLM si Phase 1 falla
 
     if not should_call_llm:
@@ -65,6 +68,9 @@ def analyze():
     try:
         postmortem = analyze_logs(content)
         postmortem_id = save_postmortem(postmortem, source="analyze")
-        return jsonify({"id": postmortem_id, "status": "complete", "postmortem": postmortem})
+        resp = {"id": postmortem_id, "status": "complete", "postmortem": postmortem}
+        if _phase1_error:
+            resp["_phase1_error"] = _phase1_error  # Debug temporal
+        return jsonify(resp)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e), "_phase1_error": _phase1_error}), 500
