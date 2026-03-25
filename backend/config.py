@@ -8,6 +8,7 @@ class Config:
     CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-prod")
     DATABASE_PATH = os.getenv("DATABASE_PATH", "postmortems.db")
+    DATABASE_URL = os.getenv("DATABASE_URL", "")  # PostgreSQL en producción
     MAX_LOG_TOKENS = int(os.getenv("MAX_LOG_TOKENS", "4000"))
     DEBUG = os.getenv("FLASK_ENV", "production") == "development"
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "https://postmortem-ai.xyz")
