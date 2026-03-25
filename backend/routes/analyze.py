@@ -26,8 +26,9 @@ def analyze():
         process_with_local_filter(content)
 
     if not should_call_llm:
-        # Respuesta local <200ms — sin LLM
-        postmortem_id = save_postmortem(postmortem_local, source="local_filter")
+        # Respuesta local <200ms — sin LLM, sin DB (ruido no requiere persistencia)
+        import uuid as _uuid
+        postmortem_id = str(_uuid.uuid4())
         return jsonify({
             "id": postmortem_id,
             "status": "complete",
