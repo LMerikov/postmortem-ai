@@ -70,6 +70,23 @@ class GroqProvider(LLMProvider):
         except Exception as e:
             return {'content': None, 'error': str(e), 'provider': self.name}
 
+    def health_check(self) -> bool:
+        """Verifica accesibilidad de la API con timeout corto."""
+        try:
+            resp = requests.post(
+                self.CHAT_URL,
+                json={
+                    "model": self.model,
+                    "messages": [{"role": "user", "content": "hi"}],
+                    "max_tokens": 5
+                },
+                headers=self._headers(),
+                timeout=8
+            )
+            return resp.status_code in (200, 400)
+        except Exception:
+            return False
+
     @property
     def name(self) -> str:
         return "groq"
