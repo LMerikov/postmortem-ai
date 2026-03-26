@@ -57,6 +57,14 @@ def init_db():
     cur.close()
     conn.close()
 
+    # Inicializar tabla de cache (Phase 2)
+    try:
+        from services.cache_service import init_cache_table
+        init_cache_table()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"init_cache_table failed: {e}")
+
 
 def save_postmortem(postmortem_data: dict, source: str = "analyze") -> str:
     postmortem_id = str(uuid.uuid4())
