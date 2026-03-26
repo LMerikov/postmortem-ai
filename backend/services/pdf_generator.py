@@ -1,5 +1,6 @@
+import html
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timezone
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -100,17 +101,17 @@ def generate_pdf(postmortem: dict) -> bytes:
     story.append(Spacer(1, 4))
 
     # Título del incidente
-    story.append(Paragraph(postmortem.get("title", "Incidente sin título"), title_style))
+    story.append(Paragraph(html.escape(postmortem.get("title", "Incidente sin título")), title_style))
 
     # Fecha generada
     story.append(Paragraph(
-        f"Generado {datetime.utcnow().strftime('%Y-%m-%d %H:%M')} UTC",
+        f"Generado {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC",
         small_style))
     story.append(HRFlowable(width="100%", thickness=1.5, color=sev_color, spaceAfter=10))
 
     # ── Resumen Ejecutivo ────────────────────────────────────────────
     story.append(Paragraph("Resumen Ejecutivo", heading_style))
-    story.append(Paragraph(postmortem.get("summary", ""), body_style))
+    story.append(Paragraph(html.escape(postmortem.get("summary", "")), body_style))
 
     # ── Timeline ────────────────────────────────────────────────────
     timeline = postmortem.get("timeline", [])
@@ -125,9 +126,9 @@ def generate_pdf(postmortem: dict) -> bytes:
         ]]
         for entry in timeline:
             rows.append([
-                _cell(entry.get("time", ""),            cell_style),
-                _cell(entry.get("event", ""),           cell_style),
-                _cell(entry.get("type", "").title(),    cell_style),
+                _cell(html.escape(entry.get("time", "")),                       cell_style),
+                _cell(html.escape(entry.get("event", "")),                      cell_style),
+                _cell(html.escape(str(entry.get("type") or "").title()),        cell_style),
             ])
         t = Table(rows, colWidths=col_w, repeatRows=1)
         t.setStyle(TableStyle([
@@ -145,7 +146,7 @@ def generate_pdf(postmortem: dict) -> bytes:
 
     # ── Análisis de Causa Raíz ───────────────────────────────────────
     story.append(Paragraph("Análisis de Causa Raíz", heading_style))
-    story.append(Paragraph(postmortem.get("root_cause", ""), body_style))
+    story.append(Paragraph(html.escape(postmortem.get("root_cause", "")), body_style))
 
     # ── Impacto ──────────────────────────────────────────────────────
     story.append(Paragraph("Impacto", heading_style))
@@ -176,7 +177,7 @@ def generate_pdf(postmortem: dict) -> bytes:
     if actions:
         story.append(Paragraph("Acciones Tomadas Durante el Incidente", heading_style))
         for action in actions:
-            story.append(Paragraph(f"• {action}", body_style))
+            story.append(Paragraph(f"• {html.escape(str(action))}", body_style))
 
     # ── Tareas de Seguimiento ────────────────────────────────────────
     action_items = postmortem.get("action_items", [])
@@ -185,8 +186,8 @@ def generate_pdf(postmortem: dict) -> bytes:
         for item in action_items:
             prio     = item.get("priority", "MEDIUM")
             prio_hex = PRIORITY_HEX.get(prio, "555555")
-            desc     = item.get("description", "")
-            owner    = item.get("owner", "TBD")
+            desc     = html.escape(str(item.get("description", "")))
+            owner    = html.escape(str(item.get("owner", "TBD")))
             story.append(Paragraph(
                 f"<font color='#{prio_hex}'><b>[{prio}]</b></font> {desc} — <i>{owner}</i>",
                 body_style,
@@ -197,14 +198,14 @@ def generate_pdf(postmortem: dict) -> bytes:
     if lessons:
         story.append(Paragraph("Lecciones Aprendidas", heading_style))
         for i, lesson in enumerate(lessons, 1):
-            story.append(Paragraph(f"{i}. {lesson}", body_style))
+            story.append(Paragraph(f"{i}. {html.escape(str(lesson))}", body_style))
 
     # ── Recomendaciones de Monitoreo ─────────────────────────────────
     recs = postmortem.get("monitoring_recommendations", [])
     if recs:
         story.append(Paragraph("Recomendaciones de Monitoreo", heading_style))
         for rec in recs:
-            story.append(Paragraph(f"• {rec}", body_style))
+            story.append(Paragraph(f"• {html.escape(str(rec))}", body_style))
 
     # ── Footer ───────────────────────────────────────────────────────
     story.append(HRFlowable(width="100%", thickness=1, color=BORDER, spaceBefore=14))

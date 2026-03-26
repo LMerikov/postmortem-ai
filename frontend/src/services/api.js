@@ -72,13 +72,52 @@ export async function deletePostmortem(id) {
 }
 
 function triggerDownload(url, filename) {
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  setTimeout(() => URL.revokeObjectURL(url), 100)
+  try {
+    // Crear un iframe invisible para evitar conflictos con React DOM
+    const iframe = document.createElement('iframe')
+    iframe.style.display = 'none'
+    iframe.src = `${url}#.pdf` // Hint del filename para navegadores
+
+    // Usar requestAnimationFrame para asegurar que se ejecuta después del render
+    requestAnimationFrame(() => {
+      try {
+        document.body.appendChild(iframe)
+        // Limpiar después de un tiempo seguro
+        setTimeout(() => {
+          try {
+            if (iframe.parentElement) {
+              document.body.removeChild(iframe)
+            }
+            URL.revokeObjectURL(url)
+          } catch (e) {
+            console.warn('Cleanup error:', e)
+          }
+        }, 500)
+      } catch (e) {
+        console.error('Iframe append error:', e)
+        // Fallback: usar el método de link directo
+        fallbackDownload(url, filename)
+      }
+    })
+  } catch (error) {
+    console.error('Download failed:', error)
+    fallbackDownload(url, filename)
+  }
+}
+
+function fallbackDownload(url, filename) {
+  try {
+    // Último recurso: método que no toca el DOM
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    // Simular click sin agregar al DOM
+    link.click?.()
+    setTimeout(() => URL.revokeObjectURL(url), 100)
+  } catch (e) {
+    console.error('All download methods failed:', e)
+    window.open(url, '_blank')
+  }
 }
 
 export async function exportMarkdown(postmortem) {

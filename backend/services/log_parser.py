@@ -24,7 +24,6 @@ def truncate_logs(content: str, max_chars: int = 12000) -> str:
         if re.search(r'\b(error|fatal|critical|exception|traceback|panic)\b', line, re.IGNORECASE)
     ]
 
-    chunk = max_chars // 3
     start = "\n".join(lines[:50])
     end = "\n".join(lines[-50:])
     errors = "\n".join(error_lines[:100])
@@ -33,7 +32,7 @@ def truncate_logs(content: str, max_chars: int = 12000) -> str:
         f"{start}\n\n[... logs truncated for context ...]\n\n"
         f"=== ERROR LINES ===\n{errors}\n\n"
         f"=== END OF LOG ===\n{end}"
-    )[:max_chars]
+    )
 
 
 def preprocess(content: str) -> dict:
@@ -41,10 +40,10 @@ def preprocess(content: str) -> dict:
     fmt = detect_format(content)
     truncated = truncate_logs(content)
 
-    timestamps = re.findall(r'\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}', content)
-    error_count = len(re.findall(r'\b(ERROR|FATAL|CRITICAL)\b', content))
-    warn_count = len(re.findall(r'\b(WARN|WARNING)\b', content))
-    services = list(set(re.findall(r'service[:\s]+([a-zA-Z0-9_-]+)', content, re.IGNORECASE)))
+    timestamps = re.findall(r'\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}', truncated)
+    error_count = len(re.findall(r'\b(ERROR|FATAL|CRITICAL)\b', truncated, re.IGNORECASE))
+    warn_count = len(re.findall(r'\b(WARN|WARNING)\b', truncated, re.IGNORECASE))
+    services = list(set(re.findall(r'service[:\s]+([a-zA-Z0-9_-]+)', truncated, re.IGNORECASE)))
 
     return {
         "content": truncated,

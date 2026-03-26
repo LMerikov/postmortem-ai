@@ -1,5 +1,5 @@
 """
-LLM Service — Phase 3: Multi-Provider (Kimi primary, Anthropic fallback)
+LLM Service — Phase 3: Multi-Provider (Groq primary, Anthropic fallback)
 """
 import re
 import json
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def _call_llm(system: str, user: str, max_tokens: int = 4096) -> dict:
     """
     Llama al LLM via provider factory con fallback automático.
-    Kimi primario → Anthropic fallback si Kimi falla.
+    Groq primario (~3s) → Anthropic fallback (~25s) si Groq falla.
     """
     provider = ProviderFactory.get_primary_provider()
 
@@ -47,7 +47,14 @@ def analyze_logs(content: str) -> dict:
     """Analyze logs and return postmortem dict. Uses multi-provider (Phase 3)."""
     parsed = preprocess(content)
     user_prompt = ANALYZE_USER_PROMPT.format(user_input=parsed["content"])
-    return _call_llm(ANALYZE_SYSTEM_PROMPT, user_prompt)
+    raw = _call_llm(ANALYZE_SYSTEM_PROMPT, user_prompt)
+    if isinstance(raw, str):
+        clean = raw.strip()
+        if clean.startswith("```"):
+            clean = re.sub(r"^```[a-z]*\n?", "", clean)
+            clean = re.sub(r"\n?```$", "", clean)
+        return json.loads(clean)
+    return raw
 
 
 def generate_simulation(
@@ -65,7 +72,14 @@ def generate_simulation(
         infrastructure=infrastructure,
         complexity=complexity,
     )
-    return _call_llm(SIMULATE_SYSTEM_PROMPT, user_prompt, max_tokens=6000)
+    raw = _call_llm(SIMULATE_SYSTEM_PROMPT, user_prompt, max_tokens=6000)
+    if isinstance(raw, str):
+        clean = raw.strip()
+        if clean.startswith("```"):
+            clean = re.sub(r"^```[a-z]*\n?", "", clean)
+            clean = re.sub(r"\n?```$", "", clean)
+        return json.loads(clean)
+    return raw
 
 
 def analyze_logs_stream(content: str):
@@ -99,6 +113,7 @@ def analyze_logs_stream(content: str):
     # Si hubo error, intentar fallback con Anthropic
     if error_msg and provider.name != "anthropic":
         logger.info("Switching to Anthropic fallback for streaming")
+        yield json.dumps({"status": "restarting", "message": "Provider failed, switching to fallback..."})
         anthropic_provider = ProviderFactory.get_anthropic_provider()
         accumulated = ""
         try:
