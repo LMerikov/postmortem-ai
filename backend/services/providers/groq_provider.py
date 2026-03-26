@@ -70,6 +70,52 @@ class GroqProvider(LLMProvider):
         except Exception as e:
             return {'content': None, 'error': str(e), 'provider': self.name}
 
+    def stream(self, system: str, user: str, max_tokens: int = 4096, **kwargs):
+        """Stream text completions from Groq (OpenAI-compatible API)."""
+        try:
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user}
+                ],
+                "temperature": kwargs.get("temperature", 0.3),
+                "max_tokens": min(max_tokens, 8000),
+                "stream": True
+            }
+
+            resp = requests.post(
+                self.CHAT_URL,
+                json=payload,
+                headers=self._headers(),
+                timeout=60,
+                stream=True
+            )
+
+            if resp.status_code != 200:
+                yield f"error: {resp.text[:200]}"
+                return
+
+            for line in resp.iter_lines():
+                if not line:
+                    continue
+                if isinstance(line, bytes):
+                    line = line.decode('utf-8')
+                if line.startswith('data: '):
+                    try:
+                        chunk_data = json.loads(line[6:])
+                        if 'choices' in chunk_data and chunk_data['choices']:
+                            delta = chunk_data['choices'][0].get('delta', {})
+                            content = delta.get('content', '')
+                            if content:
+                                yield content
+                    except json.JSONDecodeError:
+                        pass
+        except requests.Timeout:
+            yield "error: Groq API timeout (60s)"
+        except Exception as e:
+            yield f"error: {str(e)}"
+
     def health_check(self) -> bool:
         """Verifica accesibilidad de la API con timeout corto."""
         try:

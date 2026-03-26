@@ -70,25 +70,50 @@ def generate_simulation(
 
 def analyze_logs_stream(content: str):
     """
-    Generator that yields SSE chunks while streaming from Claude.
-    Streaming siempre usa Anthropic (Kimi no tiene streaming API compatible).
+    Generator que streamea desde Groq (primario, ~500 tok/s).
+    Si Groq falla → fallback a Anthropic.
     """
     parsed = preprocess(content)
     user_prompt = ANALYZE_USER_PROMPT.format(user_input=parsed["content"])
 
-    # Streaming solo con Anthropic
-    anthropic_provider = ProviderFactory.get_anthropic_provider()
-
+    # Intentar con proveedor primario (Groq)
+    provider = ProviderFactory.get_primary_provider()
     accumulated = ""
-    for text in anthropic_provider.stream(
-        system=ANALYZE_SYSTEM_PROMPT,
-        user=user_prompt,
-        max_tokens=4096
-    ):
-        accumulated += text
-        yield json.dumps({"chunk": text, "status": "generating"})
+    error_msg = None
 
-    # Parsear al final
+    try:
+        for text in provider.stream(
+            system=ANALYZE_SYSTEM_PROMPT,
+            user=user_prompt,
+            max_tokens=4096
+        ):
+            if text.startswith("error: "):
+                error_msg = text[7:]
+                break
+            accumulated += text
+            yield json.dumps({"chunk": text, "status": "generating"})
+    except Exception as e:
+        error_msg = str(e)
+        logger.warning(f"Stream error from {provider.name}: {error_msg}")
+
+    # Si hubo error, intentar fallback con Anthropic
+    if error_msg and provider.name != "anthropic":
+        logger.info("Switching to Anthropic fallback for streaming")
+        anthropic_provider = ProviderFactory.get_anthropic_provider()
+        accumulated = ""
+        try:
+            for text in anthropic_provider.stream(
+                system=ANALYZE_SYSTEM_PROMPT,
+                user=user_prompt,
+                max_tokens=4096
+            ):
+                accumulated += text
+                yield json.dumps({"chunk": text, "status": "generating"})
+        except Exception as e:
+            yield json.dumps({"status": "error", "message": f"Fallback provider failed: {str(e)}"})
+            return
+
+    # Parsear respuesta acumulada
     clean = accumulated.strip()
     if clean.startswith("```"):
         clean = re.sub(r"^```[a-z]*\n?", "", clean)
@@ -96,5 +121,5 @@ def analyze_logs_stream(content: str):
     try:
         postmortem = json.loads(clean)
         yield json.dumps({"status": "complete", "postmortem": postmortem})
-    except json.JSONDecodeError:
-        yield json.dumps({"status": "error", "message": "Failed to parse LLM response"})
+    except json.JSONDecodeError as e:
+        yield json.dumps({"status": "error", "message": f"JSON parse error: {str(e)}"})

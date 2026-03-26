@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Zap, FlaskConical, ArrowRight, Shield, Clock, FileCheck } from 'lucide-react'
 import { LogInput } from '../components/Analyze/LogInput'
-import { analyzeLogs } from '../services/api'
+import { analyzeLogsStream } from '../services/api'
 import { useToast } from '../components/UI/Toast'
 import { GeneratingState } from '../components/UI/LoadingSpinner'
 
@@ -44,8 +44,12 @@ export function HomePage() {
     }
     setLoading(true)
     try {
-      const data = await analyzeLogs(content)
-      navigate(`/result/${data.id}`)
+      await analyzeLogsStream(
+        content,
+        () => {},
+        (id) => navigate(`/result/${id}`),
+        (err) => { toast(err, 'error'); setLoading(false) },
+      )
     } catch (e) {
       toast(e.message, 'error')
       setLoading(false)
@@ -88,7 +92,7 @@ export function HomePage() {
       >
         {loading ? (
           <div className="card">
-            <GeneratingState text="Analizando tu incidente con IA..." />
+            <GeneratingState text="Groq está analizando tu incidente... (~3s)" />
           </div>
         ) : (
           <>
