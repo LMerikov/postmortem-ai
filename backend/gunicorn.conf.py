@@ -1,5 +1,5 @@
 bind = "0.0.0.0:5000"
-workers = 8
+workers = 4
 worker_class = "sync"
 timeout = 90
 keepalive = 5

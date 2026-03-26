@@ -35,8 +35,8 @@ ENV PYTHONUNBUFFERED=1
 # Expose port
 EXPOSE 5000
 
-# Health check without external dependencies
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# Health check — start-period largo para dar tiempo a gunicorn+postgres
+HEALTHCHECK --interval=10s --timeout=10s --start-period=90s --retries=5 \
   CMD python -c "from urllib.request import urlopen; urlopen('http://localhost:5000/api/health').read()" || exit 1
 
 # Start with gunicorn
