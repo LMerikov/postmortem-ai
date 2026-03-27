@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types'
+
 export function SkeletonLine({ className = '' }) {
   return <div className={`bg-border/50 rounded animate-pulse ${className}`} />
 }
@@ -28,4 +30,12 @@ export function PostmortemSkeleton() {
       </div>
     </div>
   )
+}
+
+SkeletonLine.propTypes = {
+  className: PropTypes.string,
+}
+
+SkeletonLine.defaultProps = {
+  className: '',
 }

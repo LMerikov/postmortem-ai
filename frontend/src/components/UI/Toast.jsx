@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { createContext, useContext, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react'
@@ -45,6 +46,10 @@ export function ToastProvider({ children }) {
       </div>
     </ToastContext.Provider>
   )
+}
+
+ToastProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 }
 
 export function useToast() {

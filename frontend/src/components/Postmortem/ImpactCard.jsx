@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Users, Clock, Server, DollarSign } from 'lucide-react'
 
 export function ImpactCard({ impact = {} }) {
@@ -19,4 +20,17 @@ export function ImpactCard({ impact = {} }) {
       ))}
     </div>
   )
+}
+
+ImpactCard.propTypes = {
+  impact: PropTypes.shape({
+    users_affected: PropTypes.string,
+    duration: PropTypes.string,
+    services_affected: PropTypes.arrayOf(PropTypes.string),
+    revenue_impact: PropTypes.string,
+  }),
+}
+
+ImpactCard.defaultProps = {
+  impact: {},
 }

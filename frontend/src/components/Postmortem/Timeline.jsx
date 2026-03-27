@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { motion } from 'framer-motion'
 
 const TYPE_CONFIG = {
@@ -45,4 +46,18 @@ export function Timeline({ entries = [] }) {
       })}
     </div>
   )
+}
+
+Timeline.propTypes = {
+  entries: PropTypes.arrayOf(
+    PropTypes.shape({
+      time: PropTypes.string.isRequired,
+      event: PropTypes.string.isRequired,
+      type: PropTypes.oneOf(['alert', 'detection', 'escalation', 'action', 'resolution']),
+    })
+  ),
+}
+
+Timeline.defaultProps = {
+  entries: [],
 }

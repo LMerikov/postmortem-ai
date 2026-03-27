@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types'
+
 const SEVERITY_CONFIG = {
   P0: { label: 'P0 Critical', color: 'text-p0 border-p0/30 bg-p0/10' },
   P1: { label: 'P1 High',     color: 'text-p1 border-p1/30 bg-p1/10' },
@@ -14,4 +16,14 @@ export function SeverityBadge({ severity, size = 'md' }) {
       {cfg.label}
     </span>
   )
+}
+
+SeverityBadge.propTypes = {
+  severity: PropTypes.oneOf(['P0', 'P1', 'P2', 'P3', 'P4']),
+  size: PropTypes.oneOf(['md', 'lg']),
+}
+
+SeverityBadge.defaultProps = {
+  severity: 'P3',
+  size: 'md',
 }

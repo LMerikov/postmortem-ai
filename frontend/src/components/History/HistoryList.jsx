@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 import { Trash2, ExternalLink, FlaskConical, Zap } from 'lucide-react'
 import { SeverityBadge } from '../Postmortem/SeverityBadge'
@@ -55,4 +56,18 @@ export function HistoryList({ items, onDelete }) {
       ))}
     </div>
   )
+}
+
+HistoryList.propTypes = {
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      summary: PropTypes.string,
+      severity: PropTypes.string,
+      source: PropTypes.string,
+      created_at: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  onDelete: PropTypes.func.isRequired,
 }

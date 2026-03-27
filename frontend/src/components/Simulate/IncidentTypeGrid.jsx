@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { motion } from 'framer-motion'
 
 const INCIDENT_TYPES = [
@@ -67,4 +68,9 @@ export function IncidentTypeGrid({ selected, onSelect }) {
       })}
     </div>
   )
+}
+
+IncidentTypeGrid.propTypes = {
+  selected: PropTypes.string,
+  onSelect: PropTypes.func.isRequired,
 }

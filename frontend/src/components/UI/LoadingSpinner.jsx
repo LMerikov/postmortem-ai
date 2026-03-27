@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types'
+
 export function LoadingSpinner({ size = 24, className = '' }) {
   return (
     <div
@@ -19,4 +21,22 @@ export function GeneratingState({ text = 'Analizando con IA...' }) {
       <p className="text-muted text-sm font-mono">{text}</p>
     </div>
   )
+}
+
+LoadingSpinner.propTypes = {
+  size: PropTypes.number,
+  className: PropTypes.string,
+}
+
+LoadingSpinner.defaultProps = {
+  size: 24,
+  className: '',
+}
+
+GeneratingState.propTypes = {
+  text: PropTypes.string,
+}
+
+GeneratingState.defaultProps = {
+  text: 'Analizando con IA...',
 }

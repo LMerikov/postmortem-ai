@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Component } from 'react'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
 
@@ -36,4 +37,8 @@ export class ErrorBoundary extends Component {
     }
     return this.props.children
   }
+}
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node.isRequired,
 }

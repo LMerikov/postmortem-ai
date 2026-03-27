@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types'
+
 const SEVERITIES = ['P0', 'P1', 'P2', 'P3', 'P4']
 const SEV_COLORS = { P0: 'text-p0 border-p0', P1: 'text-p1 border-p1', P2: 'text-p2 border-p2', P3: 'text-p3 border-p3', P4: 'text-p4 border-p4' }
 
@@ -64,4 +66,26 @@ export function ParameterSelectors({ params, onChange }) {
       </div>
     </div>
   )
+}
+
+SelectField.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  onChange: PropTypes.func.isRequired,
+}
+
+ParameterSelectors.propTypes = {
+  params: PropTypes.shape({
+    severity: PropTypes.string,
+    tech_stack: PropTypes.string,
+    infrastructure: PropTypes.string,
+    complexity: PropTypes.string,
+  }).isRequired,
+  onChange: PropTypes.func.isRequired,
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PropTypes from 'prop-types'
 import { FileDown, FileText, Copy, Check } from 'lucide-react'
 import { exportMarkdown, exportPDF } from '../../services/api'
 import { useToast } from '../UI/Toast'
@@ -50,4 +51,19 @@ export function ExportButtons({ postmortem }) {
       </button>
     </div>
   )
+}
+
+ExportButtons.propTypes = {
+  postmortem: PropTypes.shape({
+    title: PropTypes.string,
+    severity: PropTypes.string,
+    summary: PropTypes.string,
+    timeline: PropTypes.array,
+    root_cause: PropTypes.string,
+    impact: PropTypes.object,
+    actions_taken: PropTypes.array,
+    action_items: PropTypes.array,
+    lessons_learned: PropTypes.array,
+    monitoring_recommendations: PropTypes.array,
+  }).isRequired,
 }

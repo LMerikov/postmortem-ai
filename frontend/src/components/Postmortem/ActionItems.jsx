@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PropTypes from 'prop-types'
 import { CheckSquare, Square } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -39,4 +40,18 @@ export function ActionItems({ items = [] }) {
       ))}
     </div>
   )
+}
+
+ActionItems.propTypes = {
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      description: PropTypes.string.isRequired,
+      owner: PropTypes.string,
+      priority: PropTypes.oneOf(['HIGH', 'MEDIUM', 'LOW']),
+    })
+  ),
+}
+
+ActionItems.defaultProps = {
+  items: [],
 }

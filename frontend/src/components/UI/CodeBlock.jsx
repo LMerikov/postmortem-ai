@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { useToast } from './Toast'
@@ -36,4 +37,15 @@ export function CodeBlock({ code, language = 'log', title = '' }) {
       </pre>
     </div>
   )
+}
+
+CodeBlock.propTypes = {
+  code: PropTypes.string.isRequired,
+  language: PropTypes.string,
+  title: PropTypes.string,
+}
+
+CodeBlock.defaultProps = {
+  language: 'log',
+  title: '',
 }

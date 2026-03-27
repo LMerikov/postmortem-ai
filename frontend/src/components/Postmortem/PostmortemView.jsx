@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { motion } from 'framer-motion'
 import { SeverityBadge } from './SeverityBadge'
 import { Timeline } from './Timeline'
@@ -18,6 +19,17 @@ const Section = ({ title, icon, children, delay = 0 }) => (
     {children}
   </motion.div>
 )
+
+Section.propTypes = {
+  title: PropTypes.string.isRequired,
+  icon: PropTypes.node.isRequired,
+  children: PropTypes.node.isRequired,
+  delay: PropTypes.number,
+}
+
+Section.defaultProps = {
+  delay: 0,
+}
 
 const SEVERITY_GLOW = {
   P0: 'shadow-[0_0_24px_rgba(214,48,49,0.15)] border-p0/30',
@@ -145,4 +157,42 @@ export function PostmortemView({ postmortem, showExport = true }) {
       )}
     </motion.div>
   )
+}
+
+PostmortemView.propTypes = {
+  postmortem: PropTypes.shape({
+    title: PropTypes.string,
+    severity: PropTypes.oneOf(['P0', 'P1', 'P2', 'P3', 'P4']),
+    summary: PropTypes.string,
+    timeline: PropTypes.arrayOf(
+      PropTypes.shape({
+        time: PropTypes.string,
+        event: PropTypes.string,
+        type: PropTypes.string,
+      })
+    ),
+    root_cause: PropTypes.string,
+    impact: PropTypes.shape({
+      users_affected: PropTypes.string,
+      duration: PropTypes.string,
+      services_affected: PropTypes.arrayOf(PropTypes.string),
+      revenue_impact: PropTypes.string,
+    }),
+    actions_taken: PropTypes.arrayOf(PropTypes.string),
+    action_items: PropTypes.arrayOf(
+      PropTypes.shape({
+        description: PropTypes.string,
+        owner: PropTypes.string,
+        priority: PropTypes.string,
+      })
+    ),
+    lessons_learned: PropTypes.arrayOf(PropTypes.string),
+    monitoring_recommendations: PropTypes.arrayOf(PropTypes.string),
+  }),
+  showExport: PropTypes.bool,
+}
+
+PostmortemView.defaultProps = {
+  postmortem: null,
+  showExport: true,
 }
