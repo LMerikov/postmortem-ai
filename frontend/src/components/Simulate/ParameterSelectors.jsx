@@ -20,7 +20,7 @@ const COMPLEXITIES = [
 ]
 
 function SelectField({ label, value, options, onChange }) {
-  const inputId = `select-${label.replace(/\s+/g, '-').toLowerCase()}`
+  const inputId = `select-${label.replaceAll(/\s+/g, '-').toLowerCase()}`
   return (
     <div className="space-y-1.5">
       <label htmlFor={inputId} className="text-sm text-muted font-medium">{label}</label>

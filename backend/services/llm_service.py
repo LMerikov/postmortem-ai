@@ -12,6 +12,10 @@ from services.providers.factory import ProviderFactory
 
 logger = logging.getLogger(__name__)
 
+# Patrones para limpiar bloques de markdown
+MARKDOWN_CODE_BLOCK_START = r"^```[a-z]*\n?"
+MARKDOWN_CODE_BLOCK_END = r"\n?```$"
+
 
 def _call_llm(system: str, user: str, max_tokens: int = 4096) -> dict:
     """
@@ -51,8 +55,8 @@ def analyze_logs(content: str) -> dict:
     if isinstance(raw, str):
         clean = raw.strip()
         if clean.startswith("```"):
-            clean = re.sub(r"^```[a-z]*\n?", "", clean)
-            clean = re.sub(r"\n?```$", "", clean)
+            clean = re.sub(MARKDOWN_CODE_BLOCK_START, "", clean)
+            clean = re.sub(MARKDOWN_CODE_BLOCK_END, "", clean)
         return json.loads(clean)
     return raw
 
@@ -76,8 +80,8 @@ def generate_simulation(
     if isinstance(raw, str):
         clean = raw.strip()
         if clean.startswith("```"):
-            clean = re.sub(r"^```[a-z]*\n?", "", clean)
-            clean = re.sub(r"\n?```$", "", clean)
+            clean = re.sub(MARKDOWN_CODE_BLOCK_START, "", clean)
+            clean = re.sub(MARKDOWN_CODE_BLOCK_END, "", clean)
         return json.loads(clean)
     return raw
 
@@ -131,8 +135,8 @@ def analyze_logs_stream(content: str):
     # Parsear respuesta acumulada
     clean = accumulated.strip()
     if clean.startswith("```"):
-        clean = re.sub(r"^```[a-z]*\n?", "", clean)
-        clean = re.sub(r"\n?```$", "", clean)
+        clean = re.sub(MARKDOWN_CODE_BLOCK_START, "", clean)
+        clean = re.sub(MARKDOWN_CODE_BLOCK_END, "", clean)
     try:
         postmortem = json.loads(clean)
         yield json.dumps({"status": "complete", "postmortem": postmortem})

@@ -24,6 +24,10 @@ app = Flask(
 )
 app.config.from_object(Config)
 
+# CSRF protection is not required here: this is a stateless REST API that uses
+# JSON-only requests (Content-Type: application/json), not session cookies.
+# CORS is restricted to trusted origins via Config.CORS_ORIGINS, and rate limiting
+# is applied below. These controls are sufficient to prevent CSRF attacks.
 CORS(app, origins=Config.CORS_ORIGINS)
 
 # Rate limiting para prevenir abuso
@@ -40,7 +44,7 @@ app.register_blueprint(history_bp)
 app.register_blueprint(export_bp)
 
 
-@app.route("/api/health")
+@app.route("/api/health", methods=["GET"])
 @limiter.exempt
 def health():
     return jsonify({"status": "ok", "model": Config.CLAUDE_MODEL})
@@ -48,7 +52,7 @@ def health():
 
 # Debug endpoint — solo disponible en development
 if Config.DEBUG:
-    @app.route("/api/debug/phase1")
+    @app.route("/api/debug/phase1", methods=["GET"])
     @limiter.exempt
     def debug_phase1():
         """Diagnóstico temporal de Phase 1 — solo en development."""
@@ -72,8 +76,8 @@ if Config.DEBUG:
             })
 
 
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
+@app.route("/", defaults={"path": ""}, methods=["GET"])
+@app.route("/<path:path>", methods=["GET"])
 def serve_frontend(path):
     if not app.static_folder:
         return jsonify({"error": "Frontend build not found"}), 404

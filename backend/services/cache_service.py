@@ -112,61 +112,76 @@ def init_cache_table():
         logger.warning(f"Could not init cache table: {e}")
 
 
-def find_in_cache(normalized: str, threshold: float = 0.70) -> dict | None:
-    """
-    Busca en cache:
-    1. Primero por hash exacto
-    2. Luego por similitud Jaccard ≥ threshold
-    Retorna el postmortem dict si hay hit, None si no.
-    """
+def _update_cache_hit(content_hash_val: str) -> None:
+    """Actualiza hit_count y last_used_at en la caché."""
     from models.postmortem import get_db, USE_POSTGRES
-
-    h = content_hash(normalized)
-    kws = _extract_keywords(normalized)
 
     try:
         conn = get_db()
+        cur = conn.cursor()
+        now = datetime.now(timezone.utc).isoformat()
         if USE_POSTGRES:
-            cur = conn.cursor()
-            # 1. Búsqueda exacta por hash
             cur.execute(
-                "SELECT postmortem_json, hit_count FROM postmortem_cache WHERE content_hash = %s",
+                "UPDATE postmortem_cache SET hit_count = hit_count + 1, last_used_at = %s WHERE content_hash = %s",
+                (now, content_hash_val)
+            )
+        else:
+            cur.execute(
+                "UPDATE postmortem_cache SET hit_count = hit_count + 1, last_used_at = ? WHERE content_hash = ?",
+                (now, content_hash_val)
+            )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.warning(f"Error updating cache hit: {e}")
+
+
+def _exact_hash_search(h: str):
+    """Búsqueda exacta por hash. Retorna postmortem dict o None."""
+    from models.postmortem import get_db, USE_POSTGRES
+
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        if USE_POSTGRES:
+            cur.execute(
+                "SELECT postmortem_json FROM postmortem_cache WHERE content_hash = %s",
                 (h,)
             )
         else:
-            cur = conn.cursor()
             cur.execute(
-                "SELECT postmortem_json, hit_count FROM postmortem_cache WHERE content_hash = ?",
+                "SELECT postmortem_json FROM postmortem_cache WHERE content_hash = ?",
                 (h,)
             )
-
         row = cur.fetchone()
-        if row:
-            # Actualizar hit_count y last_used
-            now = datetime.now(timezone.utc).isoformat()
-            if USE_POSTGRES:
-                cur.execute(
-                    "UPDATE postmortem_cache SET hit_count = hit_count + 1, last_used_at = %s WHERE content_hash = %s",
-                    (now, h)
-                )
-            else:
-                cur.execute(
-                    "UPDATE postmortem_cache SET hit_count = hit_count + 1, last_used_at = ? WHERE content_hash = ?",
-                    (now, h)
-                )
-            conn.commit()
-            cur.close()
-            conn.close()
-            logger.info(f"Cache HIT exacto (hash={h[:8]})")
-            return json.loads(row[0])
+        cur.close()
+        conn.close()
 
-        # 2. Búsqueda por similitud Jaccard
-        # Traer los últimos 200 entries para comparar (suficiente para hackathon)
+        if row:
+            logger.info(f"Cache HIT exacto (hash={h[:8]})")
+            _update_cache_hit(h)
+            return json.loads(row[0])
+    except Exception as e:
+        logger.warning(f"Exact hash search error: {e}")
+
+    return None
+
+
+def _similarity_search(kws: set, threshold: float = 0.70):
+    """Búsqueda por similitud Jaccard. Retorna postmortem dict o None."""
+    from models.postmortem import get_db
+
+    try:
+        conn = get_db()
+        cur = conn.cursor()
         cur.execute(
             "SELECT content_hash, keywords, postmortem_json FROM postmortem_cache ORDER BY last_used_at DESC LIMIT 200"
         )
-
         rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
         best_score = 0.0
         best_row = None
 
@@ -177,42 +192,37 @@ def find_in_cache(normalized: str, threshold: float = 0.70) -> dict | None:
                 best_score = score
                 best_row = row
 
-        cur.close()
-        conn.close()
-
         if best_score >= threshold and best_row:
             logger.info(f"Cache HIT similitud Jaccard={best_score:.2f} (hash={best_row[0][:8]})")
-            # Marcar como usado
-            try:
-                conn2 = get_db()
-                now = datetime.now(timezone.utc).isoformat()
-                if USE_POSTGRES:
-                    cur2 = conn2.cursor()
-                    cur2.execute(
-                        "UPDATE postmortem_cache SET hit_count = hit_count + 1, last_used_at = %s WHERE content_hash = %s",
-                        (now, best_row[0])
-                    )
-                else:
-                    cur2 = conn2.cursor()
-                    cur2.execute(
-                        "UPDATE postmortem_cache SET hit_count = hit_count + 1, last_used_at = ? WHERE content_hash = ?",
-                        (now, best_row[0])
-                    )
-                conn2.commit()
-                cur2.close()
-                conn2.close()
-            except Exception:
-                pass
+            _update_cache_hit(best_row[0])
             cached_pm = json.loads(best_row[2])
             cached_pm['_meta'] = cached_pm.get('_meta', {})
             cached_pm['_meta']['cache_hit'] = True
             cached_pm['_meta']['similarity_score'] = round(best_score, 2)
             return cached_pm
-
     except Exception as e:
-        logger.warning(f"Cache lookup error: {e}")
+        logger.warning(f"Similarity search error: {e}")
 
     return None
+
+
+def find_in_cache(normalized: str, threshold: float = 0.70) -> dict | None:
+    """
+    Busca en cache:
+    1. Primero por hash exacto
+    2. Luego por similitud Jaccard ≥ threshold
+    Retorna el postmortem dict si hay hit, None si no.
+    """
+    h = content_hash(normalized)
+    kws = _extract_keywords(normalized)
+
+    # Búsqueda exacta por hash
+    result = _exact_hash_search(h)
+    if result:
+        return result
+
+    # Búsqueda por similitud Jaccard
+    return _similarity_search(kws, threshold)
 
 
 def save_to_cache(normalized: str, postmortem: dict) -> None:
