@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 SEVERITY_LABELS = {"P0": "🔴 P0 - Critical", "P1": "🟠 P1 - High", "P2": "🟡 P2 - Medium", "P3": "🔵 P3 - Low", "P4": "⚪ P4 - Informational"}
@@ -14,7 +14,7 @@ def generate_markdown(postmortem: dict) -> str:
         f"# 🔥 Postmortem: {postmortem.get('title', 'Untitled Incident')}",
         f"",
         f"**Severity:** {severity_label}  ",
-        f"**Generated:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}  ",
+        f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}  ",
         f"**Source:** Postmortem.ai",
         f"",
         f"---",

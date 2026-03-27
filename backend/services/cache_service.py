@@ -8,7 +8,7 @@ import re
 import hashlib
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ def find_in_cache(normalized: str, threshold: float = 0.70) -> dict | None:
         row = cur.fetchone()
         if row:
             # Actualizar hit_count y last_used
-            now = datetime.utcnow().isoformat()
+            now = datetime.now(timezone.utc).isoformat()
             if USE_POSTGRES:
                 cur.execute(
                     "UPDATE postmortem_cache SET hit_count = hit_count + 1, last_used_at = %s WHERE content_hash = %s",
@@ -162,14 +162,9 @@ def find_in_cache(normalized: str, threshold: float = 0.70) -> dict | None:
 
         # 2. Búsqueda por similitud Jaccard
         # Traer los últimos 200 entries para comparar (suficiente para hackathon)
-        if USE_POSTGRES:
-            cur.execute(
-                "SELECT content_hash, keywords, postmortem_json FROM postmortem_cache ORDER BY last_used_at DESC LIMIT 200"
-            )
-        else:
-            cur.execute(
-                "SELECT content_hash, keywords, postmortem_json FROM postmortem_cache ORDER BY last_used_at DESC LIMIT 200"
-            )
+        cur.execute(
+            "SELECT content_hash, keywords, postmortem_json FROM postmortem_cache ORDER BY last_used_at DESC LIMIT 200"
+        )
 
         rows = cur.fetchall()
         best_score = 0.0
@@ -190,7 +185,7 @@ def find_in_cache(normalized: str, threshold: float = 0.70) -> dict | None:
             # Marcar como usado
             try:
                 conn2 = get_db()
-                now = datetime.utcnow().isoformat()
+                now = datetime.now(timezone.utc).isoformat()
                 if USE_POSTGRES:
                     cur2 = conn2.cursor()
                     cur2.execute(
@@ -226,7 +221,7 @@ def save_to_cache(normalized: str, postmortem: dict) -> None:
 
     h = content_hash(normalized)
     kws = list(_extract_keywords(normalized))
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
 
     try:
         conn = get_db()

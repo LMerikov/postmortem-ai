@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import PropTypes from 'prop-types'
 import { useDropzone } from 'react-dropzone'
 import { Upload, FileText } from 'lucide-react'
 
@@ -51,4 +52,14 @@ export function LogInput({ value, onChange, disabled }) {
       )}
     </div>
   )
+}
+
+LogInput.propTypes = {
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
+}
+
+LogInput.defaultProps = {
+  disabled: false,
 }
