@@ -86,7 +86,7 @@ function triggerDownload(url, filename) {
         setTimeout(() => {
           try {
             if (iframe.parentElement) {
-              document.body.removeChild(iframe)
+              iframe.remove()
             }
             URL.revokeObjectURL(url)
           } catch (e) {

@@ -4,12 +4,11 @@ import { useDropzone } from 'react-dropzone'
 import { Upload, FileText } from 'lucide-react'
 
 export function LogInput({ value, onChange, disabled }) {
-  const onDrop = useCallback((files) => {
+  const onDrop = useCallback(async (files) => {
     const file = files[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (e) => onChange(e.target.result)
-    reader.readAsText(file)
+    const text = await file.text()
+    onChange(text)
   }, [onChange])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

@@ -149,7 +149,6 @@ def generate_pdf(postmortem: dict) -> bytes:
     sev_badge     = ParagraphStyle("SevBadge",parent=styles["Normal"], fontSize=9,  textColor=colors.white, fontName="Helvetica-Bold", alignment=TA_CENTER)
 
     severity  = postmortem.get("severity", "P3")
-    sev_hex   = SEVERITY_HEX.get(severity, "636E72")
     sev_color = SEVERITY_COLORS.get(severity, colors.HexColor("#636E72"))
 
     story = []

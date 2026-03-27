@@ -41,7 +41,7 @@ class ProviderFactory:
         raise RuntimeError("No LLM providers disponibles. Configura GROQ_API_KEY o ANTHROPIC_API_KEY.")
 
     @classmethod
-    def get_fallback_provider(cls, exclude_name: str) -> LLMProvider:
+    def get_fallback_provider(cls, exclude_name: str) -> Optional[LLMProvider]:
         """Retorna Anthropic como fallback si Groq falla."""
         if exclude_name != 'anthropic' and Config.ANTHROPIC_API_KEY:
             if 'anthropic' not in cls._providers_cache:

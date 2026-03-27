@@ -14,13 +14,17 @@ const ICONS = {
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([])
 
+  const removeById = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id))
+  }, [])
+
   const toast = useCallback((message, type = 'info', duration = 3000) => {
     const id = Date.now()
     setToasts(prev => [...prev, { id, message, type }])
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration)
-  }, [])
+    setTimeout(() => removeById(id), duration)
+  }, [removeById])
 
-  const remove = (id) => setToasts(prev => prev.filter(t => t.id !== id))
+  const remove = (id) => removeById(id)
 
   return (
     <ToastContext.Provider value={toast}>

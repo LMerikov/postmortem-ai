@@ -18,7 +18,7 @@ export function ActionItems({ items = [] }) {
     <div className="space-y-2">
       {items.map((item, i) => (
         <motion.div
-          key={i}
+          key={item.description}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.06 }}

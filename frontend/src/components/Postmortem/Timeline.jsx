@@ -16,7 +16,7 @@ export function Timeline({ entries = [] }) {
         const cfg = TYPE_CONFIG[entry.type] || TYPE_CONFIG.action
         return (
           <motion.div
-            key={i}
+            key={`${entry.time}-${entry.event}`}
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.08, duration: 0.3 }}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import PropTypes from 'prop-types'
-import { FileDown, FileText, Copy, Check } from 'lucide-react'
+import { FileDown, FileText, Copy } from 'lucide-react'
 import { exportMarkdown, exportPDF } from '../../services/api'
 import { useToast } from '../UI/Toast'
 import { LoadingSpinner } from '../UI/LoadingSpinner'

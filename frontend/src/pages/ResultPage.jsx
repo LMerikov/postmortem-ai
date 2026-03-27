@@ -19,7 +19,18 @@ export function ResultPage() {
       .then(data => setPm(data.data))
       .catch(() => { toast('Postmortem no encontrado', 'error'); navigate('/history') })
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, toast, navigate])
+
+  let content = null
+  if (loading) {
+    content = <PostmortemSkeleton />
+  } else if (pm) {
+    content = (
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card">
+        <PostmortemView postmortem={pm} showExport />
+      </motion.div>
+    )
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
@@ -28,13 +39,7 @@ export function ResultPage() {
           <ArrowLeft className="w-4 h-4" /> Volver
         </Link>
       </div>
-      {loading ? (
-        <PostmortemSkeleton />
-      ) : pm ? (
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card">
-          <PostmortemView postmortem={pm} showExport />
-        </motion.div>
-      ) : null}
+      {content}
     </div>
   )
 }
