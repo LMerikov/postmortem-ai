@@ -15,7 +15,7 @@ export function PostmortemSkeleton() {
       <SkeletonLine className="h-4 w-3/4" />
       <div className="space-y-2 mt-4">
         <SkeletonLine className="h-5 w-32" />
-        {[...Array(5)].map((_, i) => (
+        {[...new Array(5)].map((_, i) => (
           <div key={i} className="flex gap-4">
             <SkeletonLine className="h-4 w-16" />
             <SkeletonLine className="h-4 flex-1" />

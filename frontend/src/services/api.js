@@ -128,7 +128,7 @@ export async function exportMarkdown(postmortem) {
   })
   if (!res.ok) throw new Error('Error al exportar')
   const blob = await res.blob()
-  triggerDownload(URL.createObjectURL(blob), `${postmortem.title?.replace(/\s+/g, '_') || 'postmortem'}.md`)
+  triggerDownload(URL.createObjectURL(blob), `${postmortem.title?.replaceAll(/\s+/g, '_') || 'postmortem'}.md`)
 }
 
 export async function exportPDF(postmortem) {
@@ -139,5 +139,5 @@ export async function exportPDF(postmortem) {
   })
   if (!res.ok) throw new Error('Error al exportar')
   const blob = await res.blob()
-  triggerDownload(URL.createObjectURL(blob), `${postmortem.title?.replace(/\s+/g, '_') || 'postmortem'}.pdf`)
+  triggerDownload(URL.createObjectURL(blob), `${postmortem.title?.replaceAll(/\s+/g, '_') || 'postmortem'}.pdf`)
 }

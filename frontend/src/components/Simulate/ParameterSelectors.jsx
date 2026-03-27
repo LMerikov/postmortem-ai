@@ -20,10 +20,12 @@ const COMPLEXITIES = [
 ]
 
 function SelectField({ label, value, options, onChange }) {
+  const inputId = `select-${label.replace(/\s+/g, '-').toLowerCase()}`
   return (
     <div className="space-y-1.5">
-      <label className="text-sm text-muted font-medium">{label}</label>
+      <label htmlFor={inputId} className="text-sm text-muted font-medium">{label}</label>
       <select
+        id={inputId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="input-base w-full text-sm appearance-none cursor-pointer"
@@ -40,8 +42,8 @@ export function ParameterSelectors({ params, onChange }) {
   return (
     <div className="space-y-5">
       {/* Severity */}
-      <div className="space-y-1.5">
-        <label className="text-sm text-muted font-medium">Severidad</label>
+      <fieldset className="space-y-1.5">
+        <legend className="text-sm text-muted font-medium">Severidad</legend>
         <div className="flex gap-2">
           {SEVERITIES.map(s => (
             <button
@@ -57,7 +59,7 @@ export function ParameterSelectors({ params, onChange }) {
             </button>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       <div className="grid grid-cols-3 gap-4">
         <SelectField label="Stack Tecnológico"  value={params.tech_stack}    options={STACKS}       onChange={set('tech_stack')} />

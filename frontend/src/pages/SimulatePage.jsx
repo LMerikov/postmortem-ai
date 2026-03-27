@@ -65,12 +65,12 @@ export function SimulatePage() {
           {loading ? (
             <span className="flex items-center gap-2">
               <span className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-              Generando simulación...
+              <span>Generando simulación...</span>
             </span>
           ) : (
             <>
               <Dice6 className="w-5 h-5" />
-              Generar Simulación
+              <span>Generar Simulación</span>
             </>
           )}
         </button>
@@ -92,7 +92,7 @@ export function SimulatePage() {
           <div className="space-y-3">
             <h2 className="font-semibold flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-success animate-pulse-slow" />
-              Logs Generados
+              <span>Logs Generados</span>
             </h2>
             <CodeBlock code={result.logs} title="incident.log" language="log" />
           </div>
@@ -101,7 +101,7 @@ export function SimulatePage() {
           <div className="space-y-3">
             <h2 className="font-semibold flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse-slow" />
-              Postmortem Generado
+              <span>Postmortem Generado</span>
             </h2>
             <div className="card">
               <PostmortemView postmortem={result.postmortem} showExport />

@@ -66,7 +66,7 @@ export function HomePage() {
       >
         <div className="inline-flex items-center gap-2 text-xs text-accent border border-accent/30 bg-accent/10 px-3 py-1.5 rounded-full font-mono mb-2">
           <span className="w-2 h-2 rounded-full bg-accent animate-pulse-slow" />
-          Análisis de Incidentes con IA
+          <span>Análisis de Incidentes con IA</span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
           De logs caóticos a<br />
