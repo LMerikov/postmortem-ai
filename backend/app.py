@@ -1,3 +1,5 @@
+import logging
+import traceback
 from pathlib import Path
 
 from flask import Flask, jsonify, send_from_directory
@@ -10,6 +12,8 @@ from routes.analyze import analyze_bp
 from routes.simulate import simulate_bp
 from routes.history import history_bp
 from routes.export import export_bp
+
+logger = logging.getLogger(__name__)
 
 frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
@@ -35,10 +39,6 @@ app.register_blueprint(simulate_bp)
 app.register_blueprint(history_bp)
 app.register_blueprint(export_bp)
 
-# Aplicar rate limits específicos a rutas críticas
-limiter.limit("10 per hour")(app.view_functions['analyze.analyze'])
-limiter.limit("10 per hour")(app.view_functions['simulate.simulate'])
-
 
 @app.route("/api/health")
 @limiter.exempt
@@ -46,29 +46,30 @@ def health():
     return jsonify({"status": "ok", "model": Config.CLAUDE_MODEL})
 
 
-@app.route("/api/debug/phase1")
-@limiter.exempt
-def debug_phase1():
-    """Diagnóstico temporal de Phase 1 — ELIMINAR después de debuggear."""
-    import traceback
-    try:
-        from services.local_filtering import process_with_local_filter
-        test_content = "[INFO] Server started OK\n[DEBUG] Ready"
-        postmortem_local, should_call_llm, severity_local, cleaned_content = \
-            process_with_local_filter(test_content)
-        return jsonify({
-            "ok": True,
-            "should_call_llm": should_call_llm,
-            "severity_local": severity_local,
-            "cleaned_content_len": len(cleaned_content),
-            "cleaned_content": repr(cleaned_content),
-        })
-    except Exception as e:
-        return jsonify({
-            "ok": False,
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        })
+# Debug endpoint — solo disponible en development
+if Config.DEBUG:
+    @app.route("/api/debug/phase1")
+    @limiter.exempt
+    def debug_phase1():
+        """Diagnóstico temporal de Phase 1 — solo en development."""
+        try:
+            from services.local_filtering import process_with_local_filter
+            test_content = "[INFO] Server started OK\n[DEBUG] Ready"
+            postmortem_local, should_call_llm, severity_local, cleaned_content = \
+                process_with_local_filter(test_content)
+            return jsonify({
+                "ok": True,
+                "should_call_llm": should_call_llm,
+                "severity_local": severity_local,
+                "cleaned_content_len": len(cleaned_content),
+                "cleaned_content": repr(cleaned_content),
+            })
+        except Exception as e:
+            return jsonify({
+                "ok": False,
+                "error": str(e),
+                "traceback": traceback.format_exc()
+            })
 
 
 @app.route("/", defaults={"path": ""})
@@ -88,8 +89,11 @@ with app.app_context():
     try:
         init_db()
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).warning(f"init_db failed (DB may be unavailable): {e}")
+        logger.warning(f"init_db failed (DB may be unavailable): {e}")
+
 
 if __name__ == "__main__":
-    app.run(debug=Config.DEBUG, host="0.0.0.0", port=5000)
+    # Security: bind to localhost in dev; gunicorn handles 0.0.0.0 in Docker behind Traefik
+    import os
+    bind_host = os.getenv("BIND_HOST", "127.0.0.1")
+    app.run(debug=Config.DEBUG, host=bind_host, port=5000, use_reloader=False)

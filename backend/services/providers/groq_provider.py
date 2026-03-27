@@ -38,8 +38,11 @@ class GroqProvider(LLMProvider):
                 self.CHAT_URL,
                 json=payload,
                 headers=self._headers(),
-                timeout=30
+                timeout=(5, 25)  # (connect_timeout, read_timeout) — falla rápido si Groq no responde
             )
+
+            if resp.status_code == 429:
+                return {'content': None, 'error': 'Groq rate limit (429) — switching to fallback', 'provider': self.name}
 
             if resp.status_code != 200:
                 err = resp.json().get("error", {}).get("message", resp.text[:200])
@@ -64,7 +67,7 @@ class GroqProvider(LLMProvider):
                 'provider': self.name
             }
         except requests.Timeout:
-            return {'content': None, 'error': 'Groq API timeout (30s)', 'provider': self.name}
+            return {'content': None, 'error': 'Groq API timeout (25s) — switching to fallback', 'provider': self.name}
         except json.JSONDecodeError as e:
             return {'content': None, 'error': f'JSON parse error: {e}', 'provider': self.name}
         except Exception as e:

@@ -17,6 +17,17 @@ logger = logging.getLogger(__name__)
 analyze_bp = Blueprint("analyze", __name__)
 
 
+def _sse(payload: dict):
+    """Envuelve un dict como evento SSE único — compatible con el reader del frontend."""
+    def _gen():
+        yield f"data: {json.dumps(payload)}\n\n"
+    return Response(
+        stream_with_context(_gen()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
 @analyze_bp.route("/api/analyze", methods=["POST"])
 def analyze():
     data = request.get_json(force=True)
@@ -43,12 +54,13 @@ def analyze():
     if not should_call_llm:
         # Ruido puro — respuesta inmediata sin LLM ni cache
         import uuid as _uuid
-        return jsonify({
+        payload = {
             "id": str(_uuid.uuid4()),
             "status": "complete",
             "postmortem": postmortem_local,
             "_source": "local_filter"
-        })
+        }
+        return _sse(payload) if stream else jsonify(payload)
 
     # ─── PHASE 2: Cache por similitud ────────────────────────────────────────
     normalized = normalize_for_cache(cleaned_content)
@@ -56,13 +68,14 @@ def analyze():
         cached = find_in_cache(normalized, threshold=0.70)
         if cached:
             postmortem_id = save_postmortem(cached, source="cache")
-            return jsonify({
+            payload = {
                 "id": postmortem_id,
                 "status": "complete",
                 "postmortem": cached,
                 "_source": "cache",
                 "_similarity": cached.get("_meta", {}).get("similarity_score", 1.0)
-            })
+            }
+            return _sse(payload) if stream else jsonify(payload)
     except Exception as e:
         logger.warning(f"Phase2 cache lookup error: {e}")
 

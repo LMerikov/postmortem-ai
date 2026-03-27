@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from config import Config
 
 # ---------------------------------------------------------------------------
@@ -27,37 +27,27 @@ def get_db():
 
 
 def init_db():
+    """Initialize postmortems table (compatible with PostgreSQL and SQLite)."""
     conn = get_db()
     cur = conn.cursor()
-    if USE_POSTGRES:
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS postmortems (
-                id TEXT PRIMARY KEY,
-                title TEXT NOT NULL,
-                severity TEXT NOT NULL,
-                summary TEXT,
-                data TEXT NOT NULL,
-                source TEXT DEFAULT 'analyze',
-                created_at TEXT NOT NULL
-            )
-        """)
-    else:
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS postmortems (
-                id TEXT PRIMARY KEY,
-                title TEXT NOT NULL,
-                severity TEXT NOT NULL,
-                summary TEXT,
-                data TEXT NOT NULL,
-                source TEXT DEFAULT 'analyze',
-                created_at TEXT NOT NULL
-            )
-        """)
+
+    # SQL is compatible with both PostgreSQL and SQLite for this schema
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS postmortems (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            summary TEXT,
+            data TEXT NOT NULL,
+            source TEXT DEFAULT 'analyze',
+            created_at TEXT NOT NULL
+        )
+    """)
     conn.commit()
     cur.close()
     conn.close()
 
-    # Inicializar tabla de cache (Phase 2)
+    # Initialize cache table (Phase 2)
     try:
         from services.cache_service import init_cache_table
         init_cache_table()
@@ -67,43 +57,36 @@ def init_db():
 
 
 def save_postmortem(postmortem_data: dict, source: str = "analyze") -> str:
+    """Save postmortem to database. Returns ID (persists even if DB is unavailable)."""
     postmortem_id = str(uuid.uuid4())
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
+
     try:
         conn = get_db()
     except Exception as e:
-        # Si DB no está disponible, retornar ID sin persistir (no bloquear respuesta)
+        # DB unavailable: return ID without persisting (don't block response)
         import logging
         logging.getLogger(__name__).warning(f"DB unavailable, skipping save: {e}")
         return postmortem_id
 
     cur = conn.cursor()
-    if USE_POSTGRES:
-        cur.execute(
-            "INSERT INTO postmortems (id, title, severity, summary, data, source, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-            (
-                postmortem_id,
-                postmortem_data.get("title", "Untitled Incident"),
-                postmortem_data.get("severity", "P3"),
-                postmortem_data.get("summary", ""),
-                json.dumps(postmortem_data),
-                source,
-                now,
-            ),
-        )
-    else:
-        cur.execute(
-            "INSERT INTO postmortems (id, title, severity, summary, data, source, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (
-                postmortem_id,
-                postmortem_data.get("title", "Untitled Incident"),
-                postmortem_data.get("severity", "P3"),
-                postmortem_data.get("summary", ""),
-                json.dumps(postmortem_data),
-                source,
-                now,
-            ),
-        )
+    values = (
+        postmortem_id,
+        postmortem_data.get("title", "Untitled Incident"),
+        postmortem_data.get("severity", "P3"),
+        postmortem_data.get("summary", ""),
+        json.dumps(postmortem_data),
+        source,
+        now,
+    )
+
+    # Use appropriate placeholder syntax for each database
+    placeholders = "%s" if USE_POSTGRES else "?"
+    placeholder_list = ", ".join([placeholders] * 7)
+    cur.execute(
+        f"INSERT INTO postmortems (id, title, severity, summary, data, source, created_at) VALUES ({placeholder_list})",
+        values,
+    )
     conn.commit()
     cur.close()
     conn.close()
@@ -111,61 +94,63 @@ def save_postmortem(postmortem_data: dict, source: str = "analyze") -> str:
 
 
 def get_all_postmortems():
+    """Get all postmortems ordered by creation date (newest first)."""
     conn = get_db()
-    if USE_POSTGRES:
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute(
-            "SELECT id, title, severity, summary, source, created_at FROM postmortems ORDER BY created_at DESC"
-        )
-        rows = cur.fetchall()
-        cur.close()
+    query = "SELECT id, title, severity, summary, source, created_at FROM postmortems ORDER BY created_at DESC"
+
+    try:
+        if USE_POSTGRES:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur.execute(query)
+            rows = cur.fetchall()
+            cur.close()
+            return [dict(r) for r in rows]
+        else:
+            rows = conn.execute(query).fetchall()
+            return [dict(r) for r in rows]
+    finally:
         conn.close()
-        return [dict(r) for r in rows]
-    else:
-        rows = conn.execute(
-            "SELECT id, title, severity, summary, source, created_at FROM postmortems ORDER BY created_at DESC"
-        ).fetchall()
-        conn.close()
-        return [dict(r) for r in rows]
 
 
 def get_postmortem_by_id(postmortem_id: str):
+    """Get a postmortem by ID with parsed JSON data."""
     conn = get_db()
-    if USE_POSTGRES:
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT * FROM postmortems WHERE id = %s", (postmortem_id,))
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
+
+    try:
+        if USE_POSTGRES:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur.execute("SELECT * FROM postmortems WHERE id = %s", (postmortem_id,))
+            row = cur.fetchone()
+            cur.close()
+        else:
+            row = conn.execute(
+                "SELECT * FROM postmortems WHERE id = ?", (postmortem_id,)
+            ).fetchone()
+
         if row:
             data = dict(row)
             data["data"] = json.loads(data["data"])
             return data
         return None
-    else:
-        row = conn.execute(
-            "SELECT * FROM postmortems WHERE id = ?", (postmortem_id,)
-        ).fetchone()
+    finally:
         conn.close()
-        if row:
-            data = dict(row)
-            data["data"] = json.loads(data["data"])
-            return data
-        return None
 
 
 def delete_postmortem(postmortem_id: str) -> bool:
+    """Delete postmortem by ID. Returns True if a row was deleted."""
     conn = get_db()
-    if USE_POSTGRES:
-        cur = conn.cursor()
-        cur.execute("DELETE FROM postmortems WHERE id = %s", (postmortem_id,))
-        affected = cur.rowcount
+
+    try:
+        if USE_POSTGRES:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM postmortems WHERE id = %s", (postmortem_id,))
+            affected = cur.rowcount
+            cur.close()
+        else:
+            cur = conn.execute("DELETE FROM postmortems WHERE id = ?", (postmortem_id,))
+            affected = cur.rowcount
+
         conn.commit()
-        cur.close()
-        conn.close()
         return affected > 0
-    else:
-        cur = conn.execute("DELETE FROM postmortems WHERE id = ?", (postmortem_id,))
-        conn.commit()
+    finally:
         conn.close()
-        return cur.rowcount > 0
