@@ -9,8 +9,9 @@ class AnthropicProvider(LLMProvider):
     """Provider para Anthropic Claude API."""
 
     def __init__(self, api_key: str, model: str = "claude-sonnet-4-6"):
-        # timeout=55s: 2 intentos × 55s = 110s < gunicorn timeout(120s) → workers se liberan
-        self.client = anthropic.Anthropic(api_key=api_key, timeout=55.0)
+        # timeout=40s, max_retries=1: worst case = 40s × 2 = 80s, dentro del gunicorn timeout(120s)
+        # Sin este límite, el SDK reintenta 3 veces × 55s = 165s → Gunicorn mata el worker con SystemExit
+        self.client = anthropic.Anthropic(api_key=api_key, timeout=40.0, max_retries=1)
         self.model = model
 
     def call(self, system: str, user: str, max_tokens: int = 4096, **kwargs) -> dict:

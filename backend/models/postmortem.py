@@ -1,7 +1,10 @@
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from config import Config
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Database abstraction: PostgreSQL (production) or SQLite (local dev)
@@ -61,35 +64,41 @@ def save_postmortem(postmortem_data: dict, source: str = "analyze") -> str:
     postmortem_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
 
+    # Path 1: DB connection failure
     try:
         conn = get_db()
     except Exception as e:
-        # DB unavailable: return ID without persisting (don't block response)
-        import logging
-        logging.getLogger(__name__).warning(f"DB unavailable, skipping save: {e}")
+        logger.warning(f"DB unavailable, skipping save: {e}")
         return postmortem_id
 
-    cur = conn.cursor()
-    values = (
-        postmortem_id,
-        postmortem_data.get("title", "Untitled Incident"),
-        postmortem_data.get("severity", "P3"),
-        postmortem_data.get("summary", ""),
-        json.dumps(postmortem_data),
-        source,
-        now,
-    )
+    # Path 2: DB insert success or failure
+    try:
+        cur = conn.cursor()
+        values = (
+            postmortem_id,
+            postmortem_data.get("title", "Untitled Incident"),
+            postmortem_data.get("severity", "P3"),
+            postmortem_data.get("summary", ""),
+            json.dumps(postmortem_data),
+            source,
+            now,
+        )
 
-    # Use appropriate placeholder syntax for each database
-    placeholders = "%s" if USE_POSTGRES else "?"
-    placeholder_list = ", ".join([placeholders] * 7)
-    cur.execute(
-        f"INSERT INTO postmortems (id, title, severity, summary, data, source, created_at) VALUES ({placeholder_list})",
-        values,
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
+        # Use appropriate placeholder syntax for each database
+        placeholders = "%s" if USE_POSTGRES else "?"
+        placeholder_list = ", ".join([placeholders] * 7)
+        cur.execute(
+            f"INSERT INTO postmortems (id, title, severity, summary, data, source, created_at) VALUES ({placeholder_list})",
+            values,
+        )
+        conn.commit()
+        logger.debug(f"Postmortem saved: {postmortem_id} (source={source})")
+    except Exception as e:
+        logger.error(f"Failed to save postmortem {postmortem_id}: {e}")
+    finally:
+        cur.close()
+        conn.close()
+
     return postmortem_id
 
 

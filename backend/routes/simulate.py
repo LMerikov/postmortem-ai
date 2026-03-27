@@ -39,5 +39,6 @@ def simulate():
             "logs": result.get("logs", ""),
             "postmortem": postmortem,
         })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except BaseException as e:
+        # BaseException captura SystemExit (Gunicorn timeout) además de Exception normal
+        return jsonify({"error": str(e) or "Simulation timed out — try again"}), 500
