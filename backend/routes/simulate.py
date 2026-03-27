@@ -39,6 +39,11 @@ def simulate():
             "logs": result.get("logs", ""),
             "postmortem": postmortem,
         })
-    except BaseException as e:
-        # BaseException captura SystemExit (Gunicorn timeout) además de Exception normal
-        return jsonify({"error": str(e) or "Simulation timed out — try again"}), 500
+    except (ValueError, TimeoutError, RuntimeError) as e:
+        # ValueError: LLM provider failed, TimeoutError: request timeout, RuntimeError: no providers
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        # Catch any other unexpected errors
+        import logging
+        logging.getLogger(__name__).error(f"Unexpected error in simulate: {e}", exc_info=True)
+        return jsonify({"error": "Simulation failed — try again"}), 500
