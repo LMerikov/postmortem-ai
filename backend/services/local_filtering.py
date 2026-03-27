@@ -147,7 +147,7 @@ def process_with_local_filter(content: str) -> tuple:
     filtered = LocalFilter.filter_noise(cleaned)
 
     # 3. Estimar severidad localmente
-    severity, confidence = LocalFilter.estimate_severity_local(filtered)
+    severity, _ = LocalFilter.estimate_severity_local(filtered)
 
     # 4. Decidir si mandar al LLM
     if not LocalFilter.should_send_to_llm(filtered, severity):

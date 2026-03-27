@@ -73,6 +73,25 @@ class GroqProvider(LLMProvider):
         except Exception as e:
             return {'content': None, 'error': str(e), 'provider': self.name}
 
+    def _decode_line(self, line) -> str:
+        """Decodifica una línea de bytes/str a str."""
+        if isinstance(line, bytes):
+            return line.decode('utf-8')
+        return line
+
+    def _parse_sse_chunk(self, line: str):
+        """Parsea una línea SSE y retorna el contenido del delta, o None."""
+        if not line.startswith('data: '):
+            return None
+        try:
+            chunk_data = json.loads(line[6:])
+            if chunk_data.get('choices'):
+                delta = chunk_data['choices'][0].get('delta', {})
+                return delta.get('content') or None
+        except json.JSONDecodeError:
+            pass
+        return None
+
     def stream(self, system: str, user: str, max_tokens: int = 4096, **kwargs):
         """Stream text completions from Groq (OpenAI-compatible API)."""
         try:
@@ -99,21 +118,13 @@ class GroqProvider(LLMProvider):
                 yield f"error: {resp.text[:200]}"
                 return
 
-            for line in resp.iter_lines():
-                if not line:
+            for raw_line in resp.iter_lines():
+                if not raw_line:
                     continue
-                if isinstance(line, bytes):
-                    line = line.decode('utf-8')
-                if line.startswith('data: '):
-                    try:
-                        chunk_data = json.loads(line[6:])
-                        if 'choices' in chunk_data and chunk_data['choices']:
-                            delta = chunk_data['choices'][0].get('delta', {})
-                            content = delta.get('content', '')
-                            if content:
-                                yield content
-                    except json.JSONDecodeError:
-                        pass
+                content = self._parse_sse_chunk(self._decode_line(raw_line))
+                if content:
+                    yield content
+
         except requests.Timeout:
             yield "error: Groq API timeout (60s)"
         except Exception as e:

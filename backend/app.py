@@ -59,7 +59,7 @@ if Config.DEBUG:
         try:
             from services.local_filtering import process_with_local_filter
             test_content = "[INFO] Server started OK\n[DEBUG] Ready"
-            postmortem_local, should_call_llm, severity_local, cleaned_content = \
+            _, should_call_llm, severity_local, cleaned_content = \
                 process_with_local_filter(test_content)
             return jsonify({
                 "ok": True,

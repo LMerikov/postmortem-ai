@@ -22,11 +22,13 @@ COPY deploy ./deploy
 
 WORKDIR /app/backend
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Setup: install dependencies, create directories, and configure non-root user
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /data && \
+    pip install --no-cache-dir -r requirements.txt && \
+    chown -R appuser:appuser /app /data
 
-# Create data directory for SQLite
-RUN mkdir -p /data
+USER appuser
 
 # Set environment
 ENV FLASK_ENV=production

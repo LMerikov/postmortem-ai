@@ -50,6 +50,81 @@ def _cell(text, style):
     return Paragraph(str(text), style)
 
 
+def _add_timeline_section(story, timeline, cell_hdr, cell_style, heading_style):
+    """Agrega la sección de Timeline al PDF."""
+    if not timeline:
+        return
+    story.append(Paragraph("Timeline", heading_style))
+    col_w = [2.5 * cm, 11 * cm, 3.5 * cm]
+    rows = [[
+        _cell("Hora",   cell_hdr),
+        _cell("Evento", cell_hdr),
+        _cell("Tipo",   cell_hdr),
+    ]]
+    for entry in timeline:
+        rows.append([
+            _cell(html.escape(entry.get("time", "")),                       cell_style),
+            _cell(html.escape(entry.get("event", "")),                      cell_style),
+            _cell(html.escape(str(entry.get("type") or "").title()),        cell_style),
+        ])
+    t = Table(rows, colWidths=col_w, repeatRows=1)
+    t.setStyle(TableStyle([
+        ("BACKGROUND",   (0, 0), (-1, 0),  ACCENT),
+        ("ROWBACKGROUNDS",(0, 1),(-1, -1), [CARD_BG, BG]),
+        ("GRID",         (0, 0), (-1, -1), 0.4, BORDER),
+        ("VALIGN",       (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING",  (0, 0), (-1, -1), 5),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING",   (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING",(0, 0), (-1, -1), 4),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 8))
+
+
+def _add_actions_section(story, actions, body_style, heading_style):
+    """Agrega la sección de Acciones Tomadas al PDF."""
+    if not actions:
+        return
+    story.append(Paragraph("Acciones Tomadas Durante el Incidente", heading_style))
+    for action in actions:
+        story.append(Paragraph(f"• {html.escape(str(action))}", body_style))
+
+
+def _add_action_items_section(story, action_items, body_style, heading_style):
+    """Agrega la sección de Tareas de Seguimiento al PDF."""
+    if not action_items:
+        return
+    story.append(Paragraph("Tareas de Seguimiento", heading_style))
+    for item in action_items:
+        prio     = item.get("priority", "MEDIUM")
+        prio_hex = PRIORITY_HEX.get(prio, "555555")
+        desc     = html.escape(str(item.get("description", "")))
+        owner    = html.escape(str(item.get("owner", "TBD")))
+        story.append(Paragraph(
+            f"<font color='#{prio_hex}'><b>[{prio}]</b></font> {desc} — <i>{owner}</i>",
+            body_style,
+        ))
+
+
+def _add_lessons_section(story, lessons, body_style, heading_style):
+    """Agrega la sección de Lecciones Aprendidas al PDF."""
+    if not lessons:
+        return
+    story.append(Paragraph("Lecciones Aprendidas", heading_style))
+    for i, lesson in enumerate(lessons, 1):
+        story.append(Paragraph(f"{i}. {html.escape(str(lesson))}", body_style))
+
+
+def _add_monitoring_section(story, recs, body_style, heading_style):
+    """Agrega la sección de Recomendaciones de Monitoreo al PDF."""
+    if not recs:
+        return
+    story.append(Paragraph("Recomendaciones de Monitoreo", heading_style))
+    for rec in recs:
+        story.append(Paragraph(f"• {html.escape(str(rec))}", body_style))
+
+
 def generate_pdf(postmortem: dict) -> bytes:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -115,34 +190,7 @@ def generate_pdf(postmortem: dict) -> bytes:
 
     # ── Timeline ────────────────────────────────────────────────────
     timeline = postmortem.get("timeline", [])
-    if timeline:
-        story.append(Paragraph("Timeline", heading_style))
-        # Anchos: Hora 2.5cm | Evento 11cm | Tipo 3.5cm
-        col_w = [2.5 * cm, 11 * cm, 3.5 * cm]
-        rows = [[
-            _cell("Hora",   cell_hdr),
-            _cell("Evento", cell_hdr),
-            _cell("Tipo",   cell_hdr),
-        ]]
-        for entry in timeline:
-            rows.append([
-                _cell(html.escape(entry.get("time", "")),                       cell_style),
-                _cell(html.escape(entry.get("event", "")),                      cell_style),
-                _cell(html.escape(str(entry.get("type") or "").title()),        cell_style),
-            ])
-        t = Table(rows, colWidths=col_w, repeatRows=1)
-        t.setStyle(TableStyle([
-            ("BACKGROUND",   (0, 0), (-1, 0),  ACCENT),
-            ("ROWBACKGROUNDS",(0, 1),(-1, -1), [CARD_BG, BG]),
-            ("GRID",         (0, 0), (-1, -1), 0.4, BORDER),
-            ("VALIGN",       (0, 0), (-1, -1), "TOP"),
-            ("LEFTPADDING",  (0, 0), (-1, -1), 5),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-            ("TOPPADDING",   (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING",(0, 0), (-1, -1), 4),
-        ]))
-        story.append(t)
-        story.append(Spacer(1, 8))
+    _add_timeline_section(story, timeline, cell_hdr, cell_style, heading_style)
 
     # ── Análisis de Causa Raíz ───────────────────────────────────────
     story.append(Paragraph("Análisis de Causa Raíz", heading_style))
@@ -174,38 +222,19 @@ def generate_pdf(postmortem: dict) -> bytes:
 
     # ── Acciones Tomadas ─────────────────────────────────────────────
     actions = postmortem.get("actions_taken", [])
-    if actions:
-        story.append(Paragraph("Acciones Tomadas Durante el Incidente", heading_style))
-        for action in actions:
-            story.append(Paragraph(f"• {html.escape(str(action))}", body_style))
+    _add_actions_section(story, actions, body_style, heading_style)
 
     # ── Tareas de Seguimiento ────────────────────────────────────────
     action_items = postmortem.get("action_items", [])
-    if action_items:
-        story.append(Paragraph("Tareas de Seguimiento", heading_style))
-        for item in action_items:
-            prio     = item.get("priority", "MEDIUM")
-            prio_hex = PRIORITY_HEX.get(prio, "555555")
-            desc     = html.escape(str(item.get("description", "")))
-            owner    = html.escape(str(item.get("owner", "TBD")))
-            story.append(Paragraph(
-                f"<font color='#{prio_hex}'><b>[{prio}]</b></font> {desc} — <i>{owner}</i>",
-                body_style,
-            ))
+    _add_action_items_section(story, action_items, body_style, heading_style)
 
     # ── Lecciones Aprendidas ─────────────────────────────────────────
     lessons = postmortem.get("lessons_learned", [])
-    if lessons:
-        story.append(Paragraph("Lecciones Aprendidas", heading_style))
-        for i, lesson in enumerate(lessons, 1):
-            story.append(Paragraph(f"{i}. {html.escape(str(lesson))}", body_style))
+    _add_lessons_section(story, lessons, body_style, heading_style)
 
     # ── Recomendaciones de Monitoreo ─────────────────────────────────
     recs = postmortem.get("monitoring_recommendations", [])
-    if recs:
-        story.append(Paragraph("Recomendaciones de Monitoreo", heading_style))
-        for rec in recs:
-            story.append(Paragraph(f"• {html.escape(str(rec))}", body_style))
+    _add_monitoring_section(story, recs, body_style, heading_style)
 
     # ── Footer ───────────────────────────────────────────────────────
     story.append(HRFlowable(width="100%", thickness=1, color=BORDER, spaceBefore=14))

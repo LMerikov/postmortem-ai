@@ -97,7 +97,7 @@ export function PostmortemView({ postmortem, showExport = true }) {
           <ul className="space-y-2">
             {postmortem.actions_taken.map((a, i) => (
               <motion.li
-                key={i}
+                key={a}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.45 + i * 0.05 }}
@@ -123,7 +123,7 @@ export function PostmortemView({ postmortem, showExport = true }) {
           <ol className="space-y-2">
             {postmortem.lessons_learned.map((l, i) => (
               <motion.li
-                key={i}
+                key={l}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.55 + i * 0.05 }}
@@ -143,7 +143,7 @@ export function PostmortemView({ postmortem, showExport = true }) {
           <ul className="space-y-2">
             {postmortem.monitoring_recommendations.map((r, i) => (
               <motion.li
-                key={i}
+                key={r}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 + i * 0.05 }}

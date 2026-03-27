@@ -1,6 +1,7 @@
 """Provider factory: Groq (primario, rápido) → Anthropic (fallback confiable)."""
 import os
 import sys
+from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from config import Config
@@ -16,7 +17,7 @@ class ProviderFactory:
     """
 
     _providers_cache: dict = {}
-    _primary_name: str = None
+    _primary_name: Optional[str] = None
 
     @classmethod
     def get_primary_provider(cls) -> LLMProvider:

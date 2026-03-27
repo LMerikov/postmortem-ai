@@ -15,7 +15,7 @@ def generate_markdown(postmortem: dict) -> str:
         "",
         f"**Severity:** {severity_label}  ",
         f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}  ",
-        f"**Source:** Postmortem.ai",
+        "**Source:** Postmortem.ai",
         "",
         "---",
         "",
