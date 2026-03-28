@@ -125,7 +125,28 @@ def _add_monitoring_section(story, recs, body_style, heading_style):
         story.append(Paragraph(f"• {html.escape(str(rec))}", body_style))
 
 
-def generate_pdf(postmortem: dict) -> bytes:
+def _format_created_at(created_at: str | None) -> str:
+    """
+    Formatea el timestamp de BD a formato legible.
+    created_at viene como ISO 8601: '2026-03-28T14:23:00+00:00' o '2026-03-28T14:23:00'
+    Devuelve: '2026-03-28 14:23 UTC'
+    Si no hay fecha, devuelve la hora actual como fallback.
+    """
+    if created_at:
+        try:
+            # Parsear ISO 8601 con o sin zona horaria
+            dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            # Convertir a UTC si tiene zona horaria
+            if dt.tzinfo is not None:
+                dt = dt.astimezone(timezone.utc)
+            return dt.strftime("%Y-%m-%d %H:%M") + " UTC"
+        except (ValueError, AttributeError):
+            pass
+    # Fallback: hora actual del servidor en UTC
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M") + " UTC"
+
+
+def generate_pdf(postmortem: dict, created_at: str | None = None) -> bytes:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -177,9 +198,9 @@ def generate_pdf(postmortem: dict) -> bytes:
     # Título del incidente
     story.append(Paragraph(html.escape(postmortem.get("title", "Incidente sin título")), title_style))
 
-    # Fecha generada
+    # Fecha de creación real desde BD (no hora de exportación)
     story.append(Paragraph(
-        f"Generado {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC",
+        f"Generado {_format_created_at(created_at)}",
         small_style))
     story.append(HRFlowable(width="100%", thickness=1.5, color=sev_color, spaceAfter=10))
 

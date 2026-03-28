@@ -1,8 +1,23 @@
 from flask import Blueprint, request, jsonify, Response
 from services.markdown_generator import generate_markdown
 from services.pdf_generator import generate_pdf
+from models.postmortem import get_postmortem_by_id
 
 export_bp = Blueprint("export", __name__)
+
+
+def _get_created_at(postmortem: dict) -> str | None:
+    """Obtiene la hora real de creación desde la BD usando el ID del postmortem."""
+    postmortem_id = postmortem.get("id")
+    if not postmortem_id:
+        return None
+    try:
+        db_record = get_postmortem_by_id(postmortem_id)
+        if db_record:
+            return db_record.get("created_at")
+    except Exception:
+        pass
+    return None
 
 
 @export_bp.route("/api/export/markdown", methods=["POST"])
@@ -30,7 +45,8 @@ def export_pdf():
     if not postmortem:
         return jsonify({"error": "postmortem data required"}), 400
     try:
-        pdf_bytes = generate_pdf(postmortem)
+        created_at = _get_created_at(postmortem)
+        pdf_bytes = generate_pdf(postmortem, created_at=created_at)
         filename = postmortem.get("title", "postmortem").replace(" ", "_").lower()[:50]
         return Response(
             pdf_bytes,
