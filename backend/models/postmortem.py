@@ -14,19 +14,34 @@ USE_POSTGRES = bool(Config.DATABASE_URL)
 if USE_POSTGRES:
     import psycopg2
     import psycopg2.extras
+    from psycopg2 import pool as psycopg2_pool
+
+    _pg_pool = psycopg2_pool.ThreadedConnectionPool(
+        minconn=1,
+        maxconn=10,
+        dsn=Config.DATABASE_URL,
+        connect_timeout=5
+    )
 else:
     import sqlite3
 
 
 def get_db():
     if USE_POSTGRES:
-        # connect_timeout=5 evita hang infinito si PostgreSQL no responde
-        conn = psycopg2.connect(Config.DATABASE_URL, connect_timeout=5)
+        conn = _pg_pool.getconn()
         return conn
     else:
         conn = sqlite3.connect(Config.DATABASE_PATH)
         conn.row_factory = sqlite3.Row
         return conn
+
+
+def release_db(conn):
+    """Devuelve la conexión al pool (solo PostgreSQL)."""
+    if USE_POSTGRES:
+        _pg_pool.putconn(conn)
+    else:
+        conn.close()
 
 
 def init_db():
@@ -48,7 +63,7 @@ def init_db():
     """)
     conn.commit()
     cur.close()
-    conn.close()
+    release_db(conn)
 
     # Initialize cache table (Phase 2)
     try:
@@ -97,7 +112,7 @@ def save_postmortem(postmortem_data: dict, source: str = "analyze") -> str:
         logger.error(f"Failed to save postmortem {postmortem_id}: {e}")
     finally:
         cur.close()
-        conn.close()
+        release_db(conn)
 
     return postmortem_id
 
@@ -118,7 +133,7 @@ def get_all_postmortems():
             rows = conn.execute(query).fetchall()
             return [dict(r) for r in rows]
     finally:
-        conn.close()
+        release_db(conn)
 
 
 def get_postmortem_by_id(postmortem_id: str):
@@ -142,7 +157,7 @@ def get_postmortem_by_id(postmortem_id: str):
             return data
         return None
     finally:
-        conn.close()
+        release_db(conn)
 
 
 def delete_postmortem(postmortem_id: str) -> bool:
@@ -162,4 +177,4 @@ def delete_postmortem(postmortem_id: str) -> bool:
         conn.commit()
         return affected > 0
     finally:
-        conn.close()
+        release_db(conn)
