@@ -117,9 +117,10 @@ def analyze():
     postmortem_local, should_call_llm, cleaned_content, phase1_error = _phase1_filter(content)
 
     if not should_call_llm:
-        # Ruido puro — respuesta inmediata sin LLM ni cache
+        # Ruido puro — guardar en BD y respuesta inmediata sin LLM ni cache
+        local_id = save_postmortem(postmortem_local, source="local_filter")
         payload = {
-            "id": str(_uuid.uuid4()),
+            "id": local_id,
             "status": "complete",
             "postmortem": postmortem_local,
             "_source": "local_filter"
