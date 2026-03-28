@@ -22,7 +22,7 @@ export default {
         p4: '#A4B0BD',
       },
       fontFamily: {
-        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+        mono: ['Consolas', 'Monaco', 'Courier New', 'monospace'],
       },
       animation: {
         'pulse-slow': 'pulse 3s ease-in-out infinite',

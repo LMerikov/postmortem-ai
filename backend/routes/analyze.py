@@ -99,7 +99,8 @@ def _phase3_non_stream(content, normalized, phase1_error):
             resp["_phase1_error"] = phase1_error
         return jsonify(resp)
     except Exception as e:
-        return jsonify({"error": str(e), "_phase1_error": phase1_error}), 500
+        logger.error("Phase3 non-stream failed: %s", e, exc_info=True)
+        return jsonify({"error": "Analysis failed", "_phase1_error": phase1_error}), 500
 
 
 @analyze_bp.route("/api/analyze", methods=["POST"])

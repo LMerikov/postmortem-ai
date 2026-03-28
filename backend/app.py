@@ -2,10 +2,11 @@ import logging
 import traceback
 from pathlib import Path
 
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 from config import Config
 from models.postmortem import init_db
 from routes.analyze import analyze_bp
@@ -23,12 +24,13 @@ app = Flask(
     static_url_path="",
 )
 app.config.from_object(Config)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 # CSRF protection is not required here: this is a stateless REST API that uses
 # JSON-only requests (Content-Type: application/json), not session cookies.
 # CORS is restricted to trusted origins via Config.CORS_ORIGINS, and rate limiting
 # is applied below. These controls are sufficient to prevent CSRF attacks.
-CORS(app, origins=Config.CORS_ORIGINS)
+CORS(app, resources={r"/api/*": {"origins": Config.CORS_ORIGINS}})
 
 # Rate limiting para prevenir abuso
 limiter = Limiter(
@@ -42,6 +44,25 @@ app.register_blueprint(analyze_bp)
 app.register_blueprint(simulate_bp)
 app.register_blueprint(history_bp)
 app.register_blueprint(export_bp)
+
+
+@app.after_request
+def add_security_headers(response):
+    for header, value in Config.SECURITY_HEADERS.items():
+        response.headers.setdefault(header, value)
+
+    if request.path.startswith("/api/"):
+        response.headers.setdefault("Cache-Control", "no-store, max-age=0")
+        response.headers.setdefault("Pragma", "no-cache")
+        response.headers.setdefault("Expires", "0")
+
+    if request.is_secure:
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            "max-age=31536000; includeSubDomains",
+        )
+
+    return response
 
 
 @app.route("/api/health", methods=["GET"])

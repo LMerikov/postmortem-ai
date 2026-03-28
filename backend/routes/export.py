@@ -1,9 +1,11 @@
+import logging
 from flask import Blueprint, request, jsonify, Response
 from services.markdown_generator import generate_markdown
 from services.pdf_generator import generate_pdf
 from models.postmortem import get_postmortem_by_id
 
 export_bp = Blueprint("export", __name__)
+logger = logging.getLogger(__name__)
 
 
 def _get_created_at(postmortem: dict) -> str | None:
@@ -35,7 +37,8 @@ def export_markdown():
             headers={"Content-Disposition": f'attachment; filename="{filename}.md"'},
         )
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error("Markdown export failed: %s", e, exc_info=True)
+        return jsonify({"error": "Markdown export failed"}), 500
 
 
 @export_bp.route("/api/export/pdf", methods=["POST"])
@@ -56,4 +59,5 @@ def export_pdf():
             headers={"Content-Disposition": f'attachment; filename="{filename}.pdf"'},
         )
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error("PDF export failed: %s", e, exc_info=True)
+        return jsonify({"error": "PDF export failed"}), 500

@@ -1,8 +1,12 @@
+import logging
+
 from flask import Blueprint, request, jsonify
+
 from services.llm_service import generate_simulation
 from models.postmortem import save_postmortem
 
 simulate_bp = Blueprint("simulate", __name__)
+logger = logging.getLogger(__name__)
 
 VALID_INCIDENT_TYPES = {
     "database_outage", "memory_leak", "ddos_attack", "dns_failure",
@@ -40,10 +44,8 @@ def simulate():
             "postmortem": postmortem,
         })
     except (ValueError, TimeoutError, RuntimeError) as e:
-        # ValueError: LLM provider failed, TimeoutError: request timeout, RuntimeError: no providers
-        return jsonify({"error": str(e)}), 500
+        logger.warning("Simulation failed: %s", e)
+        return jsonify({"error": "Simulation failed"}), 500
     except Exception as e:
-        # Catch any other unexpected errors
-        import logging
-        logging.getLogger(__name__).error(f"Unexpected error in simulate: {e}", exc_info=True)
-        return jsonify({"error": "Simulation failed — try again"}), 500
+        logger.error("Unexpected error in simulate: %s", e, exc_info=True)
+        return jsonify({"error": "Simulation failed, try again"}), 500
