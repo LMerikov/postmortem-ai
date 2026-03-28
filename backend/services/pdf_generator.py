@@ -1,6 +1,7 @@
 import html
 from io import BytesIO
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -125,28 +126,43 @@ def _add_monitoring_section(story, recs, body_style, heading_style):
         story.append(Paragraph(f"• {html.escape(str(rec))}", body_style))
 
 
-def _format_created_at(created_at: str | None) -> str:
+def _format_created_at(created_at: str | None, timezone_name: str = "UTC") -> str:
     """
-    Formatea el timestamp de BD a formato legible.
-    created_at viene como ISO 8601: '2026-03-28T14:23:00+00:00' o '2026-03-28T14:23:00'
-    Devuelve: '2026-03-28 14:23 UTC'
-    Si no hay fecha, devuelve la hora actual como fallback.
+    Formatea el timestamp de BD a la hora local del usuario.
+    created_at viene como ISO 8601 en UTC (ej: '2026-03-28T20:22:00+00:00').
+    timezone_name es la zona horaria del browser (ej: 'America/Santiago').
+    Devuelve: '2026-03-28 17:22 (UTC-03:00)' para un usuario en Chile.
     """
+    # Parsear el created_at desde la BD
+    dt_utc = None
     if created_at:
         try:
-            # Parsear ISO 8601 con o sin zona horaria
-            dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-            # Convertir a UTC si tiene zona horaria
-            if dt.tzinfo is not None:
-                dt = dt.astimezone(timezone.utc)
-            return dt.strftime("%Y-%m-%d %H:%M") + " UTC"
+            dt_utc = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            if dt_utc.tzinfo is None:
+                dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+            else:
+                dt_utc = dt_utc.astimezone(timezone.utc)
         except (ValueError, AttributeError):
             pass
-    # Fallback: hora actual del servidor en UTC
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M") + " UTC"
+
+    # Usar hora actual si no hay created_at válido
+    if dt_utc is None:
+        dt_utc = datetime.now(timezone.utc)
+
+    # Convertir a la zona horaria local del usuario
+    try:
+        user_tz = ZoneInfo(timezone_name)
+        dt_local = dt_utc.astimezone(user_tz)
+        # Formatear offset como UTC-03:00 o UTC+02:00
+        offset_str = dt_local.strftime("%z")          # ej: "-0300"
+        offset_fmt = f"UTC{offset_str[:3]}:{offset_str[3:]}"  # ej: "UTC-03:00"
+        return dt_local.strftime("%Y-%m-%d %H:%M") + f" ({offset_fmt})"
+    except (ZoneInfoNotFoundError, Exception):
+        # Fallback a UTC si el timezone no es reconocido
+        return dt_utc.strftime("%Y-%m-%d %H:%M") + " UTC"
 
 
-def generate_pdf(postmortem: dict, created_at: str | None = None) -> bytes:
+def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name: str = "UTC") -> bytes:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -198,9 +214,9 @@ def generate_pdf(postmortem: dict, created_at: str | None = None) -> bytes:
     # Título del incidente
     story.append(Paragraph(html.escape(postmortem.get("title", "Incidente sin título")), title_style))
 
-    # Fecha de creación real desde BD (no hora de exportación)
+    # Fecha de creación en la hora local del usuario
     story.append(Paragraph(
-        f"Generado {_format_created_at(created_at)}",
+        f"Generado {_format_created_at(created_at, timezone_name)}",
         small_style))
     story.append(HRFlowable(width="100%", thickness=1.5, color=sev_color, spaceAfter=10))
 

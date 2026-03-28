@@ -95,10 +95,12 @@ export async function exportMarkdown(postmortem) {
 }
 
 export async function exportPDF(postmortem) {
+  // Obtener la zona horaria del navegador del usuario (ej: "America/Santiago")
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const res = await fetch(`${BASE}/export/pdf`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ postmortem }),
+    body: JSON.stringify({ postmortem, timezone }),
   })
   if (!res.ok) throw new Error('Error al exportar')
   const blob = await res.blob()
