@@ -1,24 +1,46 @@
 import { useCallback, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { useDropzone } from 'react-dropzone'
-import { Zap, ArrowRight, Shield, Terminal, Upload, FolderOpen } from 'lucide-react'
+import { Zap, ArrowRight, Shield, Terminal, Upload, FolderOpen, AlertCircle } from 'lucide-react'
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
 export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
   const [uploadedFiles, setUploadedFiles] = useState([])
   const [focused, setFocused] = useState(false)
+  const [error, setError] = useState('')
   const textareaRef = useRef(null)
   const fileInputRef = useRef(null)
+
+  const handleFileRead = useCallback(async (file) => {
+    // Validar tamaño
+    if (file.size > MAX_FILE_SIZE) {
+      const sizeMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(0)
+      const fileMB = (file.size / 1024 / 1024).toFixed(1)
+      setError(`Archivo demasiado grande: ${fileMB}MB. Máximo permitido: ${sizeMB}MB`)
+      return false
+    }
+
+    try {
+      const text = await file.text()
+      onChange(text)
+      setUploadedFiles(prev =>
+        [file.name, ...prev.filter(n => n !== file.name)].slice(0, 2)
+      )
+      setError('')
+      setTimeout(() => textareaRef.current?.focus(), 0)
+      return true
+    } catch (err) {
+      setError(`Error al leer archivo: ${err.message}`)
+      return false
+    }
+  }, [onChange])
 
   const onDrop = useCallback(async (files) => {
     const file = files[0]
     if (!file) return
-    const text = await file.text()
-    onChange(text)
-    setUploadedFiles(prev =>
-      [file.name, ...prev.filter(n => n !== file.name)].slice(0, 2)
-    )
-    setTimeout(() => textareaRef.current?.focus(), 0)
-  }, [onChange])
+    await handleFileRead(file)
+  }, [handleFileRead])
 
   // Dropzone solo para drag & drop — click desactivado
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -38,13 +60,8 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const text = await file.text()
-    onChange(text)
-    setUploadedFiles(prev =>
-      [file.name, ...prev.filter(n => n !== file.name)].slice(0, 2)
-    )
+    await handleFileRead(file)
     e.target.value = ''
-    setTimeout(() => textareaRef.current?.focus(), 0)
   }
 
   const showOverlay = !value && !focused && !isDragActive
@@ -99,6 +116,14 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
           />
         </div>
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border-b border-red-500/20 text-red-400 text-sm">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Main area — drag & drop + textarea */}
       <div
