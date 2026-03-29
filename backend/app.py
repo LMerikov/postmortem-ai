@@ -18,11 +18,10 @@ logger = logging.getLogger(__name__)
 
 frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
-app = Flask(
-    __name__,
-    static_folder=str(frontend_dist) if frontend_dist.exists() else None,
-    static_url_path="",
-)
+# Disable Flask's built-in static handler (static_folder=None) to avoid
+# route conflicts with SPA routing. All file serving is handled manually
+# in serve_frontend() below.
+app = Flask(__name__, static_folder=None)
 app.config.from_object(Config)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
@@ -109,27 +108,27 @@ if Config.DEBUG:
 @app.route("/", defaults={"path": ""}, methods=["GET"])
 @app.route("/<path:path>", methods=["GET"])
 def serve_frontend(path):
-    """Serve frontend files. Fallback to index.html for SPA routing."""
-    if not app.static_folder:
-        return jsonify({"error": "Frontend build not found"}), 404
-
-    # Ignore API routes (shouldn't reach here, but just in case)
+    """Serve frontend files. SPA fallback to index.html for client-side routing."""
+    # API routes should never reach here (handled by blueprints)
     if path.startswith("api/"):
         return jsonify({"error": "Not found"}), 404
 
-    # Try to serve the exact file if it exists
-    if path:
-        target = Path(app.static_folder) / path
-        if target.exists() and target.is_file():
-            return send_from_directory(app.static_folder, path)
+    if not frontend_dist.exists():
+        return jsonify({"error": "Frontend build not found. Run: npm run build"}), 503
 
-    # Otherwise serve index.html for SPA routing (e.g., /history, /dashboard, /result/:id)
-    try:
-        response = send_from_directory(app.static_folder, "index.html")
-        return _set_no_store(response)
-    except Exception as e:
-        logger.error(f"Failed to serve index.html: {e}")
-        return jsonify({"error": "Frontend not available"}), 503
+    # Serve exact static file if it exists (JS, CSS, assets, etc.)
+    if path:
+        target = frontend_dist / path
+        if target.exists() and target.is_file():
+            return send_from_directory(str(frontend_dist), path)
+
+    # SPA fallback — serve index.html for all frontend routes
+    # This enables /history, /dashboard, /result/:id to work on page reload
+    index_file = frontend_dist / "index.html"
+    if not index_file.exists():
+        return jsonify({"error": "index.html not found. Run: npm run build"}), 503
+
+    return _set_no_store(send_from_directory(str(frontend_dist), "index.html"))
 
 
 with app.app_context():
