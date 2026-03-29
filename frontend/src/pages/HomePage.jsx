@@ -1,20 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Zap, FlaskConical, ArrowRight, Shield, Clock, FileCheck } from 'lucide-react'
 import { LogInput } from '../components/Analyze/LogInput'
-import { analyzeLogs } from '../services/api'
+import { analyzeLogs, getStats } from '../services/api'
 import { useToast } from '../components/UI/Toast'
 import { GeneratingState } from '../components/UI/LoadingSpinner'
 
-const EXAMPLE_LOGS = `2026-03-18 14:23:01 [ERROR] PostgreSQL: FATAL: too many connections for role "webapp"
-2026-03-18 14:23:02 [WARN]  Connection pool exhausted - 100/100 connections in use
-2026-03-18 14:23:03 [ERROR] API /api/users: database connection timeout after 30s
-2026-03-18 14:23:10 [ALERT] Health check failed for service: user-service
-2026-03-18 14:23:30 [INFO]  PagerDuty alert triggered: DB_CONNECTION_POOL_EXHAUSTED
-2026-03-18 14:25:00 [INFO]  On-call engineer acknowledged alert
-2026-03-18 14:31:00 [INFO]  Identified leaked connections from background job worker
-2026-03-18 14:42:00 [INFO]  All health checks passing`
+const EXAMPLE_LOGS = `2026-03-29 03:10:11 [INFO] [api-gateway] POST /api/checkout/confirm - user_id: 8821
+2026-03-29 03:10:12 [INFO] [inventory-service] Verificando stock para order #ORD-4471
+2026-03-29 03:10:13 [WARNING] [inventory-service] Lock en tabla 'stock' tardando más de 1000ms
+2026-03-29 03:10:14 [INFO] [inventory-service] Stock confirmado. Llamando a payment-service
+2026-03-29 03:10:14 [INFO] [payment-service] Procesando pago con stripe.com (timeout: 5s)
+2026-03-29 03:10:18 [WARNING] [payment-service] stripe.com sin respuesta tras 4000ms
+2026-03-29 03:10:20 [ERROR] [payment-service] Timeout: stripe.com no respondió en 5800ms
+2026-03-29 03:10:20 [ERROR] [payment-service] Reintentando llamada a stripe (intento 1/3)
+2026-03-29 03:10:21 [ERROR] [payment-service] Reintentando llamada a stripe (intento 2/3)
+2026-03-29 03:10:22 [ERROR] [payment-service] Fallo definitivo. Todos los reintentos agotados.
+2026-03-29 03:10:22 [ERROR] [api-gateway] HTTP 503 Service Unavailable - user_id: 8821`
 
 const QUICK_SIMS = [
   { icon: '🗄️', label: 'Caída de BD',  type: 'database_outage' },
@@ -34,8 +37,13 @@ const FEATURES = [
 export function HomePage() {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
+  const [totalPostmortems, setTotalPostmortems] = useState(null)
   const navigate = useNavigate()
   const toast = useToast()
+
+  useEffect(() => {
+    getStats().then(data => setTotalPostmortems(data.total_postmortems))
+  }, [])
 
   const handleAnalyze = async () => {
     if (!content.trim()) {
@@ -64,9 +72,17 @@ export function HomePage() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center space-y-4"
       >
-        <div className="inline-flex items-center gap-2 text-xs text-accent border border-accent/30 bg-accent/10 px-3 py-1.5 rounded-full font-mono mb-2">
-          <span className="w-2 h-2 rounded-full bg-accent animate-pulse-slow" />
-          <span>Análisis de Incidentes con IA</span>
+        <div className="flex items-center justify-center gap-3 flex-wrap mb-2">
+          <div className="inline-flex items-center gap-2 text-xs text-accent border border-accent/30 bg-accent/10 px-3 py-1.5 rounded-full font-mono">
+            <span className="w-2 h-2 rounded-full bg-accent animate-pulse-slow" />
+            <span>Análisis de Incidentes con IA</span>
+          </div>
+          {totalPostmortems > 0 && (
+            <div className="inline-flex items-center gap-1.5 text-xs text-success border border-success/30 bg-success/10 px-3 py-1.5 rounded-full font-mono">
+              <span className="w-2 h-2 rounded-full bg-success" />
+              <span>{totalPostmortems} postmortems generados</span>
+            </div>
+          )}
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
           De logs caóticos a<br />

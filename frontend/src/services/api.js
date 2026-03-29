@@ -71,6 +71,12 @@ export async function deletePostmortem(id) {
   return res.json()
 }
 
+export async function getStats() {
+  const res = await fetch(`${BASE}/stats`)
+  if (!res.ok) return { total_postmortems: 0 }
+  return res.json()
+}
+
 function triggerDownload(url, filename) {
   // El unico metodo confiable cross-browser: <a download> adjunto al DOM
   const link = document.createElement('a')

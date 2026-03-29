@@ -205,8 +205,12 @@ def _add_actions_section(story, actions, body_style, heading_style):
     """Agrega la sección de Acciones Tomadas al PDF."""
     if not actions:
         return
+    # Filtrar frases vacías o de "ninguna acción"
+    real_actions = [a for a in actions if a and "ninguna" not in str(a).lower()]
+    if not real_actions:
+        return
     story.append(Paragraph("Acciones Tomadas Durante el Incidente", heading_style))
-    for action in actions:
+    for action in real_actions:
         story.append(Paragraph(f"• {html.escape(str(action))}", body_style))
 
 

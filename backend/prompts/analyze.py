@@ -7,10 +7,15 @@ IMPORTANT: All text content in the JSON (title, summary, root_cause, event descr
 actions, lessons, recommendations, impact fields, etc.) MUST be written in Spanish.
 Only keep technical terms, log keywords, service names, and severity codes in English.
 
+BEFORE generating the JSON, reason internally (do NOT include in output):
+  1. What failed first? (root trigger)
+  2. How did the failure propagate? (cascade chain)
+  3. What is the true root cause? (evidence-based)
+  4. Are there architectural weaknesses that allowed it to spread?
+
 You must respond ONLY with valid JSON matching this exact schema:
 
 {
-  "_thinking_process": "string - Escribe aquí un análisis lógico paso a paso de la cascada de errores: qué falló primero, cómo reaccionó el sistema (ej. OOM, Deadlock) y cuál es la verdadera causa subyacente. Úsalo como borrador mental.",
   "title": "string - concise incident title",
   "severity": "P0|P1|P2|P3|P4",
   "summary": "string - 2-3 sentence executive summary",
@@ -53,8 +58,7 @@ You must respond ONLY with valid JSON matching this exact schema:
   "confidence_level": "string - porcentaje estimado de confianza en el diagnóstico (ej: '87%') basado en la claridad de la evidencia",
   "technical_fix": {
     "immediate": "string - acción inmediata para detener el impacto (quick fix)",
-    "definitive": "string - solución definitiva siguiendo best practices",
-    "security_mitigations": "string - medidas concretas de seguridad si aplica (ej: bloquear IP, rate limiting, MFA, firewall rules)"
+    "definitive": "string - solución definitiva siguiendo best practices"
   },
   "actions_taken": ["string - actions EXPLICITLY recorded during the incident"],
   "action_items": [

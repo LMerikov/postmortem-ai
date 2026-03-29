@@ -160,6 +160,25 @@ def get_postmortem_by_id(postmortem_id: str):
         release_db(conn)
 
 
+def get_total_count() -> int:
+    """Returns total number of postmortems stored."""
+    conn = get_db()
+    try:
+        if USE_POSTGRES:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM postmortems")
+            count = cur.fetchone()[0]
+            cur.close()
+        else:
+            cur = conn.execute("SELECT COUNT(*) FROM postmortems")
+            count = cur.fetchone()[0]
+        return count
+    except Exception:
+        return 0
+    finally:
+        release_db(conn)
+
+
 def delete_postmortem(postmortem_id: str) -> bool:
     """Delete postmortem by ID. Returns True if a row was deleted."""
     conn = get_db()

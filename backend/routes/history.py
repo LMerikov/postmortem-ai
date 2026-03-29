@@ -1,7 +1,12 @@
 from flask import Blueprint, jsonify
-from models.postmortem import get_all_postmortems, get_postmortem_by_id, delete_postmortem
+from models.postmortem import get_all_postmortems, get_postmortem_by_id, delete_postmortem, get_total_count
 
 history_bp = Blueprint("history", __name__)
+
+
+@history_bp.route("/api/stats", methods=["GET"])
+def stats():
+    return jsonify({"total_postmortems": get_total_count()})
 
 
 @history_bp.route("/api/postmortems", methods=["GET"])
