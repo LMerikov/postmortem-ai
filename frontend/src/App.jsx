@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage'
 import { SimulatePage } from './pages/SimulatePage'
 import { ResultPage } from './pages/ResultPage'
 import { HistoryPage } from './pages/HistoryPage'
+import { DashboardPage } from './pages/DashboardPage'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
                 <Route path="/simulate" element={<ErrorBoundary><SimulatePage /></ErrorBoundary>} />
                 <Route path="/result/:id" element={<ErrorBoundary><ResultPage /></ErrorBoundary>} />
                 <Route path="/history" element={<ErrorBoundary><HistoryPage /></ErrorBoundary>} />
+                <Route path="/dashboard" element={<ErrorBoundary><DashboardPage /></ErrorBoundary>} />
               </Routes>
             </main>
           </div>

@@ -179,6 +179,93 @@ def get_total_count() -> int:
         release_db(conn)
 
 
+def get_dashboard_stats() -> dict:
+    """Returns aggregated stats for the dashboard."""
+    conn = get_db()
+    try:
+        if USE_POSTGRES:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            # Total + severity distribution
+            cur.execute("SELECT COUNT(*) as total FROM postmortems")
+            total = cur.fetchone()["total"]
+
+            cur.execute("SELECT severity, COUNT(*) as count FROM postmortems GROUP BY severity ORDER BY severity")
+            severity_rows = cur.fetchall()
+
+            # Source distribution
+            cur.execute("SELECT source, COUNT(*) as count FROM postmortems GROUP BY source")
+            source_rows = cur.fetchall()
+
+            # Error types from JSON data
+            cur.execute("SELECT data FROM postmortems ORDER BY created_at DESC LIMIT 100")
+            data_rows = cur.fetchall()
+            cur.close()
+        else:
+            cur = conn.execute("SELECT COUNT(*) as total FROM postmortems")
+            total = cur.fetchone()["total"]
+
+            cur = conn.execute("SELECT severity, COUNT(*) as count FROM postmortems GROUP BY severity ORDER BY severity")
+            severity_rows = cur.fetchall()
+
+            cur = conn.execute("SELECT source, COUNT(*) as count FROM postmortems GROUP BY source")
+            source_rows = cur.fetchall()
+
+            cur = conn.execute("SELECT data FROM postmortems ORDER BY created_at DESC LIMIT 100")
+            data_rows = cur.fetchall()
+
+        # Build severity distribution
+        severity_dist = {"P0": 0, "P1": 0, "P2": 0, "P3": 0, "P4": 0}
+        for row in severity_rows:
+            sev = dict(row).get("severity", "P3")
+            if sev in severity_dist:
+                severity_dist[sev] = dict(row)["count"]
+
+        # Build source distribution
+        source_dist = {}
+        for row in source_rows:
+            r = dict(row)
+            source_dist[r.get("source", "analyze")] = r["count"]
+
+        # Extract error types and confidence from JSON
+        error_types = {}
+        confidence_values = []
+        for row in data_rows:
+            try:
+                d = json.loads(dict(row)["data"]) if isinstance(dict(row)["data"], str) else dict(row)["data"]
+                ec = d.get("error_classification", {})
+                etype = ec.get("type", "Unknown") if ec else "Unknown"
+                error_types[etype] = error_types.get(etype, 0) + 1
+
+                conf = d.get("confidence_level", "")
+                if conf:
+                    num = ''.join(filter(str.isdigit, str(conf)))
+                    if num:
+                        confidence_values.append(int(num))
+            except Exception:
+                continue
+
+        avg_confidence = round(sum(confidence_values) / len(confidence_values)) if confidence_values else 0
+
+        return {
+            "total_postmortems": total,
+            "severity_distribution": severity_dist,
+            "source_distribution": source_dist,
+            "error_types": dict(sorted(error_types.items(), key=lambda x: x[1], reverse=True)),
+            "avg_confidence": avg_confidence,
+        }
+    except Exception as e:
+        logger.error(f"Error getting dashboard stats: {e}")
+        return {
+            "total_postmortems": 0,
+            "severity_distribution": {"P0": 0, "P1": 0, "P2": 0, "P3": 0, "P4": 0},
+            "source_distribution": {},
+            "error_types": {},
+            "avg_confidence": 0,
+        }
+    finally:
+        release_db(conn)
+
+
 def delete_postmortem(postmortem_id: str) -> bool:
     """Delete postmortem by ID. Returns True if a row was deleted."""
     conn = get_db()

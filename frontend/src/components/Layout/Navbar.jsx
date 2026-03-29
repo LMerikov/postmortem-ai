@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, FlaskConical, History, Github, Menu, X } from 'lucide-react'
+import { Zap, FlaskConical, History, Github, Menu, X, BarChart2 } from 'lucide-react'
 
 export function Navbar() {
   const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const links = [
-    { to: '/',         label: 'Analizar',  icon: <Zap          className="w-4 h-4" /> },
-    { to: '/simulate', label: 'Simular',   icon: <FlaskConical className="w-4 h-4" /> },
-    { to: '/history',  label: 'Historial', icon: <History      className="w-4 h-4" /> },
+    { to: '/',          label: 'Analizar',   icon: <Zap          className="w-4 h-4" /> },
+    { to: '/simulate',  label: 'Simular',    icon: <FlaskConical className="w-4 h-4" /> },
+    { to: '/history',   label: 'Historial',  icon: <History      className="w-4 h-4" /> },
+    { to: '/dashboard', label: 'Dashboard',  icon: <BarChart2    className="w-4 h-4" /> },
   ]
 
   const isActive = (to) =>

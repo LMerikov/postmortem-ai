@@ -77,6 +77,12 @@ export async function getStats() {
   return res.json()
 }
 
+export async function getDashboard() {
+  const res = await fetch(`${BASE}/dashboard`)
+  if (!res.ok) return null
+  return res.json()
+}
+
 function triggerDownload(url, filename) {
   // El unico metodo confiable cross-browser: <a download> adjunto al DOM
   const link = document.createElement('a')
