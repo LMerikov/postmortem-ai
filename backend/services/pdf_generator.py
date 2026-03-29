@@ -34,7 +34,6 @@ PRIORITY_HEX = {
     "LOW": "27AE60",
 }
 
-# Colores para PDF (fondo blanco, legible)
 BG       = colors.HexColor("#FFFFFF")
 CARD_BG  = colors.HexColor("#F8F8F8")
 ACCENT   = colors.HexColor("#5B3FB0")
@@ -42,7 +41,6 @@ TEXT     = colors.HexColor("#1A1A1A")
 TEXT_SEC = colors.HexColor("#555555")
 BORDER   = colors.HexColor("#DDDDDD")
 
-# Ancho útil de A4 con márgenes de 2cm a cada lado
 PAGE_WIDTH = A4[0] - 4 * cm  # ~17cm
 
 
@@ -151,23 +149,21 @@ def _add_security_and_confidence(story, security_assessment, confidence_level, a
         if security_assessment.get("details"):
             rows.append([_cell("Detalle", cell_lbl), _cell(html.escape(str(security_assessment["details"])), cell_style)])
 
-    # Integrar Análisis de Ataque en la misma tabla cuando hay ataque
     if attack_analysis and detected in ("yes", "suspicious"):
         attempt_count = str(attack_analysis.get("attempt_count", ""))
         time_window   = str(attack_analysis.get("time_window", ""))
         pattern       = str(attack_analysis.get("pattern", ""))
         if attempt_count:
-            rows.append([_cell("Intentos", cell_lbl),       _cell(html.escape(attempt_count), cell_style)])
+            rows.append([_cell("Intentos", cell_lbl),          _cell(html.escape(attempt_count), cell_style)])
         if time_window:
             rows.append([_cell("Ventana de tiempo", cell_lbl), _cell(html.escape(time_window), cell_style)])
         if pattern:
-            rows.append([_cell("Patrón", cell_lbl),         _cell(html.escape(pattern), cell_style)])
+            rows.append([_cell("Patrón", cell_lbl),            _cell(html.escape(pattern), cell_style)])
 
     if confidence_level:
         rows.append([_cell("Confianza", cell_lbl), _cell(html.escape(str(confidence_level)), cell_style)])
 
     if rows:
-        # Fondo de la columna de etiquetas cambia según nivel de amenaza
         lbl_bg = {"yes": colors.HexColor("#FDECEA"), "suspicious": colors.HexColor("#FFF8E1")}.get(detected, CARD_BG)
         t = Table(rows, colWidths=[4.5 * cm, 12.5 * cm])
         t.setStyle(TableStyle([
@@ -205,7 +201,6 @@ def _add_actions_section(story, actions, body_style, heading_style):
     """Agrega la sección de Acciones Tomadas al PDF."""
     if not actions:
         return
-    # Filtrar frases vacías o de "ninguna acción"
     real_actions = [a for a in actions if a and "ninguna" not in str(a).lower()]
     if not real_actions:
         return
@@ -269,7 +264,6 @@ def _add_sre_metrics_section(story, sre_metrics, body_style, heading_style, cell
     if not sre_metrics or not any(sre_metrics.values()):
         return
     story.append(Paragraph("Métricas SRE Recomendadas", heading_style))
-    # Cabecera con color blanco sobre fondo ACCENT
     hdr_style = ParagraphStyle("sre_hdr", parent=cell_style,
                                fontName="Helvetica-Bold", textColor=colors.white)
     rows = [[_cell("Métrica", hdr_style), _cell("Objetivo", hdr_style)]]
@@ -302,13 +296,7 @@ def _add_sre_metrics_section(story, sre_metrics, body_style, heading_style, cell
 
 
 def _format_created_at(created_at: str | None, timezone_name: str = "UTC") -> str:
-    """
-    Formatea el timestamp de BD a la hora local del usuario.
-    created_at viene como ISO 8601 en UTC (ej: '2026-03-28T20:22:00+00:00').
-    timezone_name es la zona horaria del browser (ej: 'America/Santiago').
-    Devuelve: '2026-03-28 17:22 (UTC-03:00)' para un usuario en Chile.
-    """
-    # Parsear el created_at desde la BD
+    """Formatea el timestamp de BD a la hora local del usuario."""
     dt_utc = None
     if created_at:
         try:
@@ -320,20 +308,16 @@ def _format_created_at(created_at: str | None, timezone_name: str = "UTC") -> st
         except (ValueError, AttributeError):
             pass
 
-    # Usar hora actual si no hay created_at válido
     if dt_utc is None:
         dt_utc = datetime.now(timezone.utc)
 
-    # Convertir a la zona horaria local del usuario
     try:
         user_tz = ZoneInfo(timezone_name)
         dt_local = dt_utc.astimezone(user_tz)
-        # Formatear offset como UTC-03:00 o UTC+02:00
-        offset_str = dt_local.strftime("%z")          # ej: "-0300"
-        offset_fmt = f"UTC{offset_str[:3]}:{offset_str[3:]}"  # ej: "UTC-03:00"
+        offset_str = dt_local.strftime("%z")
+        offset_fmt = f"UTC{offset_str[:3]}:{offset_str[3:]}"
         return dt_local.strftime("%Y-%m-%d %H:%M") + f" ({offset_fmt})"
     except (ZoneInfoNotFoundError, TypeError, ValueError):
-        # Fallback a UTC si el timezone no es reconocido o es invÃ¡lido
         return dt_utc.strftime("%Y-%m-%d %H:%M") + " UTC"
 
 
@@ -366,7 +350,6 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     story = []
 
     # ── Header ──────────────────────────────────────────────────────
-    # Fila superior: marca izquierda, severidad derecha
     header_top = Table(
         [[Paragraph("POSTMORTEM.AI", brand_style),
           Paragraph(f"<b>{severity}</b>", sev_badge)]],
@@ -386,10 +369,7 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     story.append(header_top)
     story.append(Spacer(1, 4))
 
-    # Título del incidente
     story.append(Paragraph(html.escape(postmortem.get("title", "Incidente sin título")), title_style))
-
-    # Fecha de creación en la hora local del usuario
     story.append(Paragraph(
         f"Generado {_format_created_at(created_at, timezone_name)}",
         small_style))
@@ -408,19 +388,14 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     )
 
     # ── Timeline ────────────────────────────────────────────────────
-    timeline = postmortem.get("timeline", [])
-    _add_timeline_section(story, timeline, cell_hdr, cell_style, heading_style)
+    _add_timeline_section(story, postmortem.get("timeline", []), cell_hdr, cell_style, heading_style)
 
     # ── Análisis de Causa Raíz ───────────────────────────────────────
     story.append(Paragraph("Análisis de Causa Raíz", heading_style))
     story.append(Paragraph(html.escape(postmortem.get("root_cause", "")), body_style))
 
-    # ── Evidencia (líneas clave del log) ─────────────────────────────
-    _add_evidence_section(
-        story,
-        postmortem.get("evidence_lines", []),
-        body_style, heading_style,
-    )
+    # ── Evidencia ────────────────────────────────────────────────────
+    _add_evidence_section(story, postmortem.get("evidence_lines", []), body_style, heading_style)
 
     # ── Impacto ──────────────────────────────────────────────────────
     story.append(Paragraph("Impacto", heading_style))
@@ -446,7 +421,7 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     story.append(t)
     story.append(Spacer(1, 8))
 
-    # ── Evaluación de Seguridad y Confianza (incluye Análisis de Ataque) ─
+    # ── Evaluación de Seguridad ─────────────────────────────────────
     _add_security_and_confidence(
         story,
         postmortem.get("security_assessment"),
@@ -455,35 +430,23 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
         body_style, heading_style, cell_style, cell_lbl,
     )
 
-    # ── Corrección Técnica ───────────────────────────────────────────
-    _add_technical_fix_section(
-        story,
-        postmortem.get("technical_fix"),
-        body_style, heading_style,
-    )
+    # ── Solución Técnica ─────────────────────────────────────────────
+    _add_technical_fix_section(story, postmortem.get("technical_fix"), body_style, heading_style)
 
     # ── Problemas de Diseño ──────────────────────────────────────────
-    _add_design_issues_section(
-        story,
-        postmortem.get("design_issues", []),
-        body_style, heading_style,
-    )
+    _add_design_issues_section(story, postmortem.get("design_issues", []), body_style, heading_style)
 
     # ── Acciones Tomadas ─────────────────────────────────────────────
-    actions = postmortem.get("actions_taken", [])
-    _add_actions_section(story, actions, body_style, heading_style)
+    _add_actions_section(story, postmortem.get("actions_taken", []), body_style, heading_style)
 
     # ── Tareas de Seguimiento ────────────────────────────────────────
-    action_items = postmortem.get("action_items", [])
-    _add_action_items_section(story, action_items, body_style, heading_style)
+    _add_action_items_section(story, postmortem.get("action_items", []), body_style, heading_style)
 
     # ── Lecciones Aprendidas ─────────────────────────────────────────
-    lessons = postmortem.get("lessons_learned", [])
-    _add_lessons_section(story, lessons, body_style, heading_style)
+    _add_lessons_section(story, postmortem.get("lessons_learned", []), body_style, heading_style)
 
     # ── Recomendaciones de Monitoreo ─────────────────────────────────
-    recs = postmortem.get("monitoring_recommendations", [])
-    _add_monitoring_section(story, recs, body_style, heading_style)
+    _add_monitoring_section(story, postmortem.get("monitoring_recommendations", []), body_style, heading_style)
 
     # ── Métricas SRE ─────────────────────────────────────────────────
     _add_sre_metrics_section(

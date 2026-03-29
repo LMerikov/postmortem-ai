@@ -12,7 +12,6 @@ from services.providers.factory import ProviderFactory
 
 logger = logging.getLogger(__name__)
 
-# Patrones para limpiar bloques de markdown
 MARKDOWN_CODE_BLOCK_START = r"^```[a-z]*\n?"
 MARKDOWN_CODE_BLOCK_END = r"\n?```$"
 
@@ -34,14 +33,12 @@ def _call_llm(system: str, user: str, max_tokens: int = 4096) -> dict:
 
         logger.warning(f"Provider {provider.name} error (attempt {attempt+1}): {result['error']}")
 
-        # En primer error, intentar el fallback
         if attempt == 0:
             fallback = ProviderFactory.get_fallback_provider(exclude_name=provider.name)
             if fallback:
                 logger.info(f"Switching to fallback provider: {fallback.name}")
                 provider = fallback
             else:
-                # No hay fallback, reintentar con el mismo
                 continue
 
     raise ValueError(f"All LLM providers failed. Last error: {result['error']}")
@@ -94,7 +91,6 @@ def analyze_logs_stream(content: str):
     parsed = preprocess(content)
     user_prompt = ANALYZE_USER_PROMPT.format(user_input=parsed["content"])
 
-    # Intentar con proveedor primario (Groq)
     provider = ProviderFactory.get_primary_provider()
     accumulated = ""
     error_msg = None
@@ -114,7 +110,6 @@ def analyze_logs_stream(content: str):
         error_msg = str(e)
         logger.warning(f"Stream error from {provider.name}: {error_msg}")
 
-    # Si hubo error, intentar fallback con Anthropic
     if error_msg and provider.name != "anthropic":
         logger.info("Switching to Anthropic fallback for streaming")
         yield json.dumps({"status": "restarting", "message": "Provider failed, switching to fallback..."})
@@ -132,7 +127,6 @@ def analyze_logs_stream(content: str):
             yield json.dumps({"status": "error", "message": f"Fallback provider failed: {str(e)}"})
             return
 
-    # Parsear respuesta acumulada
     clean = accumulated.strip()
     if clean.startswith("```"):
         clean = re.sub(MARKDOWN_CODE_BLOCK_START, "", clean)

@@ -1,0 +1,109 @@
+{
+  "nav": {
+    "analyze": "Analizar",
+    "simulate": "Simular",
+    "history": "Historial",
+    "dashboard": "Dashboard"
+  },
+  "home": {
+    "badge": "Análisis con IA · Para SRE Teams",
+    "headline": "Logs → Postmortems\nen menos de 3 segundos",
+    "headline_gradient": "en menos de 3 segundos",
+    "sub": "Deja de escribir postmortems manualmente. Pega logs, stacktraces o describe el incidente. Nuestra IA genera análisis completo con causas raíz, cascadas de fallos, y recomendaciones SRE.",
+    "stats_analyzed": "postmortems analizados",
+    "features_title": "Características Principales",
+    "features_sub": "Todo lo que necesitas para postmortems de clase mundial",
+    "personas_title": "Para Quién Es",
+    "personas_sub": "Ideal para equipos que quieren mejorar su respuesta ante incidentes",
+    "training_title": "Modo Entrenamiento",
+    "training_sub": "Genera incidentes realistas para drills SRE. Prepara tu equipo sin riesgo real.",
+    "training_see_all": "Ver todos",
+    "cta_title": "¿Listo para mejorar tu proceso?",
+    "cta_sub": "Comienza ahora. No requiere registro. Analiza tu primer incidente en 30 segundos.",
+    "cta_btn": "Analizar Incidente",
+    "footer_note": "Postmortem.ai → Análisis automático con IA. Inspira en Google SRE Book.",
+    "analyzing": "Analizando tu incidente con IA... (~3 segundos)",
+    "quick_sims_title": "Simulaciones Rápidas",
+    "quick_sims": {
+      "database": "Caída de BD",
+      "ddos": "Ataque DDoS",
+      "memory": "Fuga Memoria",
+      "ssl": "SSL Expirado",
+      "deploy": "Mal Deploy"
+    },
+    "stats": {
+      "precision": "Precisión en análisis",
+      "time": "Tiempo promedio",
+      "savings": "Ahorro por incidente",
+      "types": "Tipos de incidentes"
+    },
+    "features": [
+      { "title": "Análisis en <3s", "desc": "IA analiza logs y genera postmortems estructurados en segundos sin intervención manual" },
+      { "title": "Causas Raíz Precisas", "desc": "Detecta cascadas de fallos, distingue síntomas de triggers iniciales, identifica patrones" },
+      { "title": "Ahorra +4 Horas/Incidente", "desc": "Automatiza análisis tedioso. De 4 horas de escritura manual → 30 segundos" },
+      { "title": "Exporta a PDF/Markdown", "desc": "Postmortems profesionales listos para stakeholders con un clic" },
+      { "title": "Entrenamiento Realista", "desc": "Genera incidentes simulados para drills SRE. Mejora respuesta ante crisis" },
+      { "title": "Métricas SRE Integradas", "desc": "Recomendaciones de p95/p99 latency, error rates, y alertas automáticas" }
+    ],
+    "personas": [
+      { "title": "SRE Engineers", "desc": "Reduce tus post-incident reviews de 4 horas a 30 minutos. Enfócate en mejoras, no en redacción.", "icon": "👨‍💼" },
+      { "title": "Team Leads", "desc": "Mantén un registro completo de incidentes. Identifica patrones de fallos y causas recurrentes.", "icon": "📊" },
+      { "title": "DevOps/Infra", "desc": "Entrena a tu equipo con incidentes realistas. Mejora MTTR en eventos reales.", "icon": "🎯" },
+      { "title": "Startups", "desc": "No tienes SREs dedicados? Postmortem.ai reemplaza expertise costosa con IA.", "icon": "🚀" }
+    ],
+    "divider": "o prueba el Modo Simulación"
+  },
+  "input": {
+    "drag_title": "Arrastra archivos aquí o haz clic para escribir",
+    "drag_sub": "Soporta .log, .txt, .json o texto plano",
+    "drag_drop_here": "Suelta el archivo aquí",
+    "privacy": "Privacidad garantizada. No usamos tus logs para entrenar modelos.",
+    "btn_example": "Probar ejemplo",
+    "btn_generate": "Generar Postmortem",
+    "btn_open_file": "Abrir archivo",
+    "file_too_large": "Archivo demasiado grande. Máximo: {{max}}MB",
+    "file_invalid": "Tipo de archivo no soportado"
+  },
+  "result": {
+    "title": "Postmortem Generado",
+    "export_pdf": "Exportar PDF",
+    "export_md": "Exportar Markdown",
+    "new_analysis": "Nuevo análisis",
+    "severity": "Severidad",
+    "duration": "Duración",
+    "services": "Servicios afectados",
+    "confidence": "Confianza"
+  },
+  "history": {
+    "title": "Historial de Postmortems",
+    "empty": "No hay postmortems aún",
+    "empty_sub": "Analiza tus primeros logs para empezar",
+    "delete": "Eliminar",
+    "view": "Ver detalle",
+    "generated_on": "Generado el"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "total": "Total postmortems",
+    "by_severity": "Por severidad",
+    "by_type": "Por tipo de error",
+    "avg_confidence": "Confianza promedio",
+    "recent": "Recientes"
+  },
+  "simulate": {
+    "title": "Simulador de Incidentes",
+    "sub": "Genera logs realistas para entrenar tu equipo en incident response",
+    "btn": "Simular Incidente",
+    "select_type": "Tipo de incidente",
+    "select_severity": "Severidad",
+    "select_duration": "Duración",
+    "use_logs": "Usar estos logs"
+  },
+  "common": {
+    "loading": "Analizando...",
+    "error": "Error",
+    "back": "Volver",
+    "copy": "Copiar",
+    "copied": "¡Copiado!"
+  }
+}

@@ -84,14 +84,12 @@ export async function getDashboard() {
 }
 
 function triggerDownload(url, filename) {
-  // El unico metodo confiable cross-browser: <a download> adjunto al DOM
   const link = document.createElement('a')
   link.href = url
   link.download = filename
   document.body.appendChild(link)
   link.click()
   link.remove()
-  // Liberar la blob URL despues del click
   setTimeout(() => URL.revokeObjectURL(url), 100)
 }
 
@@ -107,7 +105,6 @@ export async function exportMarkdown(postmortem) {
 }
 
 export async function exportPDF(postmortem) {
-  // Obtener la zona horaria del navegador del usuario (ej: "America/Santiago")
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const res = await fetch(`${BASE}/export/pdf`, {
     method: 'POST',

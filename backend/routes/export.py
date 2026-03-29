@@ -49,7 +49,6 @@ def export_pdf():
         return jsonify({"error": "postmortem data required"}), 400
     try:
         created_at = _get_created_at(postmortem)
-        # Zona horaria del navegador del usuario (ej: "America/Santiago")
         timezone_name = data.get("timezone", "UTC")
         pdf_bytes = generate_pdf(postmortem, created_at=created_at, timezone_name=timezone_name)
         filename = postmortem.get("title", "postmortem").replace(" ", "_").lower()[:50]

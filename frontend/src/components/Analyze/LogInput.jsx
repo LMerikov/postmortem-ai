@@ -1,7 +1,7 @@
 import { useCallback, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { useDropzone } from 'react-dropzone'
-import { Zap, ArrowRight, Shield, Terminal, Upload, FolderOpen, AlertCircle } from 'lucide-react'
+import { Zap, ArrowRight, Shield, Terminal, FolderOpen, AlertCircle, Upload } from 'lucide-react'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -13,14 +13,12 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
   const fileInputRef = useRef(null)
 
   const handleFileRead = useCallback(async (file) => {
-    // Validar tamaño
     if (file.size > MAX_FILE_SIZE) {
       const sizeMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(0)
       const fileMB = (file.size / 1024 / 1024).toFixed(1)
       setError(`Archivo demasiado grande: ${fileMB}MB. Máximo permitido: ${sizeMB}MB`)
       return false
     }
-
     try {
       const text = await file.text()
       onChange(text)
@@ -42,17 +40,15 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
     await handleFileRead(file)
   }, [handleFileRead])
 
-  // Dropzone solo para drag & drop — click desactivado
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'text/*': ['.log', '.txt', '.json'] },
     maxFiles: 1,
     disabled,
-    noClick: true,   // ← no abrir explorador al hacer clic
+    noClick: true,
     noKeyboard: true,
   })
 
-  // Input file separado — se activa solo desde el botón de la tab
   const handleFileTabClick = () => {
     fileInputRef.current?.click()
   }
@@ -71,15 +67,12 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
 
       {/* Title bar — macOS style */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-[#1a1a2e] border-b border-border">
-
-        {/* Traffic lights */}
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
           <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
           <div className="w-3 h-3 rounded-full bg-[#28c840]" />
         </div>
 
-        {/* File tabs — clickeables para subir archivo */}
         <div className="flex items-center gap-1.5">
           {uploadedFiles.length > 0 ? (
             uploadedFiles.map(name => (
@@ -93,7 +86,6 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
             ))
           ) : null}
 
-          {/* Botón para abrir explorador */}
           <button
             type="button"
             onClick={handleFileTabClick}
@@ -105,7 +97,6 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
             <span>Abrir archivo</span>
           </button>
 
-          {/* Input file oculto */}
           <input
             ref={fileInputRef}
             type="file"
@@ -134,7 +125,6 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
       >
         <input {...getInputProps()} />
 
-        {/* Textarea — siempre activo */}
         <textarea
           ref={textareaRef}
           value={value}
@@ -146,7 +136,7 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
           spellCheck={false}
         />
 
-        {/* Watermark overlay — puntero pass-through */}
+        {/* Watermark overlay */}
         {showOverlay && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none select-none">
             <span className="text-5xl font-mono text-muted/15 tracking-widest">&gt;_</span>

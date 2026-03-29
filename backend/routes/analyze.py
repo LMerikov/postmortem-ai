@@ -31,7 +31,6 @@ def _sse(payload: dict):
 def _phase1_filter(content):
     """PHASE 1: Filtrado local. Retorna (postmortem_local, should_call_llm, cleaned_content, phase1_error)."""
     import traceback as _tb
-    import uuid as _uuid
 
     phase1_error = None
     try:
@@ -105,8 +104,6 @@ def _phase3_non_stream(content, normalized, phase1_error):
 
 @analyze_bp.route("/api/analyze", methods=["POST"])
 def analyze():
-    import uuid as _uuid
-
     data = request.get_json(force=True)
     content = data.get("content", "").strip()
     stream = data.get("stream", False)
@@ -118,7 +115,6 @@ def analyze():
     postmortem_local, should_call_llm, cleaned_content, phase1_error = _phase1_filter(content)
 
     if not should_call_llm:
-        # Ruido puro — guardar en BD y respuesta inmediata sin LLM ni cache
         local_id = save_postmortem(postmortem_local, source="local_filter")
         payload = {
             "id": local_id,
