@@ -53,6 +53,11 @@
   .glow-cyan {
     box-shadow: 0 0 20px rgba(0, 210, 211, 0.3);
   }
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(0, 210, 211, 0.1));
+    border-image: linear-gradient(135deg, rgba(108, 92, 231, 0.3), rgba(0, 210, 211, 0.3)) 1;
+  }
 }
 
 /* Terminal/typing cursor */

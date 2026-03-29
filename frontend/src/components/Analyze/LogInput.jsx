@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { useDropzone } from 'react-dropzone'
 import { Upload, FileText } from 'lucide-react'
 
-export function LogInput({ value, onChange, disabled }) {
+export function LogInput({ value, onChange, disabled, placeholder }) {
   const onDrop = useCallback(async (files) => {
     const file = files[0]
     if (!file) return
@@ -33,7 +33,7 @@ export function LogInput({ value, onChange, disabled }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        placeholder="Pega tus logs de servidor, stacktraces, o describe el incidente...&#10;&#10;O arrastra y suelta un archivo .log / .txt / .json aquí"
+        placeholder={placeholder || "Pega tus logs de servidor, stacktraces, o describe el incidente...&#10;&#10;O arrastra y suelta un archivo .log / .txt / .json aquí"}
         className="w-full h-64 bg-transparent resize-none p-4 text-sm font-mono text-text placeholder-muted focus:outline-none"
         spellCheck={false}
       />
