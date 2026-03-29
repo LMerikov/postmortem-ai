@@ -245,38 +245,18 @@ def _add_monitoring_section(story, recs, body_style, heading_style):
 
 
 def _add_design_issues_section(story, design_issues, body_style, heading_style):
-    """Agrega problemas de diseño detectados con fondo de alerta naranja — [!] centrado verticalmente."""
+    """Agrega problemas de diseño detectados como texto plano con bullet naranja."""
     if not design_issues or len(design_issues) == 0:
         return
     story.append(Paragraph("Problemas de Diseño Detectados", heading_style))
-
-    # Estilo para el ícono [!] — más grande y centrado
-    icon_style = ParagraphStyle("alert_icon", parent=body_style,
-                                fontName="Helvetica-Bold", fontSize=14,
-                                textColor=colors.HexColor("#E17055"),
-                                alignment=TA_CENTER)
-
-    rows = []
+    issue_style = ParagraphStyle("design_issue", parent=body_style,
+                                 leftIndent=8, spaceAfter=4)
     for issue in design_issues:
         if issue and issue.strip():
-            rows.append([
-                Paragraph("[!]", icon_style),
-                Paragraph(html.escape(str(issue)), body_style),
-            ])
-    if rows:
-        t = Table(rows, colWidths=[0.8 * cm, PAGE_WIDTH - 0.8 * cm])
-        t.setStyle(TableStyle([
-            ("BACKGROUND",    (0, 0), (-1, -1), colors.HexColor("#FFF3E0")),
-            ("BOX",           (0, 0), (-1, -1), 1.2, colors.HexColor("#E17055")),
-            ("LINEBEFORE",    (0, 0), (0, -1),  3,   colors.HexColor("#E17055")),
-            ("VALIGN",        (0, 0), (-1, -1), "CENTER"),  # CENTER en lugar de TOP
-            ("LEFTPADDING",   (0, 0), (-1, -1), 6),
-            ("RIGHTPADDING",  (0, 0), (-1, -1), 6),
-            ("TOPPADDING",    (0, 0), (-1, -1), 6),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-            ("ROWBACKGROUNDS",(0, 0), (-1, -1), [colors.HexColor("#FFF3E0")]),
-        ]))
-        story.append(t)
+            story.append(Paragraph(
+                f"<font color='#E17055'><b>•</b></font> {html.escape(str(issue))}",
+                issue_style,
+            ))
     story.append(Spacer(1, 8))
 
 
