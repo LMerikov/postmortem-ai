@@ -31,8 +31,8 @@ You must respond ONLY with valid JSON matching this exact schema:
   "timeline": [
     {
       "time": "HH:MM or relative timestamp",
-      "event": "string - what happened",
-      "type": "alert|action|escalation|resolution|detection"
+      "event": "string - descripción clara de qué ocurrió (incluir valores de error, códigos HTTP, duración si aplica)",
+      "type": "detection|info|warning|error|action|escalation|resolution"
     }
   ],
   "root_cause": "string - detailed root cause analysis based on your _thinking_process (2-3 paragraphs). CRITICAL: Be SPECIFIC with evidence. Replace vague 'podría deberse a...' with: CAUSA MÁS PROBABLE: [exact cause based on logs]. EVIDENCIA: [log excerpts]. CONCLUSIÓN: [specific technical reason].",
@@ -41,8 +41,8 @@ You must respond ONLY with valid JSON matching this exact schema:
   ],
   "evidence_lines": ["string - líneas exactas o fragmentos clave del log que sustentan el diagnóstico (máx 5)"],
   "impact": {
-    "users_affected": "string - exact count or precise estimate based ONLY on log evidence",
-    "duration": "string - total incident duration",
+    "users_affected": "string - exact count or precise estimate based ONLY on log evidence (count unique IPs, session IDs, user IDs)",
+    "duration": "string - total incident duration = time between FIRST log entry and LAST log entry. Format: 'X minutos Y segundos' or 'X segundos'. DO NOT confuse request timeouts (e.g., 15000ms from a single request) with total incident duration.",
     "services_affected": ["string"],
     "revenue_impact": "string - estimated or Unknown"
   },
@@ -110,7 +110,16 @@ CRITICAL RULES:
 6. SECURITY ASSESSMENT: If `security_assessment.detected` is 'yes' or 'suspicious', always set severity to P1 or higher.
    - If the attacked user is 'admin', 'root', or any privileged account, classify severity as P1 or higher and explicitly mention "high-risk target".
 7. CONFIDENCE LEVEL: Base the percentage on evidence quality: >90% if logs are explicit, 60-90% if partial evidence, <60% if inferred.
-8. Timeline must be chronological.
+8. TIMELINE QUALITY:
+   - MUST be chronological (earliest to latest)
+   - Include 4-8 KEY EVENTS that show the incident progression:
+     * First relevant event (user request, normal operation)
+     * State changes (warnings, delays, degradation)
+     * Error triggers or escalation points
+     * System reactions (timeouts, failures, recovery attempts)
+     * Last relevant event (final error or resolution)
+   - DO NOT include every single log line — select SIGNIFICANT events that tell the story
+   - Include relevant numbers: latency (ms), error codes (503, 500), attempt counts
 9. Severity guide: P0=complete outage, P1=major impact, P2=moderate, P3=minor, P4=cosmetic/informational.
 10. Respond ONLY with the JSON object, no markdown fences (like ```json), no extra text."""
 

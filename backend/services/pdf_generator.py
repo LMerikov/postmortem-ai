@@ -245,28 +245,36 @@ def _add_monitoring_section(story, recs, body_style, heading_style):
 
 
 def _add_design_issues_section(story, design_issues, body_style, heading_style):
-    """Agrega problemas de diseño detectados con fondo de alerta naranja."""
+    """Agrega problemas de diseño detectados con fondo de alerta naranja — [!] centrado verticalmente."""
     if not design_issues or len(design_issues) == 0:
         return
     story.append(Paragraph("Problemas de Diseño Detectados", heading_style))
+
+    # Estilo para el ícono [!] — más grande y centrado
+    icon_style = ParagraphStyle("alert_icon", parent=body_style,
+                                fontName="Helvetica-Bold", fontSize=14,
+                                textColor=colors.HexColor("#E17055"),
+                                alignment=TA_CENTER)
+
     rows = []
     for issue in design_issues:
         if issue and issue.strip():
             rows.append([
-                Paragraph("<font color='#E17055'><b>[!]</b></font>", body_style),
+                Paragraph("[!]", icon_style),
                 Paragraph(html.escape(str(issue)), body_style),
             ])
     if rows:
-        t = Table(rows, colWidths=[0.7 * cm, PAGE_WIDTH - 0.7 * cm])
+        t = Table(rows, colWidths=[0.8 * cm, PAGE_WIDTH - 0.8 * cm])
         t.setStyle(TableStyle([
             ("BACKGROUND",    (0, 0), (-1, -1), colors.HexColor("#FFF3E0")),
             ("BOX",           (0, 0), (-1, -1), 1.2, colors.HexColor("#E17055")),
             ("LINEBEFORE",    (0, 0), (0, -1),  3,   colors.HexColor("#E17055")),
-            ("VALIGN",        (0, 0), (-1, -1), "TOP"),
+            ("VALIGN",        (0, 0), (-1, -1), "CENTER"),  # CENTER en lugar de TOP
             ("LEFTPADDING",   (0, 0), (-1, -1), 6),
             ("RIGHTPADDING",  (0, 0), (-1, -1), 6),
-            ("TOPPADDING",    (0, 0), (-1, -1), 5),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING",    (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("ROWBACKGROUNDS",(0, 0), (-1, -1), [colors.HexColor("#FFF3E0")]),
         ]))
         story.append(t)
     story.append(Spacer(1, 8))
