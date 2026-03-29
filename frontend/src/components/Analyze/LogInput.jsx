@@ -1,10 +1,12 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { useDropzone } from 'react-dropzone'
 import { Zap, ArrowRight, Shield, Terminal, Upload } from 'lucide-react'
 
 export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
   const [uploadedFiles, setUploadedFiles] = useState([])
+  const [focused, setFocused] = useState(false)
+  const textareaRef = useRef(null)
 
   const onDrop = useCallback(async (files) => {
     const file = files[0]
@@ -15,6 +17,7 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
       const next = [file.name, ...prev.filter(n => n !== file.name)].slice(0, 2)
       return next
     })
+    setTimeout(() => textareaRef.current?.focus(), 0)
   }, [onChange])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -22,10 +25,22 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
     accept: { 'text/*': ['.log', '.txt', '.json'] },
     maxFiles: 1,
     disabled,
-    noClick: true,
+    noClick: false,
   })
 
   const isEmpty = !value && !isDragActive
+
+  const handleClick = () => {
+    textareaRef.current?.focus()
+  }
+
+  const handleFocus = () => {
+    setFocused(true)
+  }
+
+  const handleBlur = () => {
+    setFocused(false)
+  }
 
   return (
     <div className="rounded-2xl overflow-hidden border border-border shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
@@ -44,7 +59,7 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
             uploadedFiles.map(name => (
               <span
                 key={name}
-                className="flex items-center gap-1.5 text-xs text-muted px-2 py-1 rounded bg-border/40 font-mono"
+                className="flex items-center gap-1.5 text-xs text-text px-3 py-1 rounded bg-card/60 border border-border/50 font-mono"
               >
                 <Terminal className="w-3 h-3 text-accent" />
                 {name}
@@ -52,11 +67,11 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
             ))
           ) : (
             <>
-              <span className="flex items-center gap-1.5 text-xs text-muted/40 px-2 py-1 rounded font-mono">
+              <span className="flex items-center gap-1.5 text-xs text-muted/50 px-3 py-1 rounded font-mono">
                 <Terminal className="w-3 h-3" />
                 incident.log
               </span>
-              <span className="flex items-center gap-1.5 text-xs text-muted/40 px-2 py-1 rounded font-mono">
+              <span className="flex items-center gap-1.5 text-xs text-muted/50 px-3 py-1 rounded font-mono">
                 <Terminal className="w-3 h-3" />
                 errors.json
               </span>
@@ -68,53 +83,50 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
       {/* Main drop zone + textarea */}
       <div
         {...getRootProps()}
-        className={`relative transition-all duration-300 bg-[#10101a] ${
-          isDragActive ? 'bg-accent/5' : ''
-        }`}
+        className={`relative transition-all duration-200 bg-[#10101a] ${
+          isDragActive ? 'bg-accent/10 border-accent' : ''
+        } ${focused ? 'ring-2 ring-accent/40' : ''}`}
       >
         <input {...getInputProps()} />
 
-        {isEmpty ? (
-          /* Empty state — terminal icon + instructions */
-          <div className="h-56 flex flex-col items-center justify-center gap-4 px-4 cursor-text"
-               onClick={() => document.querySelector('#log-textarea')?.focus()}
+        {/* Textarea — siempre presente */}
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          disabled={disabled}
+          className="w-full h-56 bg-transparent resize-none px-5 py-4 text-sm font-mono text-text placeholder-muted/40 focus:outline-none leading-relaxed relative z-10"
+          spellCheck={false}
+          placeholder="Pega logs, stacktraces o describe qué salió mal..."
+        />
+
+        {/* Empty state overlay — desaparece al escribir o hacer foco */}
+        {isEmpty && !focused && !isDragActive && (
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 pointer-events-none"
+            onClick={handleClick}
           >
-            {isDragActive ? (
-              <>
-                <Upload className="w-12 h-12 text-accent animate-bounce" />
-                <p className="text-accent font-semibold">Suelta el archivo aquí</p>
-              </>
-            ) : (
-              <>
-                <div className="relative">
-                  <div className="text-4xl font-mono text-muted/30 select-none tracking-widest">
-                    &gt;_
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-2 h-4 bg-accent/70 animate-pulse rounded-sm" />
-                </div>
-                <div className="text-center space-y-1">
-                  <p className="font-semibold text-text/80">Arrastra tus archivos aquí o pega el texto</p>
-                  <p className="text-sm text-muted">Soporta .log, .txt, .json o texto plano</p>
-                </div>
-              </>
-            )}
+            <div className="text-5xl font-mono text-muted/20 select-none tracking-widest">
+              &gt;_
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-sm text-muted/70">Arrastra archivos aquí o haz clic para escribir</p>
+              <p className="text-xs text-muted/50">Soporta .log, .txt, .json o texto plano</p>
+            </div>
           </div>
-        ) : (
-          /* Text state — editable textarea */
-          <textarea
-            id="log-textarea"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={disabled}
-            className="w-full h-56 bg-transparent resize-none px-5 py-4 text-sm font-mono text-text/90 placeholder-muted/40 focus:outline-none leading-relaxed"
-            spellCheck={false}
-            autoFocus
-          />
         )}
 
-        {/* Drag overlay border pulse */}
+        {/* Drag overlay */}
         {isDragActive && (
-          <div className="absolute inset-0 border-2 border-accent drag-active rounded-none pointer-events-none" />
+          <>
+            <div className="absolute inset-0 border-2 border-accent drag-active rounded-none pointer-events-none z-20" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none z-20">
+              <Upload className="w-12 h-12 text-accent animate-bounce" />
+              <p className="text-accent font-semibold">Suelta el archivo aquí</p>
+            </div>
+          </>
         )}
       </div>
 
