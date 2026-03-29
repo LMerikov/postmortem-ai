@@ -228,6 +228,46 @@ def _add_monitoring_section(story, recs, body_style, heading_style):
         story.append(Paragraph(f"• {html.escape(str(rec))}", body_style))
 
 
+def _add_design_issues_section(story, design_issues, body_style, heading_style):
+    """Agrega problemas de diseño detectados (compact)."""
+    if not design_issues or len(design_issues) == 0:
+        return
+    story.append(Paragraph("Problemas de Diseño Detectados", heading_style))
+    for issue in design_issues:
+        if issue and issue.strip():
+            story.append(Paragraph(f"💥 {html.escape(str(issue))}", body_style))
+    story.append(Spacer(1, 8))
+
+
+def _add_sre_metrics_section(story, sre_metrics, body_style, heading_style, cell_style, cell_lbl):
+    """Agrega métricas SRE específicas (compact table)."""
+    if not sre_metrics or not any(sre_metrics.values()):
+        return
+    story.append(Paragraph("Métricas SRE Recomendadas", heading_style))
+    rows = [[_cell("Métrica", cell_lbl), _cell("Objetivo", cell_style)]]
+    for key, label in [
+        ("latency_percentiles", "Latency (p95, p99)"),
+        ("error_rates", "Error Rates"),
+        ("external_dependencies", "External APIs"),
+        ("resource_utilization", "Resources")
+    ]:
+        val = sre_metrics.get(key, "").strip()
+        if val and val != "No aplica":
+            rows.append([_cell(label, cell_style), _cell(html.escape(val), cell_style)])
+    if len(rows) > 1:
+        t = Table(rows, colWidths=[3.5 * cm, 13.5 * cm], repeatRows=1)
+        t.setStyle(TableStyle([
+            ("BACKGROUND",   (0, 0), (-1, 0),  ACCENT),
+            ("ROWBACKGROUNDS",(0, 1),(-1, -1), [CARD_BG, BG]),
+            ("GRID",         (0, 0), (-1, -1), 0.4, BORDER),
+            ("VALIGN",       (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING",  (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 8))
+
+
 def _format_created_at(created_at: str | None, timezone_name: str = "UTC") -> str:
     """
     Formatea el timestamp de BD a la hora local del usuario.
@@ -388,6 +428,13 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
         body_style, heading_style,
     )
 
+    # ── Problemas de Diseño ──────────────────────────────────────────
+    _add_design_issues_section(
+        story,
+        postmortem.get("design_issues", []),
+        body_style, heading_style,
+    )
+
     # ── Acciones Tomadas ─────────────────────────────────────────────
     actions = postmortem.get("actions_taken", [])
     _add_actions_section(story, actions, body_style, heading_style)
@@ -403,6 +450,13 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     # ── Recomendaciones de Monitoreo ─────────────────────────────────
     recs = postmortem.get("monitoring_recommendations", [])
     _add_monitoring_section(story, recs, body_style, heading_style)
+
+    # ── Métricas SRE ─────────────────────────────────────────────────
+    _add_sre_metrics_section(
+        story,
+        postmortem.get("sre_metrics", {}),
+        body_style, heading_style, cell_style, cell_lbl,
+    )
 
     # ── Footer ───────────────────────────────────────────────────────
     story.append(HRFlowable(width="100%", thickness=1, color=BORDER, spaceBefore=14))
