@@ -130,13 +130,14 @@ def _add_evidence_section(story, evidence_lines, body_style, heading_style):
     story.append(Spacer(1, 4))
 
 
-def _add_security_and_confidence(story, security_assessment, confidence_level, body_style, heading_style, cell_style, cell_lbl):
-    """Agrega evaluación de seguridad y nivel de confianza."""
+def _add_security_and_confidence(story, security_assessment, confidence_level, attack_analysis, body_style, heading_style, cell_style, cell_lbl):
+    """Agrega evaluación de seguridad, nivel de confianza y análisis de ataque en una sola tabla."""
     if not security_assessment and not confidence_level:
         return
 
     story.append(Paragraph("Evaluación de Seguridad", heading_style))
     rows = []
+    detected = "no"
     if security_assessment:
         detected = security_assessment.get("detected", "no")
         color_map = {"yes": "D63031", "suspicious": "F39C12", "no": "27AE60"}
@@ -150,15 +151,30 @@ def _add_security_and_confidence(story, security_assessment, confidence_level, b
         if security_assessment.get("details"):
             rows.append([_cell("Detalle", cell_lbl), _cell(html.escape(str(security_assessment["details"])), cell_style)])
 
+    # Integrar Análisis de Ataque en la misma tabla cuando hay ataque
+    if attack_analysis and detected in ("yes", "suspicious"):
+        attempt_count = str(attack_analysis.get("attempt_count", ""))
+        time_window   = str(attack_analysis.get("time_window", ""))
+        pattern       = str(attack_analysis.get("pattern", ""))
+        if attempt_count:
+            rows.append([_cell("Intentos", cell_lbl),       _cell(html.escape(attempt_count), cell_style)])
+        if time_window:
+            rows.append([_cell("Ventana de tiempo", cell_lbl), _cell(html.escape(time_window), cell_style)])
+        if pattern:
+            rows.append([_cell("Patrón", cell_lbl),         _cell(html.escape(pattern), cell_style)])
+
     if confidence_level:
         rows.append([_cell("Confianza", cell_lbl), _cell(html.escape(str(confidence_level)), cell_style)])
 
     if rows:
+        # Fondo de la columna de etiquetas cambia según nivel de amenaza
+        lbl_bg = {"yes": colors.HexColor("#FDECEA"), "suspicious": colors.HexColor("#FFF8E1")}.get(detected, CARD_BG)
         t = Table(rows, colWidths=[4.5 * cm, 12.5 * cm])
         t.setStyle(TableStyle([
-            ("BACKGROUND",   (0, 0), (0, -1), CARD_BG),
+            ("BACKGROUND",   (0, 0), (0, -1), lbl_bg),
             ("BACKGROUND",   (1, 0), (1, -1), BG),
             ("GRID",         (0, 0), (-1, -1), 0.4, BORDER),
+            ("FONTNAME",     (0, 0), (0, -1), "Helvetica-Bold"),
             ("VALIGN",       (0, 0), (-1, -1), "TOP"),
             ("LEFTPADDING",  (0, 0), (-1, -1), 6),
             ("RIGHTPADDING", (0, 0), (-1, -1), 6),
@@ -167,24 +183,6 @@ def _add_security_and_confidence(story, security_assessment, confidence_level, b
         ]))
         story.append(t)
         story.append(Spacer(1, 8))
-
-
-def _add_attack_analysis_section(story, attack_analysis, body_style, heading_style):
-    if not attack_analysis:
-        return
-    
-    story.append(Paragraph("Análisis de Ataque", heading_style))
-    
-    attempt_count = attack_analysis.get("attempt_count", "N/A")
-    time_window = attack_analysis.get("time_window", "N/A")
-    pattern = attack_analysis.get("pattern", "")
-    
-    story.append(Paragraph(f"<b>Intentos:</b> {attempt_count}", body_style))
-    story.append(Paragraph(f"<b>Ventana de tiempo:</b> {time_window}", body_style))
-    if pattern:
-        story.append(Paragraph(f"<b>Patrón:</b> {pattern}", body_style))
-    
-    story.append(Spacer(1, 8))
 
 
 def _add_technical_fix_section(story, technical_fix, body_style, heading_style):
@@ -247,40 +245,65 @@ def _add_monitoring_section(story, recs, body_style, heading_style):
 
 
 def _add_design_issues_section(story, design_issues, body_style, heading_style):
-    """Agrega problemas de diseño detectados (compact)."""
+    """Agrega problemas de diseño detectados con fondo de alerta naranja."""
     if not design_issues or len(design_issues) == 0:
         return
     story.append(Paragraph("Problemas de Diseño Detectados", heading_style))
+    rows = []
     for issue in design_issues:
         if issue and issue.strip():
-            story.append(Paragraph(f"💥 {html.escape(str(issue))}", body_style))
+            rows.append([
+                Paragraph("<font color='#E17055'><b>[!]</b></font>", body_style),
+                Paragraph(html.escape(str(issue)), body_style),
+            ])
+    if rows:
+        t = Table(rows, colWidths=[0.7 * cm, PAGE_WIDTH - 0.7 * cm])
+        t.setStyle(TableStyle([
+            ("BACKGROUND",    (0, 0), (-1, -1), colors.HexColor("#FFF3E0")),
+            ("BOX",           (0, 0), (-1, -1), 1.2, colors.HexColor("#E17055")),
+            ("LINEBEFORE",    (0, 0), (0, -1),  3,   colors.HexColor("#E17055")),
+            ("VALIGN",        (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 6),
+            ("TOPPADDING",    (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ]))
+        story.append(t)
     story.append(Spacer(1, 8))
 
 
 def _add_sre_metrics_section(story, sre_metrics, body_style, heading_style, cell_style, cell_lbl):
-    """Agrega métricas SRE específicas (compact table)."""
+    """Agrega métricas SRE específicas — tabla con cabecera violeta y labels en bold."""
     if not sre_metrics or not any(sre_metrics.values()):
         return
     story.append(Paragraph("Métricas SRE Recomendadas", heading_style))
-    rows = [[_cell("Métrica", cell_lbl), _cell("Objetivo", cell_style)]]
+    # Cabecera con color blanco sobre fondo ACCENT
+    hdr_style = ParagraphStyle("sre_hdr", parent=cell_style,
+                               fontName="Helvetica-Bold", textColor=colors.white)
+    rows = [[_cell("Métrica", hdr_style), _cell("Objetivo", hdr_style)]]
     for key, label in [
         ("latency_percentiles", "Latency (p95, p99)"),
-        ("error_rates", "Error Rates"),
-        ("external_dependencies", "External APIs"),
-        ("resource_utilization", "Resources")
+        ("error_rates",         "Error Rates"),
+        ("external_dependencies","External APIs"),
+        ("resource_utilization","Resources"),
     ]:
-        val = sre_metrics.get(key, "").strip()
+        val = sre_metrics.get(key, "")
+        if isinstance(val, str):
+            val = val.strip()
         if val and val != "No aplica":
-            rows.append([_cell(label, cell_style), _cell(html.escape(val), cell_style)])
+            rows.append([_cell(label, cell_lbl), _cell(html.escape(str(val)), cell_style)])
     if len(rows) > 1:
-        t = Table(rows, colWidths=[3.5 * cm, 13.5 * cm], repeatRows=1)
+        t = Table(rows, colWidths=[5 * cm, 12 * cm], repeatRows=1)
         t.setStyle(TableStyle([
-            ("BACKGROUND",   (0, 0), (-1, 0),  ACCENT),
-            ("ROWBACKGROUNDS",(0, 1),(-1, -1), [CARD_BG, BG]),
-            ("GRID",         (0, 0), (-1, -1), 0.4, BORDER),
-            ("VALIGN",       (0, 0), (-1, -1), "TOP"),
-            ("LEFTPADDING",  (0, 0), (-1, -1), 5),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ("BACKGROUND",    (0, 0), (-1, 0),  ACCENT),
+            ("ROWBACKGROUNDS",(0, 1), (-1, -1), [CARD_BG, BG]),
+            ("GRID",          (0, 0), (-1, -1), 0.4, BORDER),
+            ("FONTNAME",      (0, 1), (0, -1),  "Helvetica-Bold"),
+            ("VALIGN",        (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 6),
+            ("TOPPADDING",    (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
         ]))
         story.append(t)
         story.append(Spacer(1, 8))
@@ -431,20 +454,13 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     story.append(t)
     story.append(Spacer(1, 8))
 
-    # ── Evaluación de Seguridad y Confianza ──────────────────────────
+    # ── Evaluación de Seguridad y Confianza (incluye Análisis de Ataque) ─
     _add_security_and_confidence(
         story,
         postmortem.get("security_assessment"),
         postmortem.get("confidence_level"),
+        postmortem.get("attack_analysis"),
         body_style, heading_style, cell_style, cell_lbl,
-    )
-
-    # ── Analisis de  Ataque ───────────────────────────────────────────
-    _add_attack_analysis_section(
-    story,
-    postmortem.get("attack_analysis"),
-    body_style,
-    heading_style,
     )
 
     # ── Corrección Técnica ───────────────────────────────────────────
