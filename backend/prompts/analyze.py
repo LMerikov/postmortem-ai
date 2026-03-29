@@ -23,6 +23,11 @@ You must respond ONLY with valid JSON matching this exact schema:
     "parameters": "string - parámetros relevantes (user_id, IP, query), o 'No identificado'",
     "origin": "string - IP de origen, servicio o usuario si existe en el log, o 'No identificado'"
   },
+  "attack_analysis": {
+    "attempt_count": "number - número de intentos detectados",
+    "time_window": "string - intervalo de tiempo (ej: 10 segundos)",
+    "pattern": "string - descripción del patrón (ej: 'rápidos intentos consecutivos desde misma IP')"
+  },
   "timeline": [
     {
       "time": "HH:MM or relative timestamp",
@@ -48,7 +53,8 @@ You must respond ONLY with valid JSON matching this exact schema:
   "confidence_level": "string - porcentaje estimado de confianza en el diagnóstico (ej: '87%') basado en la claridad de la evidencia",
   "technical_fix": {
     "immediate": "string - acción inmediata para detener el impacto (quick fix)",
-    "definitive": "string - solución definitiva siguiendo best practices"
+    "definitive": "string - solución definitiva siguiendo best practices",
+    "security_mitigations": "string - medidas concretas de seguridad si aplica (ej: bloquear IP, rate limiting, MFA, firewall rules)"
   },
   "actions_taken": ["string - actions EXPLICITLY recorded during the incident"],
   "action_items": [
@@ -77,6 +83,8 @@ CRITICAL RULES:
 
 2. ROOT CAUSE SPECIFICITY (CRITICAL):
    - NEVER use vague phrases like "podría deberse a..." or "probablemente...".
+   - You MUST select ONLY ONE root cause. Multiple hypotheses are strictly forbidden.
+   - If multiple possibilities exist, choose the one BEST supported by evidence and discard others.
    - STRUCTURE root_cause as: CAUSA MÁS PROBABLE: [exact cause]. EVIDENCIA: [specific log excerpts with numbers/timestamps]. CONCLUSIÓN: [technical reason].
    - Example GOOD: "CAUSA MÁS PROBABLE: La consulta SELECT tardó 15000ms (15 segundos), superando el timeout de 5 segundos. EVIDENCIA: duration_ms: 15000, error: timeout. CONCLUSIÓN: Falta de índice en columna 'id' o query ineficiente".
    - Example BAD: "podría deberse a una consulta mal optimizada".
@@ -88,6 +96,7 @@ CRITICAL RULES:
      * Sin retry logic diferenciado (retry en temporary errors, fail-fast en permanent errors)
      * Servicios acoplados (ej: payment-api bloqueado por DB lenta)
    - Populate `design_issues` array with specific problems found. Empty array if none detected.
+   - DO NOT suggest retry/backoff mechanisms for authentication systems if account lockout is already implemented. Account lockout is the correct security mechanism.
 
 4. SRE METRICS SPECIFICITY (NEW CAPABILITY):
    - NEVER recommend generic "monitorear latencia" → SPECIFIC: "p95 latency de DB queries: <100ms, p99: <500ms"
@@ -99,6 +108,7 @@ CRITICAL RULES:
    - If you see a database ROLLBACK due to a Deadlock, or a Linux OOM Killer terminating a process, recognize that the underlying OS/DB detected the issue and acted to protect the system. The root cause is what triggered the system to intervene (e.g., race condition, memory leak), NOT a lack of detection mechanisms. Do NOT recommend building custom detectors for things the DB/OS already handles.
 
 6. SECURITY ASSESSMENT: If `security_assessment.detected` is 'yes' or 'suspicious', always set severity to P1 or higher.
+   - If the attacked user is 'admin', 'root', or any privileged account, classify severity as P1 or higher and explicitly mention "high-risk target".
 7. CONFIDENCE LEVEL: Base the percentage on evidence quality: >90% if logs are explicit, 60-90% if partial evidence, <60% if inferred.
 8. Timeline must be chronological.
 9. Severity guide: P0=complete outage, P1=major impact, P2=moderate, P3=minor, P4=cosmetic/informational.

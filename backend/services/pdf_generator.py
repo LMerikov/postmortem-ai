@@ -169,6 +169,24 @@ def _add_security_and_confidence(story, security_assessment, confidence_level, b
         story.append(Spacer(1, 8))
 
 
+def _add_attack_analysis_section(story, attack_analysis, body_style, heading_style):
+    if not attack_analysis:
+        return
+    
+    story.append(Paragraph("Análisis de Ataque", heading_style))
+    
+    attempt_count = attack_analysis.get("attempt_count", "N/A")
+    time_window = attack_analysis.get("time_window", "N/A")
+    pattern = attack_analysis.get("pattern", "")
+    
+    story.append(Paragraph(f"<b>Intentos:</b> {attempt_count}", body_style))
+    story.append(Paragraph(f"<b>Ventana de tiempo:</b> {time_window}", body_style))
+    if pattern:
+        story.append(Paragraph(f"<b>Patrón:</b> {pattern}", body_style))
+    
+    story.append(Spacer(1, 8))
+
+
 def _add_technical_fix_section(story, technical_fix, body_style, heading_style):
     """Agrega la sección de Solución Técnica."""
     if not technical_fix:
@@ -419,6 +437,14 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
         postmortem.get("security_assessment"),
         postmortem.get("confidence_level"),
         body_style, heading_style, cell_style, cell_lbl,
+    )
+
+    # ── Analisis de  Ataque ───────────────────────────────────────────
+    _add_attack_analysis_section(
+    story,
+    postmortem.get("attack_analysis"),
+    body_style,
+    heading_style,
     )
 
     # ── Corrección Técnica ───────────────────────────────────────────
