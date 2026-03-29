@@ -109,15 +109,27 @@ if Config.DEBUG:
 @app.route("/", defaults={"path": ""}, methods=["GET"])
 @app.route("/<path:path>", methods=["GET"])
 def serve_frontend(path):
+    """Serve frontend files. Fallback to index.html for SPA routing."""
     if not app.static_folder:
         return jsonify({"error": "Frontend build not found"}), 404
 
-    target = Path(app.static_folder) / path
-    if path and target.exists() and target.is_file():
-        return send_from_directory(app.static_folder, path)
+    # Ignore API routes (shouldn't reach here, but just in case)
+    if path.startswith("api/"):
+        return jsonify({"error": "Not found"}), 404
 
-    response = send_from_directory(app.static_folder, "index.html")
-    return _set_no_store(response)
+    # Try to serve the exact file if it exists
+    if path:
+        target = Path(app.static_folder) / path
+        if target.exists() and target.is_file():
+            return send_from_directory(app.static_folder, path)
+
+    # Otherwise serve index.html for SPA routing (e.g., /history, /dashboard, /result/:id)
+    try:
+        response = send_from_directory(app.static_folder, "index.html")
+        return _set_no_store(response)
+    except Exception as e:
+        logger.error(f"Failed to serve index.html: {e}")
+        return jsonify({"error": "Frontend not available"}), 503
 
 
 with app.app_context():
