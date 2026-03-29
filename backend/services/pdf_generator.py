@@ -272,7 +272,7 @@ def _add_sre_metrics_section(story, sre_metrics, body_style, heading_style, cell
     for key, label in [
         ("latency_percentiles", "Latency (p95, p99)"),
         ("error_rates",         "Error Rates"),
-        ("external_dependencies","External APIs"),
+        ("external_apis",       "External APIs"),
         ("resource_utilization","Resources"),
     ]:
         val = sre_metrics.get(key, "")

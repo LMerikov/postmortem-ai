@@ -68,9 +68,9 @@ You must respond ONLY with valid JSON matching this exact schema:
   "monitoring_recommendations": ["string - metrics to watch"],
   "sre_metrics": {
     "latency_percentiles": "string - ej: 'p95: <100ms, p99: <500ms para /api/orders' o 'No aplica'",
-    "error_rates": "string - ej: 'Tasa de timeouts en BD: <0.1%, Tasa de errores 5xx: <0.5%' o 'No aplica'",
-    "external_dependencies": "string - ej: 'payment-api latency p95: <2s, success rate: >99%' o 'No aplica'",
-    "resource_utilization": "string - ej: 'DB query time p99, connection pool usage, memory' o 'No aplica'"
+    "error_rates": "string - ej: 'Tasa de timeouts en BD: <0.1%, Tasa de errores 5xx: <0.5%, Tasa de errores 409: <0.1%' o 'No aplica'",
+    "external_apis": "string - ej: 'payment-api latency p95: <2s, success rate: >99%' o 'No aplica' si no hay llamadas externas",
+    "resource_utilization": "string - ej: 'DB query time p99, connection pool usage, memory, CPU de servicio' o 'No aplica'"
   }
 }
 
