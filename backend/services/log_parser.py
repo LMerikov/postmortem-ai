@@ -43,7 +43,7 @@ def preprocess(content: str) -> dict:
     timestamps = re.findall(r'\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}', truncated)
     error_count = len(re.findall(r'\b(ERROR|FATAL|CRITICAL)\b', truncated, re.IGNORECASE))
     warn_count = len(re.findall(r'\b(WARN|WARNING)\b', truncated, re.IGNORECASE))
-    services = list(set(re.findall(r'service[:\s]+([a-zA-Z0-9_-]+)', truncated, re.IGNORECASE)))
+    services = list(set(re.findall(r'service[:\s]+([a-z0-9_-]+)', truncated, re.IGNORECASE)))
 
     return {
         "content": truncated,

@@ -72,14 +72,14 @@ export async function deletePostmortem(id) {
 }
 
 function triggerDownload(url, filename) {
-  // El único método confiable cross-browser: <a download> adjunto al DOM
+  // El unico metodo confiable cross-browser: <a download> adjunto al DOM
   const link = document.createElement('a')
   link.href = url
   link.download = filename
   document.body.appendChild(link)
   link.click()
-  document.body.removeChild(link)
-  // Liberar la blob URL después del click
+  link.remove()
+  // Liberar la blob URL despues del click
   setTimeout(() => URL.revokeObjectURL(url), 100)
 }
 

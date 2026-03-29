@@ -26,10 +26,12 @@ app = Flask(
 app.config.from_object(Config)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-# CSRF protection is not required here: this is a stateless REST API that uses
-# JSON-only requests (Content-Type: application/json), not session cookies.
-# CORS is restricted to trusted origins via Config.CORS_ORIGINS, and rate limiting
-# is applied below. These controls are sufficient to prevent CSRF attacks.
+# CSRF protection is intentionally not enabled here because this API does not use
+# session cookies or other browser-managed credentials for authentication.
+# Without ambient credentials, cross-site requests do not gain a victim user's
+# privileges. Note that CORS and rate limiting are not CSRF defenses by themselves;
+# if this app later adds cookie-based auth, server-side sessions, or HTTP auth,
+# explicit CSRF protection must be introduced for state-changing endpoints.
 CORS(app, resources={r"/api/*": {"origins": Config.CORS_ORIGINS}})
 
 # Rate limiting para prevenir abuso

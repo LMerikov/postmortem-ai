@@ -157,8 +157,8 @@ def _format_created_at(created_at: str | None, timezone_name: str = "UTC") -> st
         offset_str = dt_local.strftime("%z")          # ej: "-0300"
         offset_fmt = f"UTC{offset_str[:3]}:{offset_str[3:]}"  # ej: "UTC-03:00"
         return dt_local.strftime("%Y-%m-%d %H:%M") + f" ({offset_fmt})"
-    except (ZoneInfoNotFoundError, Exception):
-        # Fallback a UTC si el timezone no es reconocido
+    except (ZoneInfoNotFoundError, TypeError, ValueError):
+        # Fallback a UTC si el timezone no es reconocido o es invÃ¡lido
         return dt_utc.strftime("%Y-%m-%d %H:%M") + " UTC"
 
 
