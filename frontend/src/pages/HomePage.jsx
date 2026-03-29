@@ -173,29 +173,26 @@ export function HomePage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="space-y-4"
       >
         {loading ? (
-          <div className="card">
-            <GeneratingState text="Analizando tu incidente con IA... (~3 segundos)" />
+          <div className="rounded-2xl overflow-hidden border border-border shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+            <div className="flex items-center gap-2 px-4 py-3 bg-[#1a1a2e] border-b border-border">
+              <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+              <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+              <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+            </div>
+            <div className="bg-[#10101a] px-4 py-8">
+              <GeneratingState text="Analizando tu incidente con IA... (~3 segundos)" />
+            </div>
           </div>
         ) : (
-          <>
-            <LogInput value={content} onChange={setContent} disabled={loading} placeholder="Pega logs de error, stacktraces, o describe qué salió mal..." />
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <button onClick={handleAnalyze} disabled={loading || !content.trim()} className="btn-primary w-full sm:w-auto">
-                <Zap className="w-5 h-5" />
-                Generar Postmortem
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setContent(EXAMPLE_LOGS)}
-                className="text-sm text-muted hover:text-accent transition-colors w-full sm:w-auto"
-              >
-                ← Ver ejemplo real
-              </button>
-            </div>
-          </>
+          <LogInput
+            value={content}
+            onChange={setContent}
+            disabled={loading}
+            onAnalyze={handleAnalyze}
+            onExample={() => setContent(EXAMPLE_LOGS)}
+          />
         )}
       </motion.div>
 
