@@ -46,6 +46,13 @@ app.register_blueprint(history_bp)
 app.register_blueprint(export_bp)
 
 
+def _set_no_store(response):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
 @app.after_request
 def add_security_headers(response):
     for header, value in Config.SECURITY_HEADERS.items():
@@ -107,7 +114,8 @@ def serve_frontend(path):
     if path and target.exists() and target.is_file():
         return send_from_directory(app.static_folder, path)
 
-    return send_from_directory(app.static_folder, "index.html")
+    response = send_from_directory(app.static_folder, "index.html")
+    return _set_no_store(response)
 
 
 with app.app_context():
