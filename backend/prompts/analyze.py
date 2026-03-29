@@ -47,7 +47,7 @@ You must respond ONLY with valid JSON matching this exact schema:
   "evidence_lines": ["string - líneas exactas o fragmentos clave del log que sustentan el diagnóstico (máx 5)"],
   "impact": {
     "users_affected": "string - exact count or precise estimate based ONLY on log evidence (count unique IPs, session IDs, user IDs)",
-    "duration": "string - total incident duration = time between FIRST log entry and LAST log entry. Format: 'X minutos Y segundos' or 'X segundos'. DO NOT confuse request timeouts (e.g., 15000ms from a single request) with total incident duration.",
+    "duration": "string - total INCIDENT duration = time between FIRST ERROR/CRITICAL log and LAST RECOVERY log. Format: 'X minutos Y segundos' or 'X segundos'. DO NOT include application startup time. DO NOT confuse request timeouts (e.g., 15000ms) with incident duration. Example: If logs show ERROR at 09:22:45 and RECOVERY at 09:23:55, duration is 1 minuto 10 segundos, NOT the time from app startup.",
     "services_affected": ["string"],
     "revenue_impact": "string - estimated or Unknown"
   },
