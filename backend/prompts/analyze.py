@@ -95,8 +95,13 @@ CRITICAL RULES:
      * Falta de timeouts en llamadas externas → requests cuelgan
      * Sin retry logic diferenciado (retry en temporary errors, fail-fast en permanent errors)
      * Servicios acoplados (ej: payment-api bloqueado por DB lenta)
+     * Servicios en SERIE que podrían ser PARALELO (ej: pricing + payment_gateway independientes) → latencia acumulativa
+     * Lock contention sin optimización (ej: SELECT FOR UPDATE sin índice) → bloqueos innecesarios
+     * CASCADAS DE N SERVICIOS: Si un fallo inicial (ej: redis) desencadena falla en Service B → Circuit breaker → sobrecarga en Service A → exhaustion: identifica cada eslabón como problema arquitectónico separado (ej: "Service B sin sincronización" + "Load Balancer sin límites" + "Service A sin circuit breaker local")
    - Populate `design_issues` array with specific problems found. Empty array if none detected.
    - DO NOT suggest retry/backoff mechanisms for authentication systems if account lockout is already implemented. Account lockout is the correct security mechanism.
+   - When timeline shows "Duration_so_far" increasing across multiple services, analyze if they could execute in parallel to reduce total time.
+   - For cascade failures: separate ROOT TRIGGER (what failed first) from PROPAGATION ISSUES (architectural weaknesses that allowed failure to spread)
 
 4. SRE METRICS SPECIFICITY (NEW CAPABILITY):
    - NEVER recommend generic "monitorear latencia" → SPECIFIC: "p95 latency de DB queries: <100ms, p99: <500ms"
