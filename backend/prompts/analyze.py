@@ -87,11 +87,15 @@ CRITICAL RULES:
 
 2. ROOT CAUSE SPECIFICITY (CRITICAL):
    - NEVER use vague phrases like "podría deberse a..." or "probablemente...".
-   - You MUST select ONLY ONE root cause. Multiple hypotheses are strictly forbidden.
+   - You MUST select ONLY ONE root cause (the initial trigger, not the cascade).
    - If multiple possibilities exist, choose the one BEST supported by evidence and discard others.
-   - STRUCTURE root_cause as: CAUSA MÁS PROBABLE: [exact cause]. EVIDENCIA: [specific log excerpts with numbers/timestamps]. CONCLUSIÓN: [technical reason].
-   - Example GOOD: "CAUSA MÁS PROBABLE: La consulta SELECT tardó 15000ms (15 segundos), superando el timeout de 5 segundos. EVIDENCIA: duration_ms: 15000, error: timeout. CONCLUSIÓN: Falta de índice en columna 'id' o query ineficiente".
-   - Example BAD: "podría deberse a una consulta mal optimizada".
+   - STRUCTURE root_cause as:
+     * TRIGGER INICIAL: [what failed FIRST in the timeline, e.g., "Redis failover", "Query timeout", "Memory exhaustion"]
+     * CASCADA: [how failure propagated: A→B→C→D, list each step]
+     * EVIDENCIA: [specific log excerpts with timestamps and numbers]
+     * CONCLUSIÓN: [technical root reason - architectural weakness that allowed propagation]
+   - Example GOOD (cascada): "TRIGGER INICIAL: Nodo primary de Redis offline. CASCADA: Redis latency → Service B race condition → BD inconsistencia → circuit breaker → Service A pool exhausto. EVIDENCIA: [log lines with timestamps]. CONCLUSIÓN: Falta de sincronización en Service B y ausencia de circuit breaker local en Service A permitieron que la falla se propagara".
+   - Example BAD: "podría deberse a una latencia alta en Redis".
 
 3. DESIGN ISSUES DETECTION (NEW CAPABILITY):
    - ANALYZE service interactions for architectural problems:
