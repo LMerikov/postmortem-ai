@@ -83,6 +83,108 @@ def _add_timeline_section(story, timeline, cell_hdr, cell_style, heading_style):
     story.append(Spacer(1, 8))
 
 
+def _add_error_classification_section(story, error_classification, context, body_style, heading_style, cell_style, cell_lbl):
+    """Agrega clasificación del error y contexto del evento."""
+    has_classification = error_classification and (error_classification.get("type") or error_classification.get("name"))
+    has_context = context and any(v and v != "No identificado" for v in context.values())
+    if not has_classification and not has_context:
+        return
+
+    story.append(Paragraph("Clasificación del Error", heading_style))
+    rows = []
+    if has_classification:
+        rows.append([_cell("Tipo", cell_lbl), _cell(html.escape(str(error_classification.get("type", ""))), cell_style)])
+        rows.append([_cell("Error", cell_lbl), _cell(html.escape(str(error_classification.get("name", ""))), cell_style)])
+    if has_context:
+        for label, key in [("Endpoint", "endpoint"), ("Parámetros", "parameters"), ("Origen", "origin")]:
+            val = context.get(key, "")
+            if val and val != "No identificado":
+                rows.append([_cell(label, cell_lbl), _cell(html.escape(str(val)), cell_style)])
+
+    if rows:
+        t = Table(rows, colWidths=[4.5 * cm, 12.5 * cm])
+        t.setStyle(TableStyle([
+            ("BACKGROUND",   (0, 0), (0, -1), CARD_BG),
+            ("BACKGROUND",   (1, 0), (1, -1), BG),
+            ("GRID",         (0, 0), (-1, -1), 0.4, BORDER),
+            ("VALIGN",       (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING",  (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING",   (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING",(0, 0), (-1, -1), 5),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 8))
+
+
+def _add_evidence_section(story, evidence_lines, body_style, heading_style):
+    """Agrega la sección de Evidencia Clave del log."""
+    if not evidence_lines:
+        return
+    story.append(Paragraph("Evidencia Clave", heading_style))
+    for line in evidence_lines:
+        story.append(Paragraph(
+            f"• <font name='Courier' size='8'>{html.escape(str(line))}</font>",
+            body_style
+        ))
+    story.append(Spacer(1, 4))
+
+
+def _add_security_and_confidence(story, security_assessment, confidence_level, body_style, heading_style, cell_style, cell_lbl):
+    """Agrega evaluación de seguridad y nivel de confianza."""
+    if not security_assessment and not confidence_level:
+        return
+
+    story.append(Paragraph("Evaluación de Seguridad", heading_style))
+    rows = []
+    if security_assessment:
+        detected = security_assessment.get("detected", "no")
+        color_map = {"yes": "D63031", "suspicious": "F39C12", "no": "27AE60"}
+        label_map = {"yes": "ATAQUE DETECTADO", "suspicious": "SOSPECHOSO", "no": "Sin amenaza"}
+        color_hex = color_map.get(detected, "555555")
+        label = label_map.get(detected, detected.upper())
+        rows.append([
+            _cell("Estado", cell_lbl),
+            Paragraph(f"<font color='#{color_hex}'><b>{label}</b></font>", cell_style)
+        ])
+        if security_assessment.get("details"):
+            rows.append([_cell("Detalle", cell_lbl), _cell(html.escape(str(security_assessment["details"])), cell_style)])
+
+    if confidence_level:
+        rows.append([_cell("Confianza", cell_lbl), _cell(html.escape(str(confidence_level)), cell_style)])
+
+    if rows:
+        t = Table(rows, colWidths=[4.5 * cm, 12.5 * cm])
+        t.setStyle(TableStyle([
+            ("BACKGROUND",   (0, 0), (0, -1), CARD_BG),
+            ("BACKGROUND",   (1, 0), (1, -1), BG),
+            ("GRID",         (0, 0), (-1, -1), 0.4, BORDER),
+            ("VALIGN",       (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING",  (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING",   (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING",(0, 0), (-1, -1), 5),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 8))
+
+
+def _add_technical_fix_section(story, technical_fix, body_style, heading_style):
+    """Agrega la sección de Solución Técnica."""
+    if not technical_fix:
+        return
+    immediate = technical_fix.get("immediate", "")
+    definitive = technical_fix.get("definitive", "")
+    if not immediate and not definitive:
+        return
+    story.append(Paragraph("Solución Técnica", heading_style))
+    if immediate:
+        story.append(Paragraph(f"<b>Quick Fix:</b> {html.escape(str(immediate))}", body_style))
+    if definitive:
+        story.append(Paragraph(f"<b>Solución Definitiva:</b> {html.escape(str(definitive))}", body_style))
+    story.append(Spacer(1, 4))
+
+
 def _add_actions_section(story, actions, body_style, heading_style):
     """Agrega la sección de Acciones Tomadas al PDF."""
     if not actions:
@@ -224,6 +326,14 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     story.append(Paragraph("Resumen Ejecutivo", heading_style))
     story.append(Paragraph(html.escape(postmortem.get("summary", "")), body_style))
 
+    # ── Clasificación del Error y Contexto ───────────────────────────
+    _add_error_classification_section(
+        story,
+        postmortem.get("error_classification"),
+        postmortem.get("context"),
+        body_style, heading_style, cell_style, cell_lbl,
+    )
+
     # ── Timeline ────────────────────────────────────────────────────
     timeline = postmortem.get("timeline", [])
     _add_timeline_section(story, timeline, cell_hdr, cell_style, heading_style)
@@ -231,6 +341,13 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     # ── Análisis de Causa Raíz ───────────────────────────────────────
     story.append(Paragraph("Análisis de Causa Raíz", heading_style))
     story.append(Paragraph(html.escape(postmortem.get("root_cause", "")), body_style))
+
+    # ── Evidencia (líneas clave del log) ─────────────────────────────
+    _add_evidence_section(
+        story,
+        postmortem.get("evidence_lines", []),
+        body_style, heading_style,
+    )
 
     # ── Impacto ──────────────────────────────────────────────────────
     story.append(Paragraph("Impacto", heading_style))
@@ -255,6 +372,21 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     ]))
     story.append(t)
     story.append(Spacer(1, 8))
+
+    # ── Evaluación de Seguridad y Confianza ──────────────────────────
+    _add_security_and_confidence(
+        story,
+        postmortem.get("security_assessment"),
+        postmortem.get("confidence_level"),
+        body_style, heading_style, cell_style, cell_lbl,
+    )
+
+    # ── Corrección Técnica ───────────────────────────────────────────
+    _add_technical_fix_section(
+        story,
+        postmortem.get("technical_fix"),
+        body_style, heading_style,
+    )
 
     # ── Acciones Tomadas ─────────────────────────────────────────────
     actions = postmortem.get("actions_taken", [])
