@@ -111,7 +111,7 @@ export function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
+          className="text-center space-y-5"
         >
           <div className="flex items-center justify-center gap-3 flex-wrap mb-4">
             <div className="inline-flex items-center gap-2 text-xs text-accent border border-accent/30 bg-accent/10 px-4 py-2 rounded-full font-mono">
@@ -137,7 +137,7 @@ export function HomePage() {
           </div>
 
           {/* Stat badges */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
             {STATS.map((stat) => (
               <div key={stat.label} className="card text-center space-y-1">
                 <div className="text-2xl sm:text-3xl font-bold text-gradient">{stat.num}</div>
