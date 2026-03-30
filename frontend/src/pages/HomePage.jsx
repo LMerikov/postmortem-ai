@@ -30,12 +30,12 @@ const QUICK_SIM_TYPES = [
 ]
 
 const FEATURE_ICONS = [
-  <Zap      className="w-5 h-5 text-accent" />,
-  <Brain    className="w-5 h-5 text-cyan" />,
-  <Clock    className="w-5 h-5 text-p2" />,
-  <FileCheck className="w-5 h-5 text-success" />,
-  <Shield   className="w-5 h-5 text-accent" />,
-  <Target   className="w-5 h-5 text-cyan" />,
+  { Icon: Zap, className: 'w-5 h-5 text-accent' },
+  { Icon: Brain, className: 'w-5 h-5 text-cyan' },
+  { Icon: Clock, className: 'w-5 h-5 text-p2' },
+  { Icon: FileCheck, className: 'w-5 h-5 text-success' },
+  { Icon: Shield, className: 'w-5 h-5 text-accent' },
+  { Icon: Target, className: 'w-5 h-5 text-cyan' },
 ]
 
 const STATS_NUMS = ['97%', '<3s', '4h+', '15+']
@@ -219,7 +219,9 @@ export function HomePage() {
                 className="card space-y-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(108,92,231,0.15)] transition-all duration-300"
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0">{FEATURE_ICONS[i]}</div>
+                  <div className="flex-shrink-0">
+                    {FEATURE_ICONS[i] && <FEATURE_ICONS[i].Icon className={FEATURE_ICONS[i].className} />}
+                  </div>
                   <div className="space-y-1">
                     <p className="font-semibold text-sm">{f.title}</p>
                     <p className="text-xs text-muted leading-relaxed">{f.desc}</p>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import PropTypes from 'prop-types'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { BarChart2, ShieldAlert, Zap, FlaskConical, TrendingUp, AlertTriangle } from 'lucide-react'
@@ -41,6 +42,14 @@ function StatCard({ icon, label, value, sub, delay = 0 }) {
   )
 }
 
+StatCard.propTypes = {
+  icon: PropTypes.node.isRequired,
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  sub: PropTypes.string,
+  delay: PropTypes.number,
+}
+
 function SeverityBar({ severity, count, total }) {
   const cfg = SEVERITY_CONFIG[severity]
   const pct = total > 0 ? Math.round((count / total) * 100) : 0
@@ -60,6 +69,12 @@ function SeverityBar({ severity, count, total }) {
       </div>
     </div>
   )
+}
+
+SeverityBar.propTypes = {
+  severity: PropTypes.oneOf(['P0', 'P1', 'P2', 'P3', 'P4']).isRequired,
+  count: PropTypes.number.isRequired,
+  total: PropTypes.number.isRequired,
 }
 
 export function DashboardPage() {

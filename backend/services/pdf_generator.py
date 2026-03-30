@@ -81,7 +81,7 @@ def _add_timeline_section(story, timeline, cell_hdr, cell_style, heading_style):
     story.append(Spacer(1, 8))
 
 
-def _add_error_classification_section(story, error_classification, context, body_style, heading_style, cell_style, cell_lbl):
+def _add_error_classification_section(story, error_classification, context, heading_style, cell_style, cell_lbl):
     """Agrega clasificación del error y contexto del evento."""
     has_classification = error_classification and (error_classification.get("type") or error_classification.get("name"))
     has_context = context and any(v and v != "No identificado" for v in context.values())
@@ -384,7 +384,7 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
         story,
         postmortem.get("error_classification"),
         postmortem.get("context"),
-        body_style, heading_style, cell_style, cell_lbl,
+        heading_style, cell_style, cell_lbl,
     )
 
     # ── Timeline ────────────────────────────────────────────────────
