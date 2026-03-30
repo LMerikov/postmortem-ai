@@ -132,7 +132,7 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           disabled={disabled}
-          className="w-full h-56 bg-transparent resize-none px-5 py-4 text-sm font-mono text-text/90 focus:outline-none leading-relaxed relative z-10 placeholder-transparent"
+          className="w-full h-40 bg-transparent resize-none px-5 py-4 text-sm font-mono text-text/90 focus:outline-none leading-relaxed relative z-10 placeholder-transparent"
           spellCheck={false}
         />
 
