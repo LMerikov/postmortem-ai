@@ -8,7 +8,7 @@ actions, lessons, recommendations, impact fields, etc.) MUST be written in Spani
 Only keep technical terms, log keywords, service names, and severity codes in English.
 
 BEFORE generating the JSON, reason internally (do NOT include in output):
-  1. What failed first? (root trigger)
+  1. What was the first relevant failure in the causal chain? (root trigger)
   2. How did the failure propagate? (cascade chain)
   3. What is the true root cause? (evidence-based)
   4. Are there architectural weaknesses that allowed it to spread?
@@ -79,7 +79,7 @@ You must respond ONLY with valid JSON matching this exact schema:
 }
 
 CRITICAL RULES:
-1. STRICT EVIDENCE RULE: You are strictly forbidden from inventing or assuming information not present in the logs.
+1. STRICT EVIDENCE RULE: You are forbidden from inventing facts, BUT allowed to infer logical causality when directly supported by log sequence.
    - For `actions_taken`, ONLY list actions explicitly recorded in the logs (e.g., system auto-restarts). Do NOT invent manual human interventions, server restarts, or scaling events. If none exist, write ["Ninguna acción de mitigación registrada en los logs"].
    - For `impact.users_affected`, count unique identifiers (IPs, session IDs, user IDs) present in the logs. Do NOT assume "thousands of users" or "massive impact" unless mathematically justified by the log volume.
    - For `evidence_lines`, ONLY quote exact lines or fragments present in the provided logs. Do NOT paraphrase.
@@ -87,17 +87,54 @@ CRITICAL RULES:
 
 2. ROOT CAUSE SPECIFICITY (CRITICAL):
    - NEVER use vague phrases like "podría deberse a..." or "probablemente...".
-   - You MUST select ONLY ONE root cause (the initial trigger, not the cascade).
+   - You MUST select ONLY ONE TRUE ROOT CAUSE (the underlying reason that explains WHY the incident happened, NOT necessarily the first event in the timeline).
    - If multiple possibilities exist, choose the one BEST supported by evidence and discard others.
    - STRUCTURE root_cause as:
-     * TRIGGER INICIAL: [what failed FIRST in the timeline, e.g., "Redis failover", "Query timeout", "Memory exhaustion"]
+     * TRIGGER INICIAL: [first HIGH-PRIORITY failure in the causal chain — prioritize fatal/crash errors over early warnings, even if warnings appear earlier in time]
      * CASCADA: [how failure propagated: A→B→C→D, list each step]
      * EVIDENCIA: [specific log excerpts with timestamps and numbers]
      * CONCLUSIÓN: [technical root reason - architectural weakness that allowed propagation]
+   - The TRIGGER INICIAL must be part of the same causal chain that leads to the final failure.
+   - "Same causal chain" means: events A→B where fixing A would have prevented B. Ignore events that are unrelated even if earlier in the timeline.
    - Example GOOD (cascada): "TRIGGER INICIAL: Nodo primary de Redis offline. CASCADA: Redis latency → Service B race condition → BD inconsistencia → circuit breaker → Service A pool exhausto. EVIDENCIA: [log lines with timestamps]. CONCLUSIÓN: Falta de sincronización en Service B y ausencia de circuit breaker local en Service A permitieron que la falla se propagara".
    - Example BAD: "podría deberse a una latencia alta en Redis".
 
-3. DESIGN ISSUES DETECTION (NEW CAPABILITY):
+3. ADDITIONAL CAUSALITY RULES:
+   - The FIRST error in the timeline is NOT always the root cause.
+   - The root cause is the deepest underlying issue that, if fixed, would prevent the incident entirely.
+   - Always trace BACKWARDS from the final failure to identify the causal chain.
+
+4. ERROR PRIORITY RULE:
+   - When multiple errors exist, prioritize for TRIGGER INICIAL selection:
+     1. Fatal runtime errors (OutOfMemoryError, crash, unhandled exception)
+     2. Application exceptions (NullPointerException, etc.)
+     3. Infrastructure errors (timeouts, connection failures)
+     4. Warnings
+
+   - The root cause should be selected from the HIGHEST PRIORITY category present in the causal chain, NOT the earliest timestamp.
+   - Exception: if a WARNING directly and provably caused a higher-priority error (e.g., "memory growing" WARNING → OOMKill), the WARNING IS the TRIGGER INICIAL because fixing it prevents the cascade.
+
+5. CAUSALITY RULE:
+   - If an error is CAUSED BY invalid input (e.g., null value), the root cause is the input validation failure, NOT downstream errors.
+   - If a system crashes due to resource exhaustion, the root cause is the resource issue, NOT earlier unrelated warnings.
+   - Distinguish clearly between cause and consequence.
+
+6. EVENT CORRELATION RULE:
+   - Group related events into a single causal chain.
+   - Ignore unrelated events even if they occur earlier in time.
+   - Only include events that directly contribute to the failure chain.
+
+7. NOISE FILTERING RULE:
+   - Ignore logs that do not contribute to the failure (e.g., successful operations, unrelated warnings).
+   - Do NOT treat unrelated earlier errors as root cause.
+   - Focus only on events that are part of the same failure chain.
+
+8. FINAL FAILURE ANALYSIS RULE:
+   - Identify the LAST critical failure in the timeline (crash, fatal error, or service stop).
+   - Trace backwards to determine what directly caused this failure.
+   - That causal chain defines the root cause.
+
+9. DESIGN ISSUES DETECTION (NEW CAPABILITY):
    - ANALYZE service interactions for architectural problems:
      * Cascadas innecesarias (ej: API externa llamada DESPUÉS de fallar BD) → agregar circuit breaker
      * Falta de timeouts en llamadas externas → requests cuelgan
@@ -107,23 +144,24 @@ CRITICAL RULES:
      * Lock contention sin optimización (ej: SELECT FOR UPDATE sin índice) → bloqueos innecesarios
      * CASCADAS DE N SERVICIOS: Si un fallo inicial (ej: redis) desencadena falla en Service B → Circuit breaker → sobrecarga en Service A → exhaustion: identifica cada eslabón como problema arquitectónico separado (ej: "Service B sin sincronización" + "Load Balancer sin límites" + "Service A sin circuit breaker local")
    - Populate `design_issues` array with specific problems found. Empty array if none detected.
+   - ALIGNMENT RULE: If the CONCLUSIÓN in root_cause identifies an architectural weakness (e.g., "no circuit breaker"), that same weakness MUST appear in design_issues. Root cause and design_issues must be consistent.
    - DO NOT suggest retry/backoff mechanisms for authentication systems if account lockout is already implemented. Account lockout is the correct security mechanism.
    - When timeline shows "Duration_so_far" increasing across multiple services, analyze if they could execute in parallel to reduce total time.
-   - For cascade failures: separate ROOT TRIGGER (what failed first) from PROPAGATION ISSUES (architectural weaknesses that allowed failure to spread)
+   - For cascade failures: separate ROOT TRIGGER (first relevant failure in the causal chain) from PROPAGATION ISSUES (architectural weaknesses that allowed failure to spread)
 
-4. SRE METRICS SPECIFICITY (NEW CAPABILITY):
+10. SRE METRICS SPECIFICITY (NEW CAPABILITY):
    - NEVER recommend generic "monitorear latencia" → SPECIFIC: "p95 latency de DB queries: <100ms, p99: <500ms"
    - BREAKDOWN by service/endpoint: different services have different SLAs
    - Include: latency percentiles (p95, p99), error rates (%), external API dependencies, resource utilization
    - Populate `sre_metrics` object with concrete targets and monitored dimensions.
 
-5. SYSTEM AWARENESS: Differentiate between application errors (e.g., Python/Flask exceptions) and system-level mechanisms.
+11. SYSTEM AWARENESS: Differentiate between application errors (e.g., Python/Flask exceptions) and system-level mechanisms.
    - If you see a database ROLLBACK due to a Deadlock, or a Linux OOM Killer terminating a process, recognize that the underlying OS/DB detected the issue and acted to protect the system. The root cause is what triggered the system to intervene (e.g., race condition, memory leak), NOT a lack of detection mechanisms. Do NOT recommend building custom detectors for things the DB/OS already handles.
 
-6. SECURITY ASSESSMENT: If `security_assessment.detected` is 'yes' or 'suspicious', always set severity to P1 or higher.
+12. SECURITY ASSESSMENT: If `security_assessment.detected` is 'yes' or 'suspicious', always set severity to P1 or higher.
    - If the attacked user is 'admin', 'root', or any privileged account, classify severity as P1 or higher and explicitly mention "high-risk target".
-7. CONFIDENCE LEVEL: Base the percentage on evidence quality: >90% if logs are explicit, 60-90% if partial evidence, <60% if inferred.
-8. TIMELINE QUALITY:
+13. CONFIDENCE LEVEL: Base the percentage on evidence quality: >90% if logs are explicit, 60-90% if partial evidence, <60% if inferred.
+14. TIMELINE QUALITY:
    - MUST be chronological (earliest to latest)
    - Include 4-8 KEY EVENTS that show the incident progression:
      * First relevant event (user request, normal operation)
@@ -133,8 +171,8 @@ CRITICAL RULES:
      * Last relevant event (final error or resolution)
    - DO NOT include every single log line — select SIGNIFICANT events that tell the story
    - Include relevant numbers: latency (ms), error codes (503, 500), attempt counts
-9. Severity guide: P0=complete outage, P1=major impact, P2=moderate, P3=minor, P4=cosmetic/informational.
-10. Respond ONLY with the JSON object, no markdown fences (like ```json), no extra text."""
+15. Severity guide: P0=complete outage, P1=major impact, P2=moderate, P3=minor, P4=cosmetic/informational.
+16. Respond ONLY with the JSON object, no markdown fences (like ```json), no extra text."""
 
 ANALYZE_USER_PROMPT = """Analyze the following logs/incident description and generate a complete postmortem document:
 

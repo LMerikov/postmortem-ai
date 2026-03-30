@@ -268,10 +268,10 @@ def _add_sre_metrics_section(story, sre_metrics, heading_style, cell_style, cell
                                fontName="Helvetica-Bold", textColor=colors.white)
     rows = [[_cell("Métrica", hdr_style), _cell("Objetivo", hdr_style)]]
     for key, label in [
-        ("latency_percentiles", "Latency (p95, p99)"),
-        ("error_rates",         "Error Rates"),
-        ("external_apis",       "External APIs"),
-        ("resource_utilization","Resources"),
+        ("latency_percentiles", "Latencia (p95, p99)"),
+        ("error_rates",         "Tasas de Error"),
+        ("external_apis",       "APIs Externas"),
+        ("resource_utilization","Recursos"),
     ]:
         val = sre_metrics.get(key, "")
         if isinstance(val, str):
@@ -392,7 +392,10 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
 
     # ── Análisis de Causa Raíz ───────────────────────────────────────
     story.append(Paragraph("Análisis de Causa Raíz", heading_style))
-    story.append(Paragraph(html.escape(postmortem.get("root_cause", "")), body_style))
+    root_cause_text = html.escape(postmortem.get("root_cause", ""))
+    for kw in ["TRIGGER INICIAL", "CASCADA", "EVIDENCIA", "CONCLUSIÓN"]:
+        root_cause_text = root_cause_text.replace(kw + ":", f"<b><font color='#5B3FB0'>{kw}:</font></b>")
+    story.append(Paragraph(root_cause_text, body_style))
 
     # ── Evidencia ────────────────────────────────────────────────────
     _add_evidence_section(story, postmortem.get("evidence_lines", []), body_style, heading_style)
@@ -402,10 +405,10 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     impact = postmortem.get("impact", {})
     services = ", ".join(impact.get("services_affected", [])) or "Desconocido"
     impact_rows = [
-        [_cell("Usuarios Afectados", cell_lbl), _cell(impact.get("users_affected", "Desconocido"), cell_style)],
-        [_cell("Duración",           cell_lbl), _cell(impact.get("duration", "Desconocido"),       cell_style)],
-        [_cell("Servicios",          cell_lbl), _cell(services,                                     cell_style)],
-        [_cell("Impacto Económico",  cell_lbl), _cell(impact.get("revenue_impact", "Desconocido"), cell_style)],
+        [_cell("Usuarios Afectados", cell_lbl), _cell(html.escape(str(impact.get("users_affected", "Desconocido"))), cell_style)],
+        [_cell("Duración",           cell_lbl), _cell(html.escape(str(impact.get("duration", "Desconocido"))),       cell_style)],
+        [_cell("Servicios",          cell_lbl), _cell(html.escape(services),                                          cell_style)],
+        [_cell("Impacto Económico",  cell_lbl), _cell(html.escape(str(impact.get("revenue_impact", "Desconocido"))), cell_style)],
     ]
     t = Table(impact_rows, colWidths=[4.5 * cm, 12.5 * cm])
     t.setStyle(TableStyle([
