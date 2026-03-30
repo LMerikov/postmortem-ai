@@ -1,5 +1,39 @@
 const BASE = '/api'
 
+function handleStreamEvent(data, onChunk, onComplete, onError) {
+  if (data.status === 'generating') {
+    onChunk(data.chunk)
+    return
+  }
+
+  if (data.status === 'complete') {
+    onComplete(data.id, data.postmortem)
+    return
+  }
+
+  if (data.status === 'error') {
+    onError(data.message)
+  }
+}
+
+
+function processStreamBuffer(buffer, onChunk, onComplete, onError) {
+  const lines = buffer.split('\n')
+  const remainder = lines.pop() ?? ''
+
+  for (const line of lines) {
+    if (!line.startsWith('data: ')) continue
+
+    try {
+      const data = JSON.parse(line.slice(6))
+      handleStreamEvent(data, onChunk, onComplete, onError)
+    } catch {}
+  }
+
+  return remainder
+}
+
+
 export async function analyzeLogsStream(content, onChunk, onComplete, onError) {
   const res = await fetch(`${BASE}/analyze`, {
     method: 'POST',
@@ -18,18 +52,7 @@ export async function analyzeLogsStream(content, onChunk, onComplete, onError) {
     const { done, value } = await reader.read()
     if (done) break
     buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop()
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        try {
-          const data = JSON.parse(line.slice(6))
-          if (data.status === 'generating') onChunk(data.chunk)
-          else if (data.status === 'complete') onComplete(data.id, data.postmortem)
-          else if (data.status === 'error') onError(data.message)
-        } catch {}
-      }
-    }
+    buffer = processStreamBuffer(buffer, onChunk, onComplete, onError)
   }
 }
 
