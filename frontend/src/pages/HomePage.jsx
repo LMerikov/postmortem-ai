@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet'
 import { motion } from 'framer-motion'
 import { Zap, FlaskConical, ArrowRight, Shield, Clock, FileCheck, TrendingDown, Brain, Target } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 import { LogInput } from '../components/Analyze/LogInput'
 import { analyzeLogs, getStats } from '../services/api'
 import { useToast } from '../components/UI/Toast'
@@ -22,24 +21,35 @@ const EXAMPLE_LOGS = `2026-03-29 03:10:11 [INFO] [api-gateway] POST /api/checkou
 2026-03-29 03:10:22 [ERROR] [api-gateway] HTTP 503 Service Unavailable - user_id: 8821`
 
 const QUICK_SIM_TYPES = [
-  { icon: '🗄️', key: 'database', type: 'database_outage' },
-  { icon: '🛡️', key: 'ddos',     type: 'ddos_attack' },
-  { icon: '💾', key: 'memory',   type: 'memory_leak' },
-  { icon: '🔒', key: 'ssl',      type: 'certificate_expiration' },
-  { icon: '🚀', key: 'deploy',   type: 'bad_deployment' },
+  { icon: '🗄️', label: 'Caída de BD', type: 'database_outage' },
+  { icon: '🛡️', label: 'Ataque DDoS', type: 'ddos_attack' },
+  { icon: '💾', label: 'Fuga Memoria', type: 'memory_leak' },
+  { icon: '🔒', label: 'SSL Expirado', type: 'certificate_expiration' },
+  { icon: '🚀', label: 'Mal Deploy', type: 'bad_deployment' },
 ]
 
-const FEATURE_ICONS = [
-  { Icon: Zap, className: 'w-5 h-5 text-accent' },
-  { Icon: Brain, className: 'w-5 h-5 text-cyan' },
-  { Icon: Clock, className: 'w-5 h-5 text-p2' },
-  { Icon: FileCheck, className: 'w-5 h-5 text-success' },
-  { Icon: Shield, className: 'w-5 h-5 text-accent' },
-  { Icon: Target, className: 'w-5 h-5 text-cyan' },
+const FEATURES = [
+  { title: 'Análisis en <3s', desc: 'IA analiza logs y genera postmortems estructurados en segundos sin intervención manual', Icon: Zap, className: 'w-5 h-5 text-accent' },
+  { title: 'Causas Raíz Precisas', desc: 'Detecta cascadas de fallos, distingue síntomas de triggers iniciales, identifica patrones', Icon: Brain, className: 'w-5 h-5 text-cyan' },
+  { title: 'Ahorra +4 Horas/Incidente', desc: 'Automatiza análisis tedioso. De 4 horas de escritura manual → 30 segundos', Icon: Clock, className: 'w-5 h-5 text-p2' },
+  { title: 'Exporta a PDF/Markdown', desc: 'Postmortems profesionales listos para stakeholders con un clic', Icon: FileCheck, className: 'w-5 h-5 text-success' },
+  { title: 'Entrenamiento Realista', desc: 'Genera incidentes simulados para drills SRE. Mejora respuesta ante crisis', Icon: Shield, className: 'w-5 h-5 text-accent' },
+  { title: 'Métricas SRE Integradas', desc: 'Recomendaciones de p95/p99 latency, error rates, y alertas automáticas', Icon: Target, className: 'w-5 h-5 text-cyan' },
 ]
 
-const STATS_NUMS = ['97%', '<3s', '4h+', '15+']
-const STATS_KEYS = ['precision', 'time', 'savings', 'types']
+const PERSONAS = [
+  { title: 'SRE Engineers', desc: 'Reduce tus post-incident reviews de 4 horas a 30 minutos. Enfócate en mejoras, no en redacción.', icon: '👨‍💼' },
+  { title: 'Team Leads', desc: 'Mantén un registro completo de incidentes. Identifica patrones de fallos y causas recurrentes.', icon: '📊' },
+  { title: 'DevOps/Infra', desc: 'Entrena a tu equipo con incidentes realistas. Mejora MTTR en eventos reales.', icon: '🎯' },
+  { title: 'Startups', desc: 'No tienes SREs dedicados? Postmortem.ai reemplaza expertise costosa con IA.', icon: '🚀' },
+]
+
+const STATS = [
+  { num: '97%', label: 'Precisión en análisis' },
+  { num: '<3s', label: 'Tiempo promedio' },
+  { num: '4h+', label: 'Ahorro por incidente' },
+  { num: '15+', label: 'Tipos de incidentes' },
+]
 
 export function HomePage() {
   const [content, setContent] = useState('')
@@ -47,7 +57,6 @@ export function HomePage() {
   const [totalPostmortems, setTotalPostmortems] = useState(null)
   const navigate = useNavigate()
   const toast = useToast()
-  const { t } = useTranslation()
 
   useEffect(() => {
     getStats().then(data => setTotalPostmortems(data.total_postmortems))
@@ -68,7 +77,7 @@ export function HomePage() {
 
   const handleAnalyze = async () => {
     if (!content.trim()) {
-      toast(t('common.error'), 'error')
+      toast('Error', 'error')
       return
     }
     setLoading(true)
@@ -84,9 +93,6 @@ export function HomePage() {
   const handleQuickSim = (type) => {
     navigate('/simulate', { state: { incident_type: type } })
   }
-
-  const features = t('home.features', { returnObjects: true })
-  const personas = t('home.personas', { returnObjects: true })
 
   return (
     <>
@@ -110,12 +116,12 @@ export function HomePage() {
           <div className="flex items-center justify-center gap-3 flex-wrap mb-4">
             <div className="inline-flex items-center gap-2 text-xs text-accent border border-accent/30 bg-accent/10 px-4 py-2 rounded-full font-mono">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse-slow" />
-              <span>⚡ {t('home.badge')}</span>
+              <span>⚡ Análisis con IA · Para SRE Teams</span>
             </div>
             {totalPostmortems > 0 && (
               <div className="inline-flex items-center gap-1.5 text-xs text-success border border-success/30 bg-success/10 px-4 py-2 rounded-full font-mono">
                 <span className="w-2 h-2 rounded-full bg-success" />
-                <span>{totalPostmortems.toLocaleString()} {t('home.stats_analyzed')}</span>
+                <span>{totalPostmortems.toLocaleString()} postmortems analizados</span>
               </div>
             )}
           </div>
@@ -123,19 +129,19 @@ export function HomePage() {
           <div className="space-y-3">
             <h1 className="text-5xl sm:text-6xl font-bold leading-tight tracking-tight">
               Logs → Postmortems<br />
-              <span className="text-gradient">{t('home.headline_gradient')}</span>
+              <span className="text-gradient">en menos de 3 segundos</span>
             </h1>
             <p className="text-lg sm:text-xl text-muted max-w-2xl mx-auto leading-relaxed">
-              {t('home.sub')}
+              Deja de escribir postmortems manualmente. Pega logs, stacktraces o describe el incidente. Nuestra IA genera análisis completo con causas raíz, cascadas de fallos, y recomendaciones SRE.
             </p>
           </div>
 
           {/* Stat badges */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
-            {STATS_NUMS.map((num, i) => (
+            {STATS.map((stat, i) => (
               <div key={i} className="card text-center space-y-1">
-                <div className="text-2xl sm:text-3xl font-bold text-gradient">{num}</div>
-                <div className="text-xs text-muted">{t(`home.stats.${STATS_KEYS[i]}`)}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-gradient">{stat.num}</div>
+                <div className="text-xs text-muted">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -155,7 +161,7 @@ export function HomePage() {
                 <div className="w-3 h-3 rounded-full bg-[#28c840]" />
               </div>
               <div className="bg-[#10101a] px-4 py-8">
-                <GeneratingState text={t('home.analyzing')} />
+                <GeneratingState text="Analizando tu incidente con IA... (~3 segundos)" />
               </div>
             </div>
           ) : (
@@ -172,7 +178,7 @@ export function HomePage() {
         {/* Divider */}
         <div className="relative text-center">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-          <span className="relative bg-bg px-4 text-muted text-sm">— {t('home.divider')} —</span>
+          <span className="relative bg-bg px-4 text-muted text-sm">— o prueba el Modo Simulación —</span>
         </div>
 
         {/* Quick simulations */}
@@ -184,10 +190,10 @@ export function HomePage() {
         >
           <div className="flex items-center gap-2">
             <FlaskConical className="w-5 h-5 text-cyan" />
-            <h2 className="text-base font-semibold text-text">{t('home.quick_sims_title')}</h2>
+            <h2 className="text-base font-semibold text-text">Simulaciones Rápidas</h2>
           </div>
           <div className="flex flex-wrap gap-3">
-            {QUICK_SIM_TYPES.map(({ icon, key, type }) => (
+            {QUICK_SIM_TYPES.map(({ icon, label, type }) => (
               <button
                 key={type}
                 onClick={() => handleQuickSim(type)}
@@ -195,7 +201,7 @@ export function HomePage() {
               >
                 <span className="text-xl">{icon}</span>
                 <span className="text-sm text-muted group-hover:text-text transition-colors">
-                  {t(`home.quick_sims.${key}`)}
+                  {label}
                 </span>
               </button>
             ))}
@@ -205,11 +211,11 @@ export function HomePage() {
         {/* Features grid */}
         <div className="space-y-8">
           <div className="text-center space-y-2">
-            <h2 className="text-3xl sm:text-4xl font-bold">{t('home.features_title')}</h2>
-            <p className="text-muted">{t('home.features_sub')}</p>
+            <h2 className="text-3xl sm:text-4xl font-bold">Características Principales</h2>
+            <p className="text-muted">Todo lo que necesitas para postmortems de clase mundial</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.isArray(features) && features.map((f, i) => (
+            {FEATURES.map((f, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 16 }}
@@ -220,7 +226,7 @@ export function HomePage() {
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0">
-                    {FEATURE_ICONS[i] && <FEATURE_ICONS[i].Icon className={FEATURE_ICONS[i].className} />}
+                    <f.Icon className={f.className} />
                   </div>
                   <div className="space-y-1">
                     <p className="font-semibold text-sm">{f.title}</p>
@@ -235,11 +241,11 @@ export function HomePage() {
         {/* Personas */}
         <div className="space-y-8">
           <div className="text-center space-y-2">
-            <h2 className="text-3xl sm:text-4xl font-bold">{t('home.personas_title')}</h2>
-            <p className="text-muted">{t('home.personas_sub')}</p>
+            <h2 className="text-3xl sm:text-4xl font-bold">Para Quién Es</h2>
+            <p className="text-muted">Ideal para equipos que quieren mejorar su respuesta ante incidentes</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.isArray(personas) && personas.map((p, i) => (
+            {PERSONAS.map((p, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 16 }}
@@ -268,12 +274,12 @@ export function HomePage() {
           <div className="text-center space-y-2">
             <h2 className="text-2xl sm:text-3xl font-bold flex items-center justify-center gap-2">
               <FlaskConical className="w-6 h-6 text-cyan" />
-              {t('home.training_title')}
+              Modo Entrenamiento
             </h2>
-            <p className="text-muted">{t('home.training_sub')}</p>
+            <p className="text-muted">Genera incidentes realistas para drills SRE. Prepara tu equipo sin riesgo real.</p>
           </div>
           <div className="flex flex-wrap gap-3 justify-center">
-            {QUICK_SIM_TYPES.map(({ icon, key, type }) => (
+            {QUICK_SIM_TYPES.map(({ icon, label, type }) => (
               <button
                 key={type}
                 onClick={() => handleQuickSim(type)}
@@ -281,7 +287,7 @@ export function HomePage() {
               >
                 <span className="text-xl">{icon}</span>
                 <span className="text-sm font-medium text-muted group-hover:text-text transition-colors">
-                  {t(`home.quick_sims.${key}`)}
+                  {label}
                 </span>
               </button>
             ))}
@@ -289,7 +295,7 @@ export function HomePage() {
               onClick={() => navigate('/simulate')}
               className="flex items-center gap-2 px-5 py-3 bg-card border border-border rounded-xl hover:border-accent/50 text-muted hover:text-text transition-all duration-200 font-medium"
             >
-              {t('home.training_see_all')}
+              Ver todos
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -302,21 +308,21 @@ export function HomePage() {
           transition={{ delay: 0.45 }}
           className="card gradient-border space-y-4 text-center bg-gradient-to-br from-accent/10 to-cyan/10 border-accent/20"
         >
-          <h2 className="text-2xl sm:text-3xl font-bold">{t('home.cta_title')}</h2>
-          <p className="text-muted max-w-xl mx-auto">{t('home.cta_sub')}</p>
+          <h2 className="text-2xl sm:text-3xl font-bold">¿Listo para mejorar tu proceso?</h2>
+          <p className="text-muted max-w-xl mx-auto">Comienza ahora. No requiere registro. Analiza tu primer incidente en 30 segundos.</p>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="btn-primary mx-auto"
           >
             <Zap className="w-5 h-5" />
-            {t('home.cta_btn')}
+            Analizar Incidente
             <ArrowRight className="w-4 h-4" />
           </button>
         </motion.div>
 
         {/* Footer note */}
         <div className="text-center text-xs text-muted space-y-2 pt-8 border-t border-border">
-          <p>{t('home.footer_note')}</p>
+          <p>Postmortem.ai → Análisis automático con IA. Inspira en Google SRE Book.</p>
         </div>
 
       </div>
