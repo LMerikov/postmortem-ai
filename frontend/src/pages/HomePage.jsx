@@ -322,7 +322,8 @@ export function HomePage() {
 
         {/* Footer note */}
         <div className="text-center text-xs text-muted space-y-2 pt-8 border-t border-border">
-          <p>Postmortem.ai → Análisis automático con IA. Inspira en Google SRE Book.</p>
+          <p>© 2026 Postmortem.ai</p>
+          <p>Engineered by Luis Merino • Inspirado en Google SRE Book</p>
         </div>
 
       </div>
