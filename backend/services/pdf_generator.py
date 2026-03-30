@@ -128,7 +128,7 @@ def _add_evidence_section(story, evidence_lines, body_style, heading_style):
     story.append(Spacer(1, 4))
 
 
-def _add_security_and_confidence(story, security_assessment, confidence_level, attack_analysis, body_style, heading_style, cell_style, cell_lbl):
+def _add_security_and_confidence(story, security_assessment, confidence_level, attack_analysis, heading_style, cell_style, cell_lbl):
     """Agrega evaluación de seguridad, nivel de confianza y análisis de ataque en una sola tabla."""
     if not security_assessment and not confidence_level:
         return
@@ -259,7 +259,7 @@ def _add_design_issues_section(story, design_issues, body_style, heading_style):
     story.append(Spacer(1, 8))
 
 
-def _add_sre_metrics_section(story, sre_metrics, body_style, heading_style, cell_style, cell_lbl):
+def _add_sre_metrics_section(story, sre_metrics, heading_style, cell_style, cell_lbl):
     """Agrega métricas SRE específicas — tabla con cabecera violeta y labels en bold."""
     if not sre_metrics or not any(sre_metrics.values()):
         return
@@ -427,7 +427,7 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
         postmortem.get("security_assessment"),
         postmortem.get("confidence_level"),
         postmortem.get("attack_analysis"),
-        body_style, heading_style, cell_style, cell_lbl,
+        heading_style, cell_style, cell_lbl,
     )
 
     # ── Solución Técnica ─────────────────────────────────────────────
@@ -452,7 +452,7 @@ def generate_pdf(postmortem: dict, created_at: str | None = None, timezone_name:
     _add_sre_metrics_section(
         story,
         postmortem.get("sre_metrics", {}),
-        body_style, heading_style, cell_style, cell_lbl,
+        heading_style, cell_style, cell_lbl,
     )
 
     # ── Footer ───────────────────────────────────────────────────────
