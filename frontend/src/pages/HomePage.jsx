@@ -29,7 +29,7 @@ const QUICK_SIM_TYPES = [
 ]
 
 const FEATURES = [
-  { title: 'Análisis en <3s', desc: 'IA analiza logs y genera postmortems estructurados en segundos sin intervención manual', Icon: Zap, className: 'w-5 h-5 text-accent' },
+  { title: 'Análisis en <5s', desc: 'IA analiza logs y genera postmortems estructurados en segundos sin intervención manual', Icon: Zap, className: 'w-5 h-5 text-accent' },
   { title: 'Causas Raíz Precisas', desc: 'Detecta cascadas de fallos, distingue síntomas de triggers iniciales, identifica patrones', Icon: Brain, className: 'w-5 h-5 text-cyan' },
   { title: 'Ahorra +4 Horas/Incidente', desc: 'Automatiza análisis tedioso. De 4 horas de escritura manual → 30 segundos', Icon: Clock, className: 'w-5 h-5 text-p2' },
   { title: 'Exporta a PDF/Markdown', desc: 'Postmortems profesionales listos para stakeholders con un clic', Icon: FileCheck, className: 'w-5 h-5 text-success' },
@@ -46,7 +46,7 @@ const PERSONAS = [
 
 const STATS = [
   { num: '97%', label: 'Precisión en análisis' },
-  { num: '<3s', label: 'Tiempo promedio' },
+  { num: '<5s', label: 'Tiempo promedio' },
   { num: '4h+', label: 'Ahorro por incidente' },
   { num: '15+', label: 'Tipos de incidentes' },
 ]
@@ -98,7 +98,7 @@ export function HomePage() {
     <>
       <Helmet>
         <title>Postmortem.ai - AI-powered incident analysis</title>
-        <meta name="description" content="Generate professional postmortems in under 3 seconds. Analyze logs, identify root causes, detect failure cascades. For SRE teams." />
+        <meta name="description" content="Generate professional postmortems in under 5 seconds. Analyze logs, identify root causes, detect failure cascades. For SRE teams." />
         <meta name="keywords" content="postmortem, incidents, SRE, log analysis, AI, DevOps" />
         <meta property="og:title" content="Postmortem.ai - Automated AI Analysis" />
         <meta property="og:description" content="From chaotic logs to professional postmortems in seconds" />
@@ -129,7 +129,7 @@ export function HomePage() {
           <div className="space-y-3">
             <h1 className="text-5xl sm:text-6xl font-bold leading-tight tracking-tight">
               Logs → Postmortems<br />
-              <span className="text-gradient">en menos de 3 segundos</span>
+              <span className="text-gradient">en menos de 5 segundos</span>
             </h1>
             <p className="text-lg sm:text-xl text-muted max-w-2xl mx-auto leading-relaxed">
               Deja de escribir postmortems manualmente. Pega logs, stacktraces o describe el incidente. Nuestra IA genera análisis completo con causas raíz, cascadas de fallos, y recomendaciones SRE.
@@ -161,7 +161,7 @@ export function HomePage() {
                 <div className="w-3 h-3 rounded-full bg-[#28c840]" />
               </div>
               <div className="bg-[#10101a] px-4 py-8">
-                <GeneratingState text="Analizando tu incidente con IA... (~3 segundos)" />
+                <GeneratingState text="Analizando tu incidente con IA... (~5 segundos)" />
               </div>
             </div>
           ) : (
