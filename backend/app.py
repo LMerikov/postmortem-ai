@@ -122,6 +122,12 @@ def serve_frontend(path):
         if target.exists() and target.is_file():
             return send_from_directory(str(frontend_dist), path)
 
+        # If the request looks like a file, do not fall back to index.html.
+        # This avoids returning the SPA shell for missing assets such as
+        # /favicon.svg, /robots.txt, or /sitemap.xml.
+        if Path(path).suffix:
+            return jsonify({"error": "Not found"}), 404
+
     # SPA fallback — serve index.html for all frontend routes
     # This enables /history, /dashboard, /result/:id to work on page reload
     index_file = frontend_dist / "index.html"
