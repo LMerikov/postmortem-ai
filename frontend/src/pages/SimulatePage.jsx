@@ -57,23 +57,25 @@ export function SimulatePage() {
         <hr className="border-border" />
         <ParameterSelectors params={params} onChange={setParams} />
 
-        <button
-          onClick={handleGenerate}
-          disabled={loading}
-          className="btn-primary w-full justify-center text-base py-4"
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-              <span>Generando simulación...</span>
-            </span>
-          ) : (
-            <>
-              <Dice6 className="w-5 h-5" />
-              <span>Generar Simulación</span>
-            </>
-          )}
-        </button>
+        <div className="flex justify-end">
+          <button
+            onClick={handleGenerate}
+            disabled={loading}
+            className="btn-primary"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <span>Generando...</span>
+              </span>
+            ) : (
+              <>
+                <Dice6 className="w-4 h-4" />
+                <span>Generar Simulación</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {loading && (
