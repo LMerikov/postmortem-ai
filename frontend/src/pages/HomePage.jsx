@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet'
 import { motion } from 'framer-motion'
-import { Zap, FlaskConical, ArrowRight, Shield, Clock, FileCheck, TrendingDown, Brain, Target } from 'lucide-react'
+import { Zap, FlaskConical, ArrowRight, Shield, Clock, FileCheck, Brain, Target } from 'lucide-react'
 import { LogInput } from '../components/Analyze/LogInput'
 import { analyzeLogs, getStats } from '../services/api'
 import { useToast } from '../components/UI/Toast'
@@ -72,7 +72,7 @@ export function HomePage() {
     script.type = 'application/ld+json'
     script.innerHTML = JSON.stringify(schema)
     document.head.appendChild(script)
-    return () => document.head.removeChild(script)
+    return () => script.remove()
   }, [])
 
   const handleAnalyze = async () => {
@@ -138,8 +138,8 @@ export function HomePage() {
 
           {/* Stat badges */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
-            {STATS.map((stat, i) => (
-              <div key={i} className="card text-center space-y-1">
+            {STATS.map((stat) => (
+              <div key={stat.label} className="card text-center space-y-1">
                 <div className="text-2xl sm:text-3xl font-bold text-gradient">{stat.num}</div>
                 <div className="text-xs text-muted">{stat.label}</div>
               </div>
@@ -217,7 +217,7 @@ export function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f, i) => (
               <motion.div
-                key={i}
+                key={f.title}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 + i * 0.06 }}
@@ -247,7 +247,7 @@ export function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {PERSONAS.map((p, i) => (
               <motion.div
-                key={i}
+                key={p.title}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 + i * 0.07 }}
