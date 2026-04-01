@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": ["node_modules\\.bin\\vite"],
+      "port": 5173,
+      "cwd": "C:\\Users\\ex_lbaltazar.UA\\Desktop\\POSTMORTEM_AI\\postmortem-ai\\frontend"
+    }
+  ]
+}
