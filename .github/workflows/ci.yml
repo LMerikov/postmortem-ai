@@ -35,5 +35,5 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements-dev.lock
       # Locked, hash-verified wheels only (no setup.py execution).
-      - run: pip install --only-binary :all: --require-hashes -r requirements-dev.lock
+      - run: "pip install --only-binary :all: --require-hashes -r requirements-dev.lock"
       - run: python -m pytest tests -q
