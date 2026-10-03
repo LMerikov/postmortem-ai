@@ -8,7 +8,7 @@
 
 Postmortem.ai convierte logs, stacktraces o una descripción del incidente en un postmortem estructurado: timeline, causa raíz, impacto, tareas de seguimiento y recomendaciones de monitoreo. El resultado se exporta en PDF o Markdown.
 
-**Demo:** [postmortem-ai.xyz](https://postmortem-ai.xyz) · Español e inglés · Sin registro
+Español e inglés · Sin registro · Se ejecuta en local (ver [Inicio rápido](#inicio-rápido))
 
 *English summary: paste logs or a stack trace, get a structured incident postmortem (timeline, root cause, impact, follow-ups) you can export as PDF or Markdown. The UI is available in Spanish and English.*
 
@@ -67,11 +67,12 @@ npm install
 npm run dev                     # http://localhost:5173
 ```
 
-Usa **Cargar ejemplo** para probar con un incidente de pagos ficticio.
+Usa **Cargar ejemplo** para probar con un incidente de pagos ficticio, o **Abrir archivo** con los de [examples/logs](examples/logs) (cuatro incidentes ficticios, de P1 a una caída total P0, con su causa raíz esperada).
 
 ## Cómo usa la IA
 
 - **Groq con GPT-OSS 120B** (`openai/gpt-oss-120b`) es el proveedor principal: rápido, con JSON fiable y razonamiento en esfuerzo bajo. Se cambia con `GROQ_MODEL`.
+- **Plan gratuito de Groq.** El límite es de 8.000 tokens por minuto (`GROQ_TPM_LIMIT`): el servidor recorta la entrada para caber, cae a `openai/gpt-oss-20b` (`GROQ_FALLBACK_MODEL`) si el principal se satura y, si aun así hay límite, responde 429 con el tiempo de espera y la interfaz reintenta sola.
 - **Anthropic Claude** entra como respaldo si Groq falla o no está configurado.
 - Antes de llamar al modelo, un **filtro local** quita líneas `INFO`/`DEBUG`, hashes, UUIDs y direcciones de memoria. Si no queda señal de incidente, responde sin gastar una llamada.
 - Una **caché por similitud** reutiliza un análisis previo cuando los logs son casi iguales, solo dentro del mismo navegador.
@@ -87,7 +88,7 @@ La respuesta del modelo debe ser JSON con un esquema fijo. Si no lo es, el anál
 | IA | Groq (GPT-OSS 120B) y Anthropic Claude |
 | Datos | PostgreSQL en producción, SQLite en local |
 | Exportación | ReportLab (PDF) y Markdown |
-| Despliegue | VPS de CubePath con Docker, Dokploy y Nginx |
+| Despliegue | Docker, Nginx y PostgreSQL (ver [Despliegue](#despliegue)) |
 
 Flujo, límites de confianza y decisiones en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
@@ -119,13 +120,14 @@ Flujo, límites de confianza y decisiones en [docs/ARQUITECTURA.md](docs/ARQUITE
 ```bash
 cd frontend && npm run check          # ESLint + build de producción
 cd backend && python -m pytest tests  # Aislamiento entre navegadores y migración
+python scripts/e2e.py                 # Punta a punta con un modelo real (ver cabecera del script)
 ```
 
-GitHub Actions ejecuta ambos en cada push y pull request.
+GitHub Actions ejecuta los dos primeros en cada push y pull request, con dependencias del backend fijadas por hash (`requirements-dev.lock`).
 
 ## Despliegue
 
-Desplegado en un VPS de **CubePath** (plan gp.micro, 2 vCPU, 4 GB, Miami) para la Hackathon CubePath 2026 de [midudev](https://github.com/midudev) × CubePath.
+El proyecto se desarrolló para la Hackathon CubePath 2026 de [midudev](https://github.com/midudev) × CubePath y estuvo desplegado en un VPS con Docker, Nginx y PostgreSQL. Hoy vive solo en este repositorio; `deploy/setup.sh` documenta cómo levantarlo en un VPS propio.
 
 ```
 Internet → Nginx (TLS) → Docker
@@ -133,12 +135,13 @@ Internet → Nginx (TLS) → Docker
                           └── PostgreSQL
 ```
 
-```bash
-bash deploy/setup.sh   # en el VPS
-# Configura /opt/postmortem-ai/backend/.env con tus claves
-```
+Configura `backend/.env` con tus claves (ver `backend/.env.example`). La tabla de postmortems y la caché se migran solas al arrancar (columna `owner_hash`).
 
-La tabla de postmortems y la caché se migran solas al arrancar (columna `owner_hash`).
+## Diseño y producto
+
+- [PRODUCT.md](PRODUCT.md): para quién es, principios y restricciones.
+- [DESIGN.md](DESIGN.md): el sistema visual "Catálogo numerado" (negro mate, bloques de severidad, traza polar calculada con los datos del incidente).
+- [docs/UX_AUDIT.md](docs/UX_AUDIT.md): auditoría de usabilidad y su seguimiento.
 
 ## Autor
 
