@@ -66,10 +66,10 @@ export function DashboardPage() {
 
   if (loading) {
     return (
-      <div role="status" className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-4 py-20 text-muted">
+      <output className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-4 py-20 text-muted">
         <LoadingSpinner size={28} />
-        <p className="text-sm">{t('dashboard.loading')}</p>
-      </div>
+        <span className="text-sm">{t('dashboard.loading')}</span>
+      </output>
     )
   }
 

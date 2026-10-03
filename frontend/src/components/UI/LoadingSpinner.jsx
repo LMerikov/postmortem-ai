@@ -5,7 +5,7 @@ import { Check } from 'lucide-react'
 export function LoadingSpinner({ size = 24, className = '' }) {
   return (
     <span
-      role="presentation"
+      aria-hidden="true"
       className={`inline-block shrink-0 animate-spin rounded-full border-2 border-border border-t-accent-strong ${className}`}
       style={{ width: size, height: size }}
     />
@@ -29,7 +29,7 @@ export function GeneratingState({ text, steps = [], interval = 1800 }) {
   }, [steps.length, interval])
 
   return (
-    <div role="status" aria-live="polite" className="flex flex-col items-center gap-6 py-10">
+    <div aria-live="polite" className="flex flex-col items-center gap-6 py-10">
       <div className="flex items-center gap-3">
         <LoadingSpinner size={20} />
         <p className="text-sm font-medium text-text">{text}</p>
@@ -39,14 +39,13 @@ export function GeneratingState({ text, steps = [], interval = 1800 }) {
           {steps.map((step, i) => {
             const done = i < current
             const active = i === current
+            let markerClass = 'border-border text-transparent'
+            if (done) markerClass = 'border-success/50 bg-success/15 text-success'
+            else if (active) markerClass = 'border-accent-strong text-accent-strong'
             return (
               <li key={step} className="flex items-center gap-3 text-sm">
                 <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors duration-300 ${
-                    done ? 'border-success/50 bg-success/15 text-success'
-                      : active ? 'border-accent-strong text-accent-strong'
-                      : 'border-border text-transparent'
-                  }`}
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors duration-300 ${markerClass}`}
                   aria-hidden="true"
                 >
                   {done ? <Check className="h-3 w-3" /> : <span className={`h-1.5 w-1.5 rounded-full ${active ? 'animate-pulse bg-accent-strong' : ''}`} />}

@@ -17,7 +17,7 @@ BOB = {"X-Client-Id": "bob-00000000000000000000"}
 PM = {"title": "Payment outage", "severity": "P1", "summary": "Stripe timeouts exhausted the pool."}
 
 
-@pytest.fixture()
+@pytest.fixture
 def app_ctx(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "")
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "test.db"))
@@ -29,7 +29,7 @@ def app_ctx(tmp_path, monkeypatch):
     from models.postmortem import save_postmortem
     from services.cache_service import find_in_cache, save_to_cache
     from services.owner import HEADER  # noqa: F401
-    yield app_module.app.test_client(), save_postmortem, find_in_cache, save_to_cache
+    return app_module.app.test_client(), save_postmortem, find_in_cache, save_to_cache
 
 
 def _hash(headers):

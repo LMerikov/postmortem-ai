@@ -22,20 +22,22 @@ export function ActionItems({ items = [] }) {
         const priority = PRIORITY_STYLES[item.priority] ? item.priority : 'MEDIUM'
         return (
           <li key={`${i}-${item.description}`} className="flex items-start gap-3 p-4">
-            <button
-              type="button"
-              role="checkbox"
-              aria-checked={done}
-              aria-label={done ? t('pm.markPending') : t('pm.markDone')}
-              onClick={() => toggle(i)}
-              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors ${
-                done ? 'border-success bg-success/20 text-success' : 'border-muted/50 hover:border-accent-strong'
-              }`}
-            >
-              {done && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
-            </button>
+            <span className="relative mt-0.5 flex h-5 w-5 shrink-0">
+              <input
+                type="checkbox"
+                checked={done}
+                onChange={() => toggle(i)}
+                aria-labelledby={`action-item-${i}`}
+                title={done ? t('pm.markPending') : t('pm.markDone')}
+                className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-muted/50 transition-colors hover:border-accent-strong checked:border-success checked:bg-success/20"
+              />
+              <Check
+                className="pointer-events-none absolute inset-0 m-auto hidden h-3.5 w-3.5 text-success peer-checked:block"
+                aria-hidden="true"
+              />
+            </span>
             <div className="min-w-0 flex-1">
-              <p className={`text-sm leading-relaxed ${done ? 'text-muted line-through' : 'text-text'}`}>
+              <p id={`action-item-${i}`} className={`text-sm leading-relaxed ${done ? 'text-muted line-through' : 'text-text'}`}>
                 {item.description}
               </p>
               <p className="mt-1 text-xs text-muted">

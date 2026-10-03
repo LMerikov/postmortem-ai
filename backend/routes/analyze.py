@@ -31,8 +31,6 @@ def _sse(payload: dict):
 
 def _phase1_filter(content):
     """PHASE 1: Filtrado local. Retorna (postmortem_local, should_call_llm, cleaned_content, phase1_error)."""
-    import traceback as _tb
-
     phase1_error = None
     try:
         postmortem_local, should_call_llm, severity_local, cleaned_content = \
@@ -41,7 +39,7 @@ def _phase1_filter(content):
                     f"content_len={len(content)} filtered_len={len(cleaned_content)}")
     except Exception as e:
         phase1_error = f"{type(e).__name__}: {e}"
-        logger.error(f"Phase1 EXCEPTION: {phase1_error}\n{_tb.format_exc()}")
+        logger.exception("Phase1 EXCEPTION: %s", phase1_error)
         postmortem_local, should_call_llm, cleaned_content = None, True, content
 
     return postmortem_local, should_call_llm, cleaned_content, phase1_error
@@ -98,8 +96,8 @@ def _phase3_non_stream(content, normalized, phase1_error, owner):
         if phase1_error:
             resp["_phase1_error"] = phase1_error
         return jsonify(resp)
-    except Exception as e:
-        logger.error("Phase3 non-stream failed: %s", e, exc_info=True)
+    except Exception:
+        logger.exception("Phase3 non-stream failed")
         return jsonify({"error": "Analysis failed", "_phase1_error": phase1_error}), 500
 
 

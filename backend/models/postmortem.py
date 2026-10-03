@@ -124,8 +124,8 @@ def save_postmortem(postmortem_data: dict, source: str = "analyze", owner_hash: 
         )
         conn.commit()
         logger.debug(f"Postmortem saved: {postmortem_id} (source={source})")
-    except Exception as e:
-        logger.error(f"Failed to save postmortem {postmortem_id}: {e}")
+    except Exception:
+        logger.exception("Failed to save postmortem %s", postmortem_id)
     finally:
         cur.close()
         release_db(conn)
@@ -298,8 +298,8 @@ def get_dashboard_stats() -> dict:
             "error_types": error_types,
             "avg_confidence": avg_confidence,
         }
-    except Exception as e:
-        logger.error(f"Error getting dashboard stats: {e}")
+    except Exception:
+        logger.exception("Error getting dashboard stats")
         return _empty_dashboard_stats()
     finally:
         release_db(conn)

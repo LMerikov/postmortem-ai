@@ -10,7 +10,8 @@ const LANGS = ['es', 'en']
 function LanguageSwitch() {
   const { t, i18n } = useTranslation()
   return (
-    <div role="group" aria-label={t('nav.language')} className="flex items-center rounded-lg border border-border p-0.5">
+    <fieldset className="flex items-center rounded-lg border border-border p-0.5">
+      <legend className="sr-only">{t('nav.language')}</legend>
       {LANGS.map((lng) => {
         const active = i18n.resolvedLanguage === lng
         return (
@@ -27,7 +28,7 @@ function LanguageSwitch() {
           </button>
         )
       })}
-    </div>
+    </fieldset>
   )
 }
 
