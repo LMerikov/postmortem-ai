@@ -1,4 +1,4 @@
-"""Groq provider — ultra-rápido con Llama-3.3-70b (~3-5s por postmortem)."""
+"""Groq provider — GPT-OSS 120B por defecto (rápido, JSON fiable, precio publicado)."""
 import re
 import json
 import requests
@@ -11,9 +11,22 @@ class GroqProvider(LLMProvider):
     BASE_URL = "https://api.groq.com/openai/v1"
     CHAT_URL = f"{BASE_URL}/chat/completions"
 
-    def __init__(self, api_key: str, model: str = "llama-3.3-70b-versatile"):
+    DEFAULT_MODEL = "openai/gpt-oss-120b"
+
+    def __init__(self, api_key: str, model: str = DEFAULT_MODEL):
         self.api_key = api_key
         self.model = model
+
+    def _model_params(self) -> dict:
+        """Parámetros específicos del modelo.
+
+        Los modelos GPT-OSS razonan antes de responder. Con esfuerzo bajo y sin
+        devolver el razonamiento, el contenido es solo el JSON y la latencia se
+        mantiene en pocos segundos.
+        """
+        if self.model.startswith("openai/gpt-oss"):
+            return {"reasoning_effort": "low", "include_reasoning": False}
+        return {}
 
     def _headers(self) -> dict:
         return {
@@ -31,7 +44,8 @@ class GroqProvider(LLMProvider):
                 ],
                 "temperature": kwargs.get("temperature", 0.3),
                 "max_tokens": min(max_tokens, 8000),
-                "response_format": {"type": "json_object"}
+                "response_format": {"type": "json_object"},
+                **self._model_params(),
             }
 
             resp = requests.post(
@@ -103,7 +117,8 @@ class GroqProvider(LLMProvider):
                 ],
                 "temperature": kwargs.get("temperature", 0.3),
                 "max_tokens": min(max_tokens, 8000),
-                "stream": True
+                "stream": True,
+                **self._model_params(),
             }
 
             resp = requests.post(
@@ -153,4 +168,4 @@ class GroqProvider(LLMProvider):
 
     @property
     def cost_per_1k_input(self) -> float:
-        return 0.00059  # ~$0.59 por 1M tokens
+        return 0.00015  # GPT-OSS 120B: $0.15 por 1M tokens de entrada

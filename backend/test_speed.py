@@ -69,7 +69,7 @@ def test_anthropic():
 def test_groq():
     """Test Groq Llama (currently primary provider)."""
     print('=' * 70)
-    print('TEST 2: GROQ (Llama-3.3-70b)')
+    print('TEST 2: GROQ (GPT-OSS 120B)')
     print('=' * 70)
 
     api_key = os.getenv('GROQ_API_KEY', '')
@@ -82,7 +82,7 @@ def test_groq():
         'Content-Type': 'application/json'
     }
     payload = {
-        'model': 'llama-3.3-70b-versatile',
+        'model': 'openai/gpt-oss-120b',
         'messages': [
             {'role': 'system', 'content': 'You are an SRE analyzing incidents. Return JSON postmortem only.'},
             {'role': 'user', 'content': f'Analyze incident: {LOGS}'}

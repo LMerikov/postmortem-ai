@@ -16,7 +16,7 @@ Navegador ──POST /api/analyze──▶ Flask
                                   │    solo entre los análisis previos del mismo X-Client-Id.
                                   │
                                   └─ Fase 3 · Modelo de lenguaje
-                                       Groq (Llama 3.3 70B) como primario,
+                                       Groq (GPT-OSS 120B) como primario,
                                        Anthropic Claude como respaldo si Groq falla.
                                   │
                                   ▼

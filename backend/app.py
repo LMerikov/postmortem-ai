@@ -146,4 +146,5 @@ if __name__ == "__main__":
     # Security: bind to localhost in dev; gunicorn handles 0.0.0.0 in Docker behind Traefik
     import os
     bind_host = os.getenv("BIND_HOST", "127.0.0.1")
-    app.run(debug=Config.DEBUG, host=bind_host, port=5000, use_reloader=False)
+    port = int(os.getenv("PORT", "5000"))
+    app.run(debug=Config.DEBUG, host=bind_host, port=port, use_reloader=False)

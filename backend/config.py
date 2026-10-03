@@ -11,7 +11,7 @@ class Config:
     DATABASE_PATH = os.getenv("DATABASE_PATH", "postmortems.db")
     DATABASE_URL = os.getenv("DATABASE_URL", "")  # PostgreSQL en producción
     GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")   # Groq — ultra-rápido (primario)
-    GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     CACHE_TTL_HOURS = int(os.getenv("CACHE_TTL_HOURS", "24"))
     MAX_LOG_TOKENS = int(os.getenv("MAX_LOG_TOKENS", "4000"))
     DEBUG = os.getenv("FLASK_ENV", "production") == "development"

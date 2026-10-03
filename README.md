@@ -51,7 +51,12 @@ cp .env.example .env            # Agrega GROQ_API_KEY y/o ANTHROPIC_API_KEY
 python app.py                   # http://127.0.0.1:5000
 ```
 
-En macOS, el puerto 5000 lo usa el Receptor AirPlay. Desactívalo en Ajustes del Sistema o cambia el puerto en `app.py` y en `frontend/vite.config.js`.
+En macOS el puerto 5000 lo ocupa el Receptor AirPlay. Usa otro puerto en el backend y apunta el frontend a él:
+
+```bash
+PORT=5050 python app.py
+VITE_API_TARGET=http://127.0.0.1:5050 npm run dev   # en frontend/
+```
 
 ### Frontend
 
@@ -65,7 +70,7 @@ Usa **Cargar ejemplo** para probar con un incidente de pagos ficticio.
 
 ## Cómo usa la IA
 
-- **Groq con Llama 3.3 70B** es el proveedor principal por velocidad (pocos segundos por análisis).
+- **Groq con GPT-OSS 120B** (`openai/gpt-oss-120b`) es el proveedor principal: rápido, con JSON fiable y razonamiento en esfuerzo bajo. Se cambia con `GROQ_MODEL`.
 - **Anthropic Claude** entra como respaldo si Groq falla o no está configurado.
 - Antes de llamar al modelo, un **filtro local** quita líneas `INFO`/`DEBUG`, hashes, UUIDs y direcciones de memoria. Si no queda señal de incidente, responde sin gastar una llamada.
 - Una **caché por similitud** reutiliza un análisis previo cuando los logs son casi iguales, solo dentro del mismo navegador.
@@ -78,7 +83,7 @@ La respuesta del modelo debe ser JSON con un esquema fijo. Si no lo es, el anál
 |------|------------|
 | Interfaz | React 18, Vite, Tailwind CSS, i18next, Framer Motion |
 | API | Flask 3, Gunicorn, Flask-Limiter |
-| IA | Groq (Llama 3.3 70B) y Anthropic Claude |
+| IA | Groq (GPT-OSS 120B) y Anthropic Claude |
 | Datos | PostgreSQL en producción, SQLite en local |
 | Exportación | ReportLab (PDF) y Markdown |
 | Despliegue | VPS de CubePath con Docker, Dokploy y Nginx |
