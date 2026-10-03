@@ -133,6 +133,21 @@ def save_postmortem(postmortem_data: dict, source: str = "analyze", owner_hash: 
     return postmortem_id
 
 
+def _list_item(row: dict) -> dict:
+    """List view of a postmortem: summary fields plus a compact timeline (time + type)
+    so the history can draw each incident's trace without shipping the whole document."""
+    timeline = []
+    try:
+        raw = row.pop("data", "{}")
+        parsed = json.loads(raw) if isinstance(raw, str) else (raw or {})
+        for event in (parsed.get("timeline") or [])[:40]:
+            timeline.append({"time": str(event.get("time", "")), "type": str(event.get("type", ""))})
+    except (ValueError, TypeError, AttributeError):
+        pass
+    row["timeline"] = timeline
+    return row
+
+
 def get_all_postmortems(owner_hash: str | None):
     """Get the owner's postmortems, newest first. Without an owner, returns nothing."""
     if not owner_hash:
@@ -140,7 +155,7 @@ def get_all_postmortems(owner_hash: str | None):
     conn = get_db()
     ph = "%s" if USE_POSTGRES else "?"
     query = (
-        "SELECT id, title, severity, summary, source, created_at FROM postmortems "
+        "SELECT id, title, severity, summary, source, created_at, data FROM postmortems "
         f"WHERE owner_hash = {ph} ORDER BY created_at DESC LIMIT 200"
     )
 
@@ -150,10 +165,9 @@ def get_all_postmortems(owner_hash: str | None):
             cur.execute(query, (owner_hash,))
             rows = cur.fetchall()
             cur.close()
-            return [dict(r) for r in rows]
         else:
             rows = conn.execute(query, (owner_hash,)).fetchall()
-            return [dict(r) for r in rows]
+        return [_list_item(dict(r)) for r in rows]
     finally:
         release_db(conn)
 
@@ -212,31 +226,30 @@ def _empty_dashboard_stats() -> dict:
     }
 
 
-def _fetch_dashboard_rows(conn):
+def _fetch_dashboard_rows(conn, owner_hash: str):
+    """Aggregates for one owner. A single parameterized query per metric, any DB."""
+    ph = "%s" if USE_POSTGRES else "?"
+    where = f"WHERE owner_hash = {ph}"
+    queries = {
+        "total": f"SELECT COUNT(*) AS total FROM postmortems {where}",
+        "severity": f"SELECT severity, COUNT(*) AS count FROM postmortems {where} GROUP BY severity ORDER BY severity",
+        "source": f"SELECT source, COUNT(*) AS count FROM postmortems {where} GROUP BY source",
+        "data": f"SELECT data FROM postmortems {where} ORDER BY created_at DESC LIMIT 100",
+    }
+
+    def run(cur, key):
+        cur.execute(queries[key], (owner_hash,))
+        return cur.fetchall()
+
     if USE_POSTGRES:
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT COUNT(*) as total FROM postmortems")
-        total = cur.fetchone()["total"]
-        cur.execute("SELECT severity, COUNT(*) as count FROM postmortems GROUP BY severity ORDER BY severity")
-        severity_rows = cur.fetchall()
-        cur.execute("SELECT source, COUNT(*) as count FROM postmortems GROUP BY source")
-        source_rows = cur.fetchall()
-        cur.execute("SELECT data FROM postmortems ORDER BY created_at DESC LIMIT 100")
-        data_rows = cur.fetchall()
+    else:
+        cur = conn.cursor()
+    try:
+        total = dict(run(cur, "total")[0])["total"]
+        return total, run(cur, "severity"), run(cur, "source"), run(cur, "data")
+    finally:
         cur.close()
-        return total, severity_rows, source_rows, data_rows
-
-    total = conn.execute("SELECT COUNT(*) as total FROM postmortems").fetchone()["total"]
-    severity_rows = conn.execute(
-        "SELECT severity, COUNT(*) as count FROM postmortems GROUP BY severity ORDER BY severity"
-    ).fetchall()
-    source_rows = conn.execute(
-        "SELECT source, COUNT(*) as count FROM postmortems GROUP BY source"
-    ).fetchall()
-    data_rows = conn.execute(
-        "SELECT data FROM postmortems ORDER BY created_at DESC LIMIT 100"
-    ).fetchall()
-    return total, severity_rows, source_rows, data_rows
 
 
 def _build_severity_distribution(severity_rows) -> dict:
@@ -282,11 +295,13 @@ def _extract_dashboard_metrics(data_rows):
     return sorted_error_types, avg_confidence
 
 
-def get_dashboard_stats() -> dict:
-    """Returns aggregated stats for the dashboard."""
+def get_dashboard_stats(owner_hash: str | None) -> dict:
+    """Aggregated stats for one owner's postmortems. Without an owner, returns empty stats."""
+    if not owner_hash:
+        return _empty_dashboard_stats()
     conn = get_db()
     try:
-        total, severity_rows, source_rows, data_rows = _fetch_dashboard_rows(conn)
+        total, severity_rows, source_rows, data_rows = _fetch_dashboard_rows(conn, owner_hash)
         severity_dist = _build_severity_distribution(severity_rows)
         source_dist = _build_source_distribution(source_rows)
         error_types, avg_confidence = _extract_dashboard_metrics(data_rows)
