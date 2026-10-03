@@ -1,0 +1,160 @@
+{
+  "nav": {
+    "analyze": "Analizar",
+    "history": "Historial",
+    "dashboard": "Dashboard",
+    "github": "Código en GitHub",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "language": "Idioma",
+    "primary": "Navegación principal"
+  },
+  "home": {
+    "metaTitle": "Postmortem.ai — Postmortems de incidentes con IA",
+    "metaDescription": "Convierte logs y stacktraces en postmortems estructurados: timeline, causa raíz, impacto y tareas de seguimiento.",
+    "title": "De logs caóticos a un postmortem listo para revisar",
+    "subtitle": "Pega logs, stacktraces o una descripción del incidente. Obtienes timeline, causa raíz, impacto y tareas de seguimiento en un documento que puedes exportar.",
+    "analyzed_one": "{{n}} postmortem generado hasta hoy",
+    "analyzed_other": "{{n}} postmortems generados hasta hoy",
+    "emptyInput": "Pega logs o describe el incidente para generar el postmortem.",
+    "loading": "Analizando el incidente",
+    "steps": {
+      "read": "Leyendo logs y detectando eventos",
+      "cause": "Separando síntomas de la causa raíz",
+      "write": "Redactando timeline y tareas"
+    },
+    "howTitle": "Qué incluye cada postmortem",
+    "how": {
+      "timeline": {
+        "title": "Timeline del incidente",
+        "desc": "Eventos ordenados con su tipo: alerta, detección, escalamiento, acción y resolución."
+      },
+      "cause": {
+        "title": "Causa raíz y cascada",
+        "desc": "Distingue el disparador inicial de los síntomas que provocó en otros servicios."
+      },
+      "actions": {
+        "title": "Tareas de seguimiento",
+        "desc": "Acciones con prioridad y responsable sugerido, más recomendaciones de monitoreo."
+      },
+      "export": {
+        "title": "Exportación",
+        "desc": "Descarga en PDF o Markdown, o copia el resultado para tu herramienta de tickets."
+      }
+    },
+    "footer": "Hecho por Luis Merino · Formato inspirado en el Google SRE Book"
+  },
+  "input": {
+    "label": "Logs o descripción del incidente",
+    "placeholder": "Pega logs, arrastra un archivo o describe qué pasó",
+    "formats": "Admite .log, .txt, .json o texto libre · máx. 5 MB",
+    "openFile": "Abrir archivo",
+    "dropHere": "Suelta el archivo aquí",
+    "privacy": "No usamos tus logs para entrenar modelos. Quita contraseñas y tokens antes de pegar.",
+    "example": "Cargar ejemplo",
+    "generate": "Generar postmortem",
+    "shortcut": "{{key}}+Enter",
+    "clear": "Limpiar",
+    "chars": "{{n}} caracteres",
+    "tooLarge": "El archivo pesa {{size}} MB. El máximo es {{max}} MB.",
+    "readError": "No se pudo leer el archivo: {{message}}"
+  },
+  "result": {
+    "back": "Historial",
+    "current": "Postmortem",
+    "notFound": "No encontramos ese postmortem. Puede que se haya eliminado.",
+    "contents": "Contenido"
+  },
+  "pm": {
+    "summary": "Resumen ejecutivo",
+    "timeline": "Timeline",
+    "rootCause": "Causa raíz",
+    "impact": "Impacto",
+    "actionsTaken": "Acciones durante el incidente",
+    "actionItems": "Tareas de seguimiento",
+    "lessons": "Lecciones aprendidas",
+    "monitoring": "Recomendaciones de monitoreo",
+    "usersAffected": "Usuarios afectados",
+    "duration": "Duración",
+    "services": "Servicios",
+    "revenue": "Impacto económico",
+    "unknown": "Sin datos",
+    "owner": "Responsable: {{owner}}",
+    "ownerTbd": "por asignar",
+    "markDone": "Marcar como hecha",
+    "markPending": "Marcar como pendiente",
+    "priority": {
+      "HIGH": "Alta",
+      "MEDIUM": "Media",
+      "LOW": "Baja"
+    },
+    "eventType": {
+      "alert": "Alerta",
+      "detection": "Detección",
+      "escalation": "Escalamiento",
+      "action": "Acción",
+      "resolution": "Resolución",
+      "info": "Info",
+      "warning": "Aviso",
+      "error": "Error",
+      "critical": "Crítico"
+    }
+  },
+  "severity": {
+    "P0": "Crítica",
+    "P1": "Alta",
+    "P2": "Media",
+    "P3": "Baja",
+    "P4": "Informativa"
+  },
+  "export": {
+    "markdown": "Markdown",
+    "pdf": "PDF",
+    "copy": "Copiar JSON",
+    "copied": "JSON copiado al portapapeles",
+    "downloaded": "{{format}} descargado",
+    "error": "No se pudo exportar. Revisa la conexión e inténtalo de nuevo."
+  },
+  "history": {
+    "title": "Historial",
+    "count_one": "{{count}} postmortem",
+    "count_other": "{{count}} postmortems",
+    "empty": "Todavía no hay postmortems",
+    "emptyHint": "Analiza unos logs y aparecerán aquí.",
+    "emptyCta": "Analizar logs",
+    "loadError": "No se pudo cargar el historial. Revisa la conexión y recarga la página.",
+    "open": "Abrir {{title}}",
+    "delete": "Eliminar {{title}}",
+    "deleted": "Postmortem eliminado",
+    "undo": "Deshacer",
+    "deleteError": "No se pudo eliminar el postmortem.",
+    "privacy": "Solo este navegador ve tu historial. Quien tenga el enlace de un postmortem puede abrirlo."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Resumen de todos los postmortems generados",
+    "loading": "Cargando estadísticas…",
+    "empty": "Todavía no hay datos",
+    "emptyHint": "Analiza tus primeros logs para ver estadísticas aquí.",
+    "total": "Total",
+    "totalSub": "postmortems generados",
+    "critical": "Críticos (P0 + P1)",
+    "criticalSub": "{{pct}} % del total",
+    "confidence": "Confianza media",
+    "confidenceSub": "según el propio modelo",
+    "bySeverity": "Por severidad",
+    "byType": "Tipos de error más frecuentes",
+    "noData": "Sin datos suficientes",
+    "topType": "Más frecuente: {{type}} ({{count}} incidentes)",
+    "analyze": "Analizar nuevos logs",
+    "history": "Ver historial"
+  },
+  "common": {
+    "close": "Cerrar",
+    "copy": "Copiar",
+    "copiedShort": "Copiado",
+    "errorTitle": "Algo salió mal",
+    "errorUnknown": "Error desconocido",
+    "retry": "Reintentar"
+  }
+}

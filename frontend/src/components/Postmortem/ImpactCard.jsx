@@ -1,36 +1,36 @@
 import PropTypes from 'prop-types'
+import { useTranslation } from 'react-i18next'
 import { Users, Clock, Server, DollarSign } from 'lucide-react'
 
 export function ImpactCard({ impact = {} }) {
+  const { t } = useTranslation()
   const items = [
-    { icon: <Users className="w-4 h-4 text-p3" />, label: 'Usuarios Afectados', value: impact.users_affected },
-    { icon: <Clock className="w-4 h-4 text-p1" />,  label: 'Duración',          value: impact.duration },
-    { icon: <Server className="w-4 h-4 text-accent" />, label: 'Servicios',      value: (impact.services_affected || []).join(', ') },
-    { icon: <DollarSign className="w-4 h-4 text-p2" />, label: 'Impacto $',      value: impact.revenue_impact },
+    { Icon: Users,      label: t('pm.usersAffected'), value: impact.users_affected },
+    { Icon: Clock,      label: t('pm.duration'),      value: impact.duration },
+    { Icon: Server,     label: t('pm.services'),      value: (impact.services_affected || []).join(', ') },
+    { Icon: DollarSign, label: t('pm.revenue'),       value: impact.revenue_impact },
   ]
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {items.map(({ icon, label, value }) => (
-        <div key={label} className="bg-input border border-border rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">{icon}<span className="text-xs text-muted">{label}</span></div>
-          <p className="text-sm text-text font-medium truncate" title={value || 'Unknown'}>
-            {value || 'Desconocido'}
-          </p>
+    <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
+      {items.map(({ Icon, label, value }) => (
+        <div key={label} className="space-y-1 bg-input p-4">
+          <dt className="flex items-center gap-2 text-xs text-muted">
+            <Icon className="h-3.5 w-3.5" aria-hidden="true" />{label}
+          </dt>
+          <dd className={`text-sm font-medium leading-snug ${value ? 'text-text' : 'text-muted'}`}>
+            {value || t('pm.unknown')}
+          </dd>
         </div>
       ))}
-    </div>
+    </dl>
   )
 }
 
 ImpactCard.propTypes = {
   impact: PropTypes.shape({
-    users_affected: PropTypes.string,
+    users_affected: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     duration: PropTypes.string,
     services_affected: PropTypes.arrayOf(PropTypes.string),
     revenue_impact: PropTypes.string,
   }),
-}
-
-ImpactCard.defaultProps = {
-  impact: {},
 }

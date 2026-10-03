@@ -1,48 +1,75 @@
 import PropTypes from 'prop-types'
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react'
 
 const ToastContext = createContext(null)
 
 const ICONS = {
-  success: <CheckCircle className="w-5 h-5 text-success" />,
-  error: <XCircle className="w-5 h-5 text-p0" />,
-  info: <AlertCircle className="w-5 h-5 text-p3" />,
+  success: <CheckCircle className="h-5 w-5 shrink-0 text-success" aria-hidden="true" />,
+  error: <XCircle className="h-5 w-5 shrink-0 text-p0" aria-hidden="true" />,
+  info: <AlertCircle className="h-5 w-5 shrink-0 text-p3" aria-hidden="true" />,
 }
 
+/**
+ * toast(message, type?, options?)
+ * options: { duration?: number, action?: { label: string, onClick: () => void } }
+ * A number as third argument is still accepted as duration.
+ */
 export function ToastProvider({ children }) {
+  const { t } = useTranslation()
   const [toasts, setToasts] = useState([])
+  const seq = useRef(0)
 
-  const removeById = useCallback((id) => {
-    setToasts(prev => prev.filter(t => t.id !== id))
+  const remove = useCallback((id) => {
+    setToasts(prev => prev.filter(item => item.id !== id))
   }, [])
 
-  const toast = useCallback((message, type = 'info', duration = 3000) => {
-    const id = Date.now()
-    setToasts(prev => [...prev, { id, message, type }])
-    setTimeout(() => removeById(id), duration)
-  }, [removeById])
-
-  const remove = (id) => removeById(id)
+  const toast = useCallback((message, type = 'info', options = {}) => {
+    const opts = typeof options === 'number' ? { duration: options } : options
+    const id = ++seq.current
+    const duration = opts.duration ?? (opts.action ? 6000 : 3500)
+    setToasts(prev => [...prev, { id, message, type, action: opts.action }])
+    setTimeout(() => remove(id), duration)
+  }, [remove])
 
   return (
     <ToastContext.Provider value={toast}>
       {children}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+      <div
+        aria-live="polite"
+        className="fixed inset-x-4 bottom-4 z-50 flex flex-col items-end gap-3 sm:inset-x-auto sm:bottom-6 sm:right-6"
+      >
         <AnimatePresence>
-          {toasts.map(t => (
+          {toasts.map(item => (
             <motion.div
-              key={t.id}
-              initial={{ opacity: 0, x: 80 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 80 }}
-              className="bg-card border border-border rounded-lg px-4 py-3 flex items-center gap-3 shadow-lg min-w-64 max-w-xs"
+              key={item.id}
+              role={item.type === 'error' ? 'alert' : 'status'}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="flex w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.6)] sm:w-auto sm:min-w-72 sm:max-w-sm"
             >
-              {ICONS[t.type]}
-              <span className="text-sm text-text flex-1">{t.message}</span>
-              <button onClick={() => remove(t.id)} className="text-muted hover:text-text">
-                <X className="w-4 h-4" />
+              {ICONS[item.type]}
+              <span className="flex-1 text-sm text-text">{item.message}</span>
+              {item.action && (
+                <button
+                  type="button"
+                  onClick={() => { item.action.onClick(); remove(item.id) }}
+                  className="rounded-md px-2 py-1 text-sm font-medium text-accent-strong hover:bg-subtle"
+                >
+                  {item.action.label}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => remove(item.id)}
+                className="rounded-md p-1 text-muted hover:text-text"
+                aria-label={t('common.close')}
+              >
+                <X className="h-4 w-4" />
               </button>
             </motion.div>
           ))}

@@ -1,0 +1,160 @@
+{
+  "nav": {
+    "analyze": "Analyze",
+    "history": "History",
+    "dashboard": "Dashboard",
+    "github": "Source on GitHub",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "language": "Language",
+    "primary": "Main navigation"
+  },
+  "home": {
+    "metaTitle": "Postmortem.ai — AI incident postmortems",
+    "metaDescription": "Turn logs and stack traces into structured postmortems: timeline, root cause, impact and follow-up tasks.",
+    "title": "From messy logs to a postmortem ready for review",
+    "subtitle": "Paste logs, stack traces or a description of the incident. You get a timeline, root cause, impact and follow-up tasks in a document you can export.",
+    "analyzed_one": "{{n}} postmortem generated so far",
+    "analyzed_other": "{{n}} postmortems generated so far",
+    "emptyInput": "Paste logs or describe the incident to generate the postmortem.",
+    "loading": "Analyzing the incident",
+    "steps": {
+      "read": "Reading logs and detecting events",
+      "cause": "Separating symptoms from the root cause",
+      "write": "Writing timeline and tasks"
+    },
+    "howTitle": "What every postmortem includes",
+    "how": {
+      "timeline": {
+        "title": "Incident timeline",
+        "desc": "Ordered events tagged as alert, detection, escalation, action or resolution."
+      },
+      "cause": {
+        "title": "Root cause and cascade",
+        "desc": "Tells the initial trigger apart from the symptoms it caused in other services."
+      },
+      "actions": {
+        "title": "Follow-up tasks",
+        "desc": "Actions with priority and a suggested owner, plus monitoring recommendations."
+      },
+      "export": {
+        "title": "Export",
+        "desc": "Download as PDF or Markdown, or copy the result into your ticketing tool."
+      }
+    },
+    "footer": "Built by Luis Merino · Format inspired by the Google SRE Book"
+  },
+  "input": {
+    "label": "Logs or incident description",
+    "placeholder": "Paste logs, drop a file or describe what happened",
+    "formats": "Accepts .log, .txt, .json or plain text · max 5 MB",
+    "openFile": "Open file",
+    "dropHere": "Drop the file here",
+    "privacy": "We don't train models on your logs. Remove passwords and tokens before pasting.",
+    "example": "Load example",
+    "generate": "Generate postmortem",
+    "shortcut": "{{key}}+Enter",
+    "clear": "Clear",
+    "chars": "{{n}} characters",
+    "tooLarge": "The file is {{size}} MB. The maximum is {{max}} MB.",
+    "readError": "Couldn't read the file: {{message}}"
+  },
+  "result": {
+    "back": "History",
+    "current": "Postmortem",
+    "notFound": "We couldn't find that postmortem. It may have been deleted.",
+    "contents": "Contents"
+  },
+  "pm": {
+    "summary": "Executive summary",
+    "timeline": "Timeline",
+    "rootCause": "Root cause",
+    "impact": "Impact",
+    "actionsTaken": "Actions during the incident",
+    "actionItems": "Follow-up tasks",
+    "lessons": "Lessons learned",
+    "monitoring": "Monitoring recommendations",
+    "usersAffected": "Users affected",
+    "duration": "Duration",
+    "services": "Services",
+    "revenue": "Revenue impact",
+    "unknown": "No data",
+    "owner": "Owner: {{owner}}",
+    "ownerTbd": "unassigned",
+    "markDone": "Mark as done",
+    "markPending": "Mark as pending",
+    "priority": {
+      "HIGH": "High",
+      "MEDIUM": "Medium",
+      "LOW": "Low"
+    },
+    "eventType": {
+      "alert": "Alert",
+      "detection": "Detection",
+      "escalation": "Escalation",
+      "action": "Action",
+      "resolution": "Resolution",
+      "info": "Info",
+      "warning": "Warning",
+      "error": "Error",
+      "critical": "Critical"
+    }
+  },
+  "severity": {
+    "P0": "Critical",
+    "P1": "High",
+    "P2": "Medium",
+    "P3": "Low",
+    "P4": "Info"
+  },
+  "export": {
+    "markdown": "Markdown",
+    "pdf": "PDF",
+    "copy": "Copy JSON",
+    "copied": "JSON copied to clipboard",
+    "downloaded": "{{format}} downloaded",
+    "error": "Export failed. Check your connection and try again."
+  },
+  "history": {
+    "title": "History",
+    "count_one": "{{count}} postmortem",
+    "count_other": "{{count}} postmortems",
+    "empty": "No postmortems yet",
+    "emptyHint": "Analyze some logs and they'll show up here.",
+    "emptyCta": "Analyze logs",
+    "loadError": "Couldn't load history. Check your connection and reload the page.",
+    "open": "Open {{title}}",
+    "delete": "Delete {{title}}",
+    "deleted": "Postmortem deleted",
+    "undo": "Undo",
+    "deleteError": "Couldn't delete the postmortem.",
+    "privacy": "Only this browser can see your history. Anyone with a postmortem's link can open it."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of every generated postmortem",
+    "loading": "Loading stats…",
+    "empty": "No data yet",
+    "emptyHint": "Analyze your first logs to see stats here.",
+    "total": "Total",
+    "totalSub": "postmortems generated",
+    "critical": "Critical (P0 + P1)",
+    "criticalSub": "{{pct}}% of total",
+    "confidence": "Average confidence",
+    "confidenceSub": "as reported by the model",
+    "bySeverity": "By severity",
+    "byType": "Most frequent error types",
+    "noData": "Not enough data",
+    "topType": "Most frequent: {{type}} ({{count}} incidents)",
+    "analyze": "Analyze new logs",
+    "history": "View history"
+  },
+  "common": {
+    "close": "Close",
+    "copy": "Copy",
+    "copiedShort": "Copied",
+    "errorTitle": "Something went wrong",
+    "errorUnknown": "Unknown error",
+    "retry": "Retry"
+  }
+}
