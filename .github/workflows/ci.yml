@@ -18,7 +18,8 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
+      # --ignore-scripts: dependency lifecycle scripts never run in CI.
+      - run: npm ci --ignore-scripts
       - run: npm run check
 
   backend:
@@ -32,6 +33,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: backend/requirements-dev.txt
-      - run: pip install -r requirements-dev.txt
+          cache-dependency-path: backend/requirements-dev.lock
+      # Locked, hash-verified wheels only (no setup.py execution).
+      - run: pip install --only-binary :all: --require-hashes -r requirements-dev.lock
       - run: python -m pytest tests -q

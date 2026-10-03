@@ -27,6 +27,14 @@ export function getClientId() {
   }
 }
 
+const POSTMORTEM_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** Builds /api/postmortems/:id only for well-formed UUIDs, so a crafted URL can't reach other API routes. */
+function postmortemUrl(id) {
+  if (typeof id !== 'string' || !POSTMORTEM_ID.test(id)) throw new Error('Not found')
+  return `${BASE}/postmortems/${encodeURIComponent(id)}`
+}
+
 function apiFetch(url, options = {}) {
   return fetch(url, { ...options, headers: { ...options.headers, 'X-Client-Id': getClientId() } })
 }
@@ -104,13 +112,13 @@ export async function getPostmortems() {
 }
 
 export async function getPostmortem(id) {
-  const res = await apiFetch(`${BASE}/postmortems/${id}`)
+  const res = await apiFetch(postmortemUrl(id))
   if (!res.ok) throw new Error('Not found')
   return res.json()
 }
 
 export async function deletePostmortem(id) {
-  const res = await apiFetch(`${BASE}/postmortems/${id}`, { method: 'DELETE' })
+  const res = await apiFetch(postmortemUrl(id), { method: 'DELETE' })
   if (!res.ok) throw new Error('Delete failed')
   return res.json()
 }

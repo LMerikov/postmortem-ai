@@ -1,2 +1,6 @@
+# Dev/CI dependencies. CI installs the hashed lockfile; regenerate it after editing:
+#   uv pip compile requirements-dev.txt --python-version 3.12 \
+#     --python-platform x86_64-manylinux_2_28 --only-binary :all: --generate-hashes \
+#     --no-header -o requirements-dev.lock
 -r requirements.txt
 pytest>=8
