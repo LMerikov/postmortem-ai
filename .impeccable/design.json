@@ -117,7 +117,7 @@
       },
       "display-severity": {
         "displayName": "Display Severity",
-        "purpose": "P-code inside the xl severity block; Archivo width 125%, clamp(2.25rem, 4.2vw, 3.5rem)."
+        "purpose": "P-code inside the xl severity block; Geist Mono 600 with slashed zero (wide Archivo made P0 read as PO), clamp(2.25rem, 4.2vw, 3.5rem)."
       },
       "headline": {
         "displayName": "Headline",

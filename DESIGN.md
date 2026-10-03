@@ -25,12 +25,11 @@ typography:
     letterSpacing: "-0.02em"
     fontVariation: "wdth 125"
   display-severity:
-    fontFamily: "Archivo Variable, Geist Variable, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Geist Mono Variable, ui-monospace, monospace"
     fontSize: "clamp(2.25rem, 4.2vw, 3.5rem)"
-    fontWeight: 500
-    lineHeight: 0.92
-    letterSpacing: "-0.02em"
-    fontVariation: "wdth 125"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "-0.04em"
   headline:
     fontFamily: "Archivo Variable, Geist Variable, ui-sans-serif, system-ui, sans-serif"
     fontSize: "clamp(2.4rem, 5.4vw, 4.4rem)"
@@ -218,7 +217,7 @@ Text on red and blue blocks is white; on yellow, white and grey blocks it is bla
 
 ### Hierarchy
 - **Display INC** (Archivo 500, clamp(2rem, 4vw, 3.5rem), 0.92, -0.02em, width 125%): the incident code "INC 3EA5" on Result, kept smaller so the severity block leads; 404/empty-state codes use larger clamps. Class `.display-wide`.
-- **Display Severity** (Archivo 500, clamp(2.25rem, 4.2vw, 3.5rem), 0.92, width 125%): the P-code inside the `xl` severity block, the loudest figure in the header.
+- **Display Severity** (Geist Mono 600 with slashed zero, clamp(2.25rem, 4.2vw, 3.5rem), 1; mono because in wide Archivo "P0" reads as "PO"): the P-code inside the `xl` severity block, the loudest figure in the header.
 - **Headline** (Archivo 500, clamp(2.4rem, 5.4vw, 4.4rem), 1.02, -0.025em, width 108%): Home h1, max 17ch.
 - **Title** (Archivo 500, clamp(1.5rem, 3vw, 2.1rem), 1.12, width 108%): the incident title, max 26ch.
 - **Body reading** (Geist 400, 17px, 1.65): summary and the root-cause Conclusión, capped at 56ch (about 70 characters per line).

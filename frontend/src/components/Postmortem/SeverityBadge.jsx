@@ -10,9 +10,10 @@ export function SeverityBadge({ severity = 'P3', size = 'md' }) {
   const big = size === 'lg'
   if (size === 'xl') {
     // Header block: the loudest, most meaningful element. Code and word travel together.
+    // The code is mono with a slashed zero: in wide Archivo "P0" reads as "PO".
     return (
       <span className="inline-flex items-stretch border border-line/70 whitespace-nowrap">
-        <span className={`display-wide flex items-center px-5 py-3 text-[clamp(2.25rem,4.2vw,3.5rem)] ${BLOCK[sev]} ${sev === 'P0' || sev === 'P2' ? 'text-white' : 'text-black'}`}>
+        <span className={`flex items-center px-5 py-3 font-mono text-[clamp(2.25rem,4.2vw,3.5rem)] font-semibold leading-none tracking-[-0.04em] [font-feature-settings:'zero'] ${BLOCK[sev]} ${sev === 'P0' || sev === 'P2' ? 'text-white' : 'text-black'}`}>
           {sev}
         </span>
         <span className="caps-lg flex items-center px-5 text-text">{t(`severity.${sev}`)}</span>

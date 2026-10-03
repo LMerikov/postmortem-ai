@@ -38,7 +38,7 @@ Se usa justo después de un incidente. Entradas típicas: archivos `.log`, `.txt
 
 ## Evidence on Hand
 
-- `examples/logs/`: tres incidentes ficticios con su causa raíz esperada, usados para probar el producto de punta a punta.
+- `examples/logs/`: cuatro incidentes ficticios con su causa raíz esperada, usados para probar el producto de punta a punta.
 - Capturas del producto en `docs/screenshots/` e imagen social en `frontend/public/og.png`.
 - No hay clientes, testimonios, métricas de precisión ni benchmarks verificables; ninguno debe inventarse en la interfaz ni en el README.
 
