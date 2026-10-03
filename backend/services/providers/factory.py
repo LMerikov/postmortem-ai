@@ -25,7 +25,7 @@ class ProviderFactory:
         if Config.GROQ_API_KEY:
             if 'groq' not in cls._providers_cache:
                 cls._providers_cache['groq'] = GroqProvider(
-                    Config.GROQ_API_KEY, model=Config.GROQ_MODEL
+                    Config.GROQ_API_KEY, model=Config.GROQ_MODEL, tpm_limit=Config.GROQ_TPM_LIMIT
                 )
             cls._primary_name = 'groq'
             return cls._providers_cache['groq']

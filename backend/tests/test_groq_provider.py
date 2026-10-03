@@ -42,3 +42,32 @@ def test_non_reasoning_models_get_no_reasoning_params(monkeypatch):
 
     assert "reasoning_effort" not in sent
     assert "include_reasoning" not in sent
+
+
+def test_free_tier_budget_caps_input_plus_output(monkeypatch):
+    from services.providers.groq_provider import _estimate_tokens
+
+    sent = _capture(monkeypatch)
+    system = "s" * 13000            # ~ the real analyze system prompt
+    huge_logs = "ERROR timeout\n" * 3000
+    GroqProvider("key", tpm_limit=8000).call(system, huge_logs, max_tokens=4096)
+
+    user_sent = sent["messages"][1]["content"]
+    total = _estimate_tokens(system) + _estimate_tokens(user_sent) + sent["max_tokens"]
+    assert total <= 8000
+    assert sent["max_tokens"] >= 2500
+    assert "recortados" in user_sent
+
+
+def test_small_input_keeps_requested_output(monkeypatch):
+    sent = _capture(monkeypatch)
+    GroqProvider("key", tpm_limit=8000).call("short system", "short logs", max_tokens=4096)
+    assert sent["max_tokens"] == 4096
+    assert sent["messages"][1]["content"] == "short logs"
+
+
+def test_budget_disabled_on_paid_plans(monkeypatch):
+    sent = _capture(monkeypatch)
+    huge_logs = "ERROR timeout\n" * 3000
+    GroqProvider("key", tpm_limit=0).call("system", huge_logs, max_tokens=4096)
+    assert sent["messages"][1]["content"] == huge_logs
