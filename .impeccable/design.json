@@ -1,0 +1,392 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-03T18:00:00Z",
+  "title": "Design System: Postmortem.ai",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Matte Black",
+        "canonical": "#050505",
+        "tonalRamp": [
+          "#000000",
+          "#050505",
+          "#0D0D0D",
+          "#171717",
+          "#2E2E2E",
+          "#4A4A4A",
+          "#8C8C88",
+          "#F2F2EC"
+        ]
+      },
+      "plot-white": {
+        "role": "neutral",
+        "displayName": "Plot White",
+        "canonical": "#F2F2EC",
+        "tonalRamp": [
+          "#2E2E2E",
+          "#4A4A4A",
+          "#8C8C88",
+          "#A3A39E",
+          "#BDBDB8",
+          "#D6D6D0",
+          "#E8E8E2",
+          "#F2F2EC"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#2E2E2E",
+        "tonalRamp": [
+          "#050505",
+          "#0D0D0D",
+          "#171717",
+          "#202020",
+          "#2E2E2E",
+          "#3A3A3A",
+          "#4A4A4A",
+          "#6A6A68"
+        ]
+      },
+      "block-red": {
+        "role": "primary",
+        "displayName": "Active Red",
+        "canonical": "#D9261C",
+        "tonalRamp": [
+          "#3A0A07",
+          "#5E0F0A",
+          "#86150F",
+          "#A91D15",
+          "#D9261C",
+          "#E5574E",
+          "#EF8A83",
+          "#F8C4C0"
+        ]
+      },
+      "block-yellow": {
+        "role": "secondary",
+        "displayName": "Signal Yellow",
+        "canonical": "#F0C20A",
+        "tonalRamp": [
+          "#3D3100",
+          "#665200",
+          "#8F7400",
+          "#B89400",
+          "#F0C20A",
+          "#F4D13F",
+          "#F8E07A",
+          "#FCF0BD"
+        ]
+      },
+      "block-blue": {
+        "role": "secondary",
+        "displayName": "Catalog Blue",
+        "canonical": "#2B57D6",
+        "tonalRamp": [
+          "#0A1745",
+          "#10266E",
+          "#173A9B",
+          "#1F4BC4",
+          "#2B57D6",
+          "#5A7FE0",
+          "#8DA8EA",
+          "#C4D2F5"
+        ]
+      },
+      "block-grey": {
+        "role": "secondary",
+        "displayName": "Slate Grey",
+        "canonical": "#8C8C88",
+        "tonalRamp": [
+          "#2E2E2E",
+          "#4A4A4A",
+          "#62625F",
+          "#767673",
+          "#8C8C88",
+          "#A3A39E",
+          "#BDBDB8",
+          "#D6D6D0"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display-inc": {
+        "displayName": "Display INC",
+        "purpose": "Incident code only (INC 3EA5, INC 404); Archivo at width 125%; clamp(2rem, 4vw, 3.5rem) on Result."
+      },
+      "display-severity": {
+        "displayName": "Display Severity",
+        "purpose": "P-code inside the xl severity block; Archivo width 125%, clamp(2.25rem, 4.2vw, 3.5rem)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Home h1; Archivo width 108%."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Incident title on Result."
+      },
+      "body-reading": {
+        "displayName": "Body Reading",
+        "purpose": "Summary and root-cause Conclusión, 17px, capped at 56ch (about 70 characters per line)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Lists, timeline events, descriptions, 15px."
+      },
+      "label-caps": {
+        "displayName": "Engraved Caps",
+        "purpose": "Label voice: 12px, 0.2em, width 112%; the 13px variant uses 0.18em."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Times, codes, counts and pasted logs only."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Entrance of headers and toasts; 0.25 to 0.6s."
+      },
+      {
+        "name": "state-fast",
+        "value": "150ms",
+        "purpose": "Colour and transform transitions on buttons and rows; the primary block scales on X rather than animating width."
+      },
+      {
+        "name": "plot-sweep",
+        "value": "7s linear infinite",
+        "purpose": "Red sweep line on the polar trace, only while the server is working."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "All animation and transition durations collapse under prefers-reduced-motion."
+      },
+      {
+        "name": "ghost",
+        "value": "opacity 0.38",
+        "purpose": "Labelled example trace on the empty Home dial (static, not animated)."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Framed action with a red block fused to the right edge as the active marker; the block scales from 36px to 48px on hover and the button inverts.",
+      "html": "<button class=\"ds-btn-primary\">Generate postmortem</button>",
+      "css": ".ds-btn-primary { position: relative; display: inline-flex; align-items: center; justify-content: space-between; gap: 24px; border: 1px solid #BDBDB8; background: #050505; color: #F2F2EC; padding: 12px 56px 12px 20px; border-radius: 0; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.18em; transition: background-color 150ms, color 150ms; cursor: pointer; } .ds-btn-primary::after { content: ''; position: absolute; top: -1px; bottom: -1px; right: -1px; width: 48px; transform: scaleX(0.75); transform-origin: right; background: #D9261C; transition: transform 150ms; } .ds-btn-primary:hover { background: #F2F2EC; color: #050505; } .ds-btn-primary:hover::after { transform: scaleX(1); } .ds-btn-primary:focus-visible { outline: 2px solid #F2F2EC; outline-offset: 3px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Hairline-framed supporting action in engraved caps.",
+      "html": "<button class=\"ds-btn-secondary\">Example</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #2E2E2E; background: #050505; color: #F2F2EC; padding: 10px 16px; border-radius: 0; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2em; transition: background-color 150ms, border-color 150ms; cursor: pointer; } .ds-btn-secondary:hover { border-color: #BDBDB8; background: #171717; } .ds-btn-secondary:focus-visible { outline: 2px solid #F2F2EC; outline-offset: 3px; }"
+    },
+    {
+      "name": "Severity Badge",
+      "kind": "chip",
+      "refersTo": "severity-code-p0",
+      "description": "Colour block with mono P-code plus the severity word; never colour alone.",
+      "html": "<span class=\"ds-sev\"><span class=\"ds-sev-code\">P0</span><span class=\"ds-sev-word\">Critical</span></span>",
+      "css": ".ds-sev { display: inline-flex; align-items: stretch; border: 1px solid rgba(189,189,184,0.7); color: #F2F2EC; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.18em; white-space: nowrap; } .ds-sev-code { display: flex; align-items: center; padding: 6px 10px; background: #D9261C; color: #fff; font-family: 'Geist Mono Variable', ui-monospace, monospace; font-weight: 600; font-size: 14px; letter-spacing: normal; } .ds-sev-word { display: flex; align-items: center; padding: 0 14px; }"
+    },
+    {
+      "name": "Severity Strip",
+      "kind": "custom",
+      "refersTo": "block-red",
+      "description": "Five-block P4 to P0 legend; non-active blocks fade to 25% when one is active.",
+      "html": "<ul class=\"ds-strip\"><li style=\"background:#8C8C88;opacity:.25\"></li><li style=\"background:#F2F2EC;opacity:.25\"></li><li style=\"background:#2B57D6;opacity:.25\"></li><li style=\"background:#F0C20A;opacity:.25\"></li><li style=\"background:#D9261C\"></li></ul>",
+      "css": ".ds-strip { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; } .ds-strip li { width: 36px; height: 10px; border-radius: 0; }"
+    },
+    {
+      "name": "Log Input Slot",
+      "kind": "input",
+      "refersTo": "input-log",
+      "description": "Framed paste slot with caps label bar and monospaced textarea; the outer frame carries focus.",
+      "html": "<div class=\"ds-slot\"><div class=\"ds-slot-bar\">Paste logs</div><textarea class=\"ds-slot-area\" placeholder=\"2026-03-29 03:10:20 [ERROR] ...\"></textarea></div>",
+      "css": ".ds-slot { border: 1px solid rgba(189,189,184,0.7); background: #080808; border-radius: 0; } .ds-slot-bar { border-bottom: 1px solid #2E2E2E; padding: 12px 16px; color: #F2F2EC; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.18em; } .ds-slot-area { display: block; width: 100%; height: 224px; box-sizing: border-box; resize: vertical; background: transparent; border: 0; padding: 16px 20px; color: #F2F2EC; font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 13px; line-height: 1.6; } .ds-slot-area::placeholder { color: #A3A39E; } .ds-slot:focus-within { border-color: #F2F2EC; outline: 2px solid #F2F2EC; outline-offset: 3px; } .ds-slot-area:focus { outline: none; }"
+    },
+    {
+      "name": "Navigation Link",
+      "kind": "nav",
+      "refersTo": "nav-link-active",
+      "description": "Bordered caps cell; the active one inverts with a red tick.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link\" href=\"#\">Analyze</a><a class=\"ds-nav-link ds-active\" href=\"#\" aria-current=\"page\">History</a></nav>",
+      "css": ".ds-nav { display: flex; background: #050505; height: 64px; } .ds-nav-link { position: relative; display: flex; align-items: center; padding: 0 24px; border-left: 1px solid #2E2E2E; color: #A3A39E; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.18em; text-decoration: none; transition: background-color 150ms, color 150ms; } .ds-nav-link:hover { background: #171717; color: #F2F2EC; } .ds-nav-link:focus-visible { outline: 2px solid #F2F2EC; outline-offset: -3px; } .ds-active { background: #F2F2EC; color: #050505; } .ds-active::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 4px; background: #D9261C; }"
+    },
+    {
+      "name": "Timeline Row",
+      "kind": "custom",
+      "refersTo": "block-red",
+      "description": "Numbered event row; the first failure is a solid red square with a tag.",
+      "html": "<div class=\"ds-tl\"><span class=\"ds-tl-n ds-tl-fail\">3</span><div class=\"ds-tl-time\"><time>03:10:20</time><span>T+00:00:09</span></div><div><p class=\"ds-tl-type\">Error <span class=\"ds-tl-tag\">First failure</span></p><p class=\"ds-tl-text\">payment-service timed out calling stripe.com.</p></div></div>",
+      "css": ".ds-tl { display: grid; grid-template-columns: 28px 9.5rem 1fr; gap: 16px; padding: 16px 0; border-bottom: 1px solid #2E2E2E; } .ds-tl-n { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid rgba(189,189,184,0.7); font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 12px; color: #F2F2EC; } .ds-tl-fail { background: #D9261C; border-color: #D9261C; color: #fff; } .ds-tl-time { display: flex; flex-direction: column; font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 12px; line-height: 24px; color: #A3A39E; } .ds-tl-time time { color: #F2F2EC; } .ds-tl-type { margin: 0; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-size: 12px; text-transform: uppercase; letter-spacing: 0.2em; color: #A3A39E; } .ds-tl-tag { background: #D9261C; color: #fff; padding: 1px 6px; margin-left: 12px; } .ds-tl-text { margin: 4px 0 0; font-family: 'Geist Variable', system-ui, sans-serif; font-size: 15px; line-height: 1.6; color: #F2F2EC; }"
+    },
+    {
+      "name": "Incident Code",
+      "kind": "custom",
+      "refersTo": "display-inc",
+      "description": "The wide INC display that anchors a result, kept smaller than the severity block.",
+      "html": "<div><p class=\"ds-inc\">INC 3EA5</p></div>",
+      "css": ".ds-inc { margin: 0; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 125%; font-weight: 500; font-size: clamp(2rem, 4vw, 3.5rem); line-height: 0.92; letter-spacing: -0.02em; color: #F2F2EC; white-space: nowrap; }"
+    },
+    {
+      "name": "Severity Badge XL",
+      "kind": "chip",
+      "refersTo": "severity-block-xl",
+      "description": "Result header block: large P-code on the severity fill beside the word.",
+      "html": "<span class=\"ds-sevxl\"><span class=\"ds-sevxl-code\">P0</span><span class=\"ds-sevxl-word\">Critical</span></span>",
+      "css": ".ds-sevxl { display: inline-flex; align-items: stretch; border: 1px solid rgba(189,189,184,0.7); white-space: nowrap; color: #F2F2EC; } .ds-sevxl-code { display: flex; align-items: center; padding: 12px 20px; background: #D9261C; color: #fff; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 125%; font-weight: 500; font-size: 3.5rem; line-height: 0.92; letter-spacing: -0.02em; } .ds-sevxl-word { display: flex; align-items: center; padding: 0 20px; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-weight: 500; text-transform: uppercase; font-size: 13px; letter-spacing: 0.18em; }"
+    },
+    {
+      "name": "Severity Guide",
+      "kind": "custom",
+      "refersTo": "severity-code-p0",
+      "description": "Collapsed reference of P0 to P4 with the current level highlighted.",
+      "html": "<details class=\"ds-guide\" open><summary>Severity levels</summary><ul><li class=\"ds-cur\"><span class=\"ds-g-code\" style=\"background:#D9261C;color:#fff\">P0</span><p><b>Critical</b> Full outage or data loss.</p></li><li><span class=\"ds-g-code\" style=\"background:#F0C20A;color:#000\">P1</span><p><b>High</b> Major feature degraded.</p></li></ul><p class=\"ds-g-note\">Common SRE conventions, not a standard.</p></details>",
+      "css": ".ds-guide { max-width: 448px; color: #F2F2EC; } .ds-guide summary { cursor: pointer; list-style: none; color: #A3A39E; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: 0.2em; } .ds-guide summary::-webkit-details-marker { display: none; } .ds-guide summary::before { content: '+'; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-right: 12px; border: 1px solid rgba(189,189,184,0.7); font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 11px; } .ds-guide[open] summary::before { content: '\\2212'; } .ds-guide summary:hover { color: #F2F2EC; } .ds-guide summary:focus-visible { outline: 2px solid #F2F2EC; outline-offset: 3px; } .ds-guide ul { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid #2E2E2E; } .ds-guide li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #2E2E2E; } .ds-guide .ds-cur { background: #171717; } .ds-g-code { width: 36px; flex: none; padding: 2px 0; text-align: center; font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 12px; font-weight: 600; } .ds-guide p { margin: 0; font-family: 'Geist Variable', system-ui, sans-serif; font-size: 13px; line-height: 1.6; color: #A3A39E; } .ds-guide b { margin-right: 8px; color: #F2F2EC; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: 0.2em; } .ds-g-note { margin-top: 12px !important; }"
+    },
+    {
+      "name": "Analysis Status",
+      "kind": "custom",
+      "refersTo": "analysis-status",
+      "description": "Honest status: spinner, real mm:ss elapsed, optional retry countdown, Cancel. No invented stages.",
+      "html": "<div class=\"ds-status\" role=\"status\" aria-live=\"polite\"><div class=\"ds-status-row\"><p class=\"ds-status-msg\"><span class=\"ds-spin\"></span>Analyzing</p><time aria-label=\"Elapsed\">00:14</time></div><p class=\"ds-status-hint\">This can take up to a minute.</p><button class=\"ds-btn-secondary\" type=\"button\">Cancel</button></div>",
+      "css": ".ds-status { display: grid; gap: 16px; padding: 16px; border: 1px solid rgba(189,189,184,0.7); background: #080808; color: #F2F2EC; } .ds-status-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; } .ds-status-msg { margin: 0; display: flex; align-items: center; gap: 12px; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-weight: 500; text-transform: uppercase; font-size: 13px; letter-spacing: 0.18em; } .ds-status time { font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 14px; font-variant-numeric: tabular-nums; } .ds-status-hint { margin: 0; font-family: 'Geist Variable', system-ui, sans-serif; font-size: 14px; line-height: 1.6; color: #A3A39E; } .ds-spin { width: 14px; height: 14px; border: 2px solid #2E2E2E; border-top-color: #F2F2EC; border-radius: 9999px; animation: ds-spin 1s linear infinite; } @keyframes ds-spin { to { transform: rotate(360deg); } } @media (prefers-reduced-motion: reduce) { .ds-spin { animation-duration: 0.01ms; } } .ds-btn-secondary { justify-self: start; border: 1px solid #2E2E2E; background: #050505; color: #F2F2EC; padding: 10px 16px; border-radius: 0; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: 0.2em; cursor: pointer; } .ds-btn-secondary:hover { border-color: #BDBDB8; background: #171717; } .ds-btn-secondary:focus-visible { outline: 2px solid #F2F2EC; outline-offset: 3px; }"
+    },
+    {
+      "name": "Collapsible Section",
+      "kind": "custom",
+      "refersTo": "details-section",
+      "description": "Native details/summary reference section: caps heading, aria-hidden count, square +/- marker.",
+      "html": "<details class=\"ds-det\"><summary><h2>Lessons learned <span aria-hidden=\"true\">03</span></h2><span class=\"ds-det-mark\" aria-hidden=\"true\"></span></summary><ol><li>Alert on retry exhaustion.</li></ol></details>",
+      "css": ".ds-det { border-top: 1px solid rgba(189,189,184,0.5); color: #F2F2EC; } .ds-det summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; cursor: pointer; list-style: none; } .ds-det summary::-webkit-details-marker { display: none; } .ds-det summary:hover { background: #171717; } .ds-det summary:focus-visible { outline: 2px solid #F2F2EC; outline-offset: -3px; } .ds-det h2 { margin: 0; display: flex; align-items: baseline; gap: 12px; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-weight: 500; text-transform: uppercase; font-size: 13px; letter-spacing: 0.18em; } .ds-det h2 span { font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 12px; letter-spacing: normal; color: #A3A39E; } .ds-det-mark { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 1px solid rgba(189,189,184,0.7); font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 14px; } .ds-det-mark::before { content: '+'; } .ds-det[open] .ds-det-mark::before { content: '\\2212'; } .ds-det ol { margin: 0 0 20px; padding: 0; list-style: none; border-top: 1px solid #2E2E2E; } .ds-det li { padding: 12px 0; border-bottom: 1px solid #2E2E2E; max-width: 56ch; font-family: 'Geist Variable', system-ui, sans-serif; font-size: 15px; line-height: 1.6; }"
+    },
+    {
+      "name": "History Row",
+      "kind": "custom",
+      "refersTo": "history-row",
+      "description": "Catalog row: INC code with active severity strip, compact trace thumbnail, title, summary, date, reviewed or pending mark, severity.",
+      "html": "<div class=\"ds-hist\"><div><span class=\"ds-hist-code\">3EA5</span><ul class=\"ds-hist-strip\"><li style=\"background:#8C8C88;opacity:.25\"></li><li style=\"background:#F2F2EC;opacity:.25\"></li><li style=\"background:#2B57D6;opacity:.25\"></li><li style=\"background:#F0C20A;opacity:.25\"></li><li style=\"background:#D9261C\"></li></ul></div><svg class=\"ds-hist-plot\" viewBox=\"0 0 400 400\" role=\"img\" aria-label=\"Trace of 6 events\"><circle cx=\"200\" cy=\"200\" r=\"188\" fill=\"none\" stroke=\"#4A4A4A\" stroke-width=\"4\"/><path d=\"M200 120 L290 160 L320 230 L240 300 L170 270 L120 200 L150 150 Z\" fill=\"#F2F2EC\" fill-opacity=\".25\" stroke=\"#F2F2EC\" stroke-width=\"7\" stroke-linejoin=\"round\"/></svg><div><p class=\"ds-hist-title\">Payment timeout</p><p class=\"ds-hist-sum\">stripe.com did not respond.</p><div class=\"ds-hist-meta\"><time>Mar 29, 2026, 3:10 AM</time><span class=\"ds-hist-rev\"><span class=\"ds-hist-sq\" aria-hidden=\"true\"></span>Pending review</span></div></div><span class=\"ds-sev\"><span class=\"ds-sev-code\">P0</span><span class=\"ds-sev-word\">Critical</span></span></div>",
+      "css": ".ds-hist { display: grid; grid-template-columns: 7.5rem 4.5rem minmax(0,1fr) auto; align-items: center; gap: 24px; padding: 20px 4px; border-bottom: 1px solid #2E2E2E; color: #F2F2EC; } .ds-hist:hover { background: #171717; } .ds-hist-code { display: block; margin-bottom: 8px; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 125%; font-weight: 500; font-size: 1.7rem; line-height: 0.92; letter-spacing: -0.02em; color: #A3A39E; } .ds-hist:hover .ds-hist-code { color: #F2F2EC; } .ds-hist-strip { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; } .ds-hist-strip li { width: 16px; height: 6px; } .ds-hist-plot { width: 4.5rem; height: 4.5rem; } .ds-hist-title { margin: 0; font-family: 'Geist Variable', system-ui, sans-serif; font-size: 17px; font-weight: 500; } .ds-hist-sum { margin: 4px 0 0; font-family: 'Geist Variable', system-ui, sans-serif; font-size: 14px; color: #A3A39E; } .ds-hist-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-top: 8px; } .ds-hist-rev { display: inline-flex; align-items: center; gap: 8px; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: 0.2em; color: #A3A39E; } .ds-hist-sq { width: 10px; height: 10px; border: 1px solid rgba(189,189,184,0.8); } .ds-hist-rev.ds-done .ds-hist-sq { background: #F2F2EC; } .ds-hist time { display: block; font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 12px; color: #A3A39E; } .ds-sev { display: inline-flex; align-items: stretch; border: 1px solid rgba(189,189,184,0.7); font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: 0.2em; white-space: nowrap; } .ds-sev-code { display: flex; align-items: center; padding: 4px 10px; background: #D9261C; color: #fff; font-family: 'Geist Mono Variable', ui-monospace, monospace; font-weight: 600; letter-spacing: normal; } .ds-sev-word { display: flex; align-items: center; padding: 0 10px; }"
+    },
+    {
+      "name": "Review Toggle",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Closing step of a review: a secondary button with aria-pressed and a square checkbox glyph; a human mark saved only in this browser, with its hint.",
+      "html": "<div class=\"ds-rev\"><button class=\"ds-rev-btn\" type=\"button\" aria-pressed=\"false\"><span class=\"ds-rev-box\" aria-hidden=\"true\"></span>Mark as reviewed</button><p>Did you check the points against the logs? The mark is saved only in this browser.</p></div>",
+      "css": ".ds-rev { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; } .ds-rev-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #2E2E2E; background: #050505; color: #F2F2EC; padding: 10px 16px; border-radius: 0; font-family: 'Archivo Variable', system-ui, sans-serif; font-stretch: 112%; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2em; transition: background-color 150ms, border-color 150ms; cursor: pointer; } .ds-rev-btn:hover { border-color: #BDBDB8; background: #171717; } .ds-rev-btn:focus-visible { outline: 2px solid #F2F2EC; outline-offset: 3px; } .ds-rev-box { width: 16px; height: 16px; box-sizing: border-box; border: 1px solid rgba(189,189,184,0.8); } .ds-rev-btn[aria-pressed='true'] .ds-rev-box { background: #F2F2EC; } .ds-rev p { margin: 0; max-width: 48ch; font-family: 'Geist Variable', system-ui, sans-serif; font-size: 13px; line-height: 1.6; color: #A3A39E; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Numbered Catalog",
+    "overview": "Each incident is a catalog entry, like a Factory Records sleeve: a huge wide INC code, a title, one block of colour that says how bad it was, and a single polar trace that owns the field. The ground is matte black, the ink is fine off-white plot lines, every corner is square. Colour is not decoration here; it is the severity code and the \"active\" marker, and nothing else.\n\nThe system is dense but quiet. Information lives in ruled rows (label left, value right, hairline between), never in floating cards with shadows. Reading is the job after the first glance, so prose is set in Geist at 15 to 17px on generous leading, while the engraved spaced caps carry the labelling voice. The page refuses the dark violet panel with soft cards.\n\nThe polar trace is a measurement. It is always computed from real data (pasted log lines on Home, timeline events on the Result and History pages, via lib/incident.js). It is never ornament. The one exception is the empty Home dial, which shows a ghosted trace of the built-in example log, labelled EXAMPLE.",
+    "keyCharacteristics": [
+      "Matte black ground, fine white plot ink, hairline borders; no gradients, no shadows.",
+      "Radius 0 everywhere; the only round shape is the loading spinner.",
+      "Colour reserved for meaning: severity blocks P4..P0 and red as the \"active / first failure\" marker.",
+      "Two voices: wide Archivo (INC code, headlines, engraved caps) and Geist (prose); Geist Mono only for times and codes.",
+      "Severity is never colour alone: always the P-code and its word beside the block."
+    ],
+    "rules": [
+      {
+        "name": "The Meaning-Only Colour Rule",
+        "body": "A saturated colour appears only as severity, priority, or the active/first-failure marker. If a block is not saying how bad or what is live, it is black, white, or grey.",
+        "section": "colors"
+      },
+      {
+        "name": "The Never-Colour-Alone Rule",
+        "body": "Every colour block travels with its P-code (or priority word). The block is the code; the words are the meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Red Rule",
+        "body": "Red marks one live thing per region: the primary button's block, the first failure on the trace, the active TOC square, the P0 severity block. Where severity is P0, the primary export button's block turns plot-white so severity is the only red. Do not scatter it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Engraved-Caps Rule",
+        "body": "Labels are small, wide-tracked Archivo caps (.caps / .caps-lg). Prose is never set in caps and never in Archivo.",
+        "section": "typography"
+      },
+      {
+        "name": "The Mono-Means-Data Rule",
+        "body": "Geist Mono is for times, codes, counts and pasted or quoted log lines only; never for sentences or headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Measure-In-Characters Rule",
+        "body": "Reading width is stated as characters per line, about 70, and set as a 56ch cap. ch is the width of the digit \"0\", roughly 25% wider than an average letter, so 56ch yields about 58 to 73 characters; the earlier 68ch gave 83 to 91. Do not set a cap in ch by reading it as a character count.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-Black Rule",
+        "body": "Surfaces separate by hairline and tone, not by shadow, glow or blur.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Data-Only Trace Rule",
+        "body": "The polar trace draws measured data only. Smoothing shoulders spread the same data; the single exception is the ghosted example, which must be labelled EXAMPLE.",
+        "section": "components"
+      },
+      {
+        "name": "The Honest-Status Rule",
+        "body": "Status UI shows elapsed time and real countdowns, a way out (Cancel), and no invented stages.",
+        "section": "components"
+      },
+      {
+        "name": "The Local-Is-Labelled Rule",
+        "body": "State kept only in this browser (ticked tasks, the reviewed mark, the history list) always says so where it is shown, in the interface's own words: \"Solo se guarda en este navegador.\"",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do keep every radius at 0; rounded-full is for the spinner only.",
+      "Do pair each severity colour block with its P-code and label (see SeverityBadge); order the scale P4 to P0, grey, white, blue, yellow, red.",
+      "Do compute every trace from real data via lib/incident.js; ghost it only when it is labelled as an example.",
+      "Do make status UI report only what is known (elapsed time, a real countdown); never invent stages.",
+      "Do use engraved caps (Archivo, 12 to 13px, 0.18 to 0.2em, width 112%) for labels, Geist 15 to 17px at 1.6+ leading for prose, capped at 56ch (about 70 characters per line), and Geist Mono only for times and codes.",
+      "Do use the INC display (Archivo, width 125%) for incident codes.",
+      "Do separate content with hairlines and tonal black steps; make hover a fill change.",
+      "Do keep a visible focus indicator (2px plot-white outline, 3px offset) on every interactive element; for the log input the indicator sits on the outer frame (focus-within: plot-white border plus the outline), not on the textarea; keep the skip link, and honour prefers-reduced-motion (animations and transitions collapse to near-zero).",
+      "Do meet WCAG 2.1 AA contrast; muted ink on ground and white on red/blue blocks were chosen for it.",
+      "Do label browser-local state as such (\"Solo se guarda en este navegador\") wherever it is shown, and keep exports free of it.",
+      "Do self-host fonts through @fontsource (CSP font-src 'self')."
+    ],
+    "donts": [
+      "Don't use colour as the only carrier of meaning; a block without its code or word is a defect.",
+      "Don't spend red, yellow or blue on branding, links, or decoration.",
+      "Don't add box shadows, glows, gradients, or rounded corners; no dark violet panel with soft cards.",
+      "Don't draw a decorative or random trace; if the data is absent, show no signal or a labelled example.",
+      "Don't invent loading stages or progress the server has not reported.",
+      "Don't mark the active TOC row with a coloured side stripe; fill it white.",
+      "Don't set prose in caps or Archivo, or sentences in mono.",
+      "Don't load fonts from a remote host.",
+      "Don't read ch as a character count; cap prose at 56ch for about 70 characters per line.",
+      "Don't present the reviewed mark as verification; it is a personal note, not a check."
+    ]
+  }
+}
