@@ -74,7 +74,11 @@ def add_security_headers(response):
 @app.route("/api/health", methods=["GET"])
 @limiter.exempt
 def health():
-    return jsonify({"status": "ok", "model": Config.CLAUDE_MODEL})
+    return jsonify({
+        "status": "ok",
+        "primary": {"provider": "groq", "model": Config.GROQ_MODEL} if Config.GROQ_API_KEY else None,
+        "fallback": {"provider": "anthropic", "model": Config.CLAUDE_MODEL} if Config.ANTHROPIC_API_KEY else None,
+    })
 
 
 # Debug endpoint — solo disponible en development
