@@ -1,6 +1,7 @@
 """Groq provider — GPT-OSS 120B por defecto (rápido, JSON fiable, precio publicado)."""
 import re
 import json
+import math
 import requests
 from .base import LLMProvider
 
@@ -10,6 +11,14 @@ _CHARS_PER_TOKEN = 3.2
 # Mínimo de tokens de salida para que quepa un postmortem completo.
 _MIN_COMPLETION = 2500
 _SAFETY_MARGIN = 300
+
+
+def _retry_after_seconds(value) -> int:
+    """Groq envía retry-after en segundos (puede traer decimales). Por defecto 60."""
+    try:
+        return max(1, math.ceil(float(value)))
+    except (TypeError, ValueError):
+        return 60
 
 
 def _estimate_tokens(text: str) -> int:
@@ -87,7 +96,13 @@ class GroqProvider(LLMProvider):
             )
 
             if resp.status_code in (413, 429):
-                return {'content': None, 'error': f'Groq rate limit ({resp.status_code}) — switching to fallback', 'provider': self.name}
+                return {
+                    'content': None,
+                    'error': f'Groq rate limit ({resp.status_code}) on {self.model}',
+                    'rate_limited': True,
+                    'retry_after': _retry_after_seconds(resp.headers.get('retry-after')),
+                    'provider': self.name,
+                }
 
             if resp.status_code != 200:
                 err = resp.json().get("error", {}).get("message", resp.text[:200])

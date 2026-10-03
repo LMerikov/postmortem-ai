@@ -52,6 +52,27 @@ class ProviderFactory:
         return None
 
     @classmethod
+    def get_provider_chain(cls) -> list[LLMProvider]:
+        """Orden de intento: Groq principal → Groq secundario → Anthropic."""
+        chain: list[LLMProvider] = []
+        if Config.GROQ_API_KEY:
+            models = [Config.GROQ_MODEL]
+            if Config.GROQ_FALLBACK_MODEL and Config.GROQ_FALLBACK_MODEL != Config.GROQ_MODEL:
+                models.append(Config.GROQ_FALLBACK_MODEL)
+            for model in models:
+                key = f"groq:{model}"
+                if key not in cls._providers_cache:
+                    cls._providers_cache[key] = GroqProvider(
+                        Config.GROQ_API_KEY, model=model, tpm_limit=Config.GROQ_TPM_LIMIT
+                    )
+                chain.append(cls._providers_cache[key])
+        if Config.ANTHROPIC_API_KEY:
+            chain.append(cls.get_anthropic_provider())
+        if not chain:
+            raise RuntimeError("No LLM providers disponibles. Configura GROQ_API_KEY o ANTHROPIC_API_KEY.")
+        return chain
+
+    @classmethod
     def get_anthropic_provider(cls) -> AnthropicProvider:
         """Retorna siempre el provider Anthropic (para streaming)."""
         if 'anthropic' not in cls._providers_cache:

@@ -60,7 +60,10 @@ export function HomePage() {
       const result = await analyzeLogs(content)
       navigate(`/result/${result.id}`)
     } catch (e) {
-      toast(e.message, 'error')
+      const message = e.status === 429
+        ? t('home.rateLimited', { seconds: e.retryAfter || 60 })
+        : t('home.analyzeError')
+      toast(message, 'error', { duration: 8000 })
       setLoading(false)
     }
   }

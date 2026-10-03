@@ -15,32 +15,39 @@ MARKDOWN_CODE_BLOCK_START = r"^```[a-z]*\n?"
 MARKDOWN_CODE_BLOCK_END = r"\n?```$"
 
 
+class RateLimitedError(Exception):
+    """Todos los proveedores rechazaron la petición por límite de uso."""
+
+    def __init__(self, retry_after: int):
+        super().__init__(f"All LLM providers are rate limited; retry after {retry_after}s")
+        self.retry_after = retry_after
+
+
 def _call_llm(system: str, user: str, max_tokens: int = 4096) -> dict:
     """
-    Llama al LLM via provider factory con fallback automático.
-    Groq primario (~3s) → Anthropic fallback (~25s) si Groq falla.
+    Recorre la cadena de proveedores hasta que uno responda:
+    Groq principal → Groq secundario → Anthropic.
+    Si todos fallan por límite de uso, lanza RateLimitedError con la espera mínima.
     """
-    provider = ProviderFactory.get_primary_provider()
+    errors = []
+    retry_afters = []
 
-    for attempt in range(2):
+    for provider in ProviderFactory.get_provider_chain():
         result = provider.call(system=system, user=user, max_tokens=max_tokens)
 
         if result['error'] is None:
-            logger.info(f"LLM call OK via {result.get('provider','?')} | "
+            logger.info(f"LLM call OK via {result.get('provider','?')} ({getattr(provider, 'model', '')}) | "
                         f"tokens: {result.get('tokens_input',0)} in / {result.get('tokens_output',0)} out")
             return result['content']
 
-        logger.warning(f"Provider {provider.name} error (attempt {attempt+1}): {result['error']}")
+        logger.warning(f"Provider {provider.name} error: {result['error']}")
+        errors.append(result['error'])
+        if result.get('rate_limited'):
+            retry_afters.append(result.get('retry_after', 60))
 
-        if attempt == 0:
-            fallback = ProviderFactory.get_fallback_provider(exclude_name=provider.name)
-            if fallback:
-                logger.info(f"Switching to fallback provider: {fallback.name}")
-                provider = fallback
-            else:
-                continue
-
-    raise ValueError(f"All LLM providers failed. Last error: {result['error']}")
+    if retry_afters and len(retry_afters) == len(errors):
+        raise RateLimitedError(min(retry_afters))
+    raise ValueError(f"All LLM providers failed: {' | '.join(errors)}")
 
 
 def analyze_logs(content: str) -> dict:

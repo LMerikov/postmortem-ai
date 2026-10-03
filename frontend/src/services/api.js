@@ -101,7 +101,13 @@ export async function analyzeLogs(content) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content }),
   })
-  if (!res.ok) throw new Error((await res.json()).error || 'Request failed')
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    const err = new Error(body.error || 'Request failed')
+    err.status = res.status
+    err.retryAfter = body.retry_after ?? (Number(res.headers.get('Retry-After')) || undefined)
+    throw err
+  }
   return res.json()
 }
 

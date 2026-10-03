@@ -29,6 +29,18 @@ def client():
     return {"X-Client-Id": str(uuid.uuid4())}
 
 
+def analyze(content, headers, max_waits=2):
+    """POST /api/analyze, honoring 429 Retry-After the way a person would retry."""
+    for _ in range(max_waits + 1):
+        resp = requests.post(f"{API}/api/analyze", json={"content": content}, headers=headers, timeout=120)
+        if resp.status_code != 429:
+            return resp
+        wait = int(resp.json().get("retry_after") or resp.headers.get("Retry-After") or 60)
+        check(wait <= 90, f"rate limited → API says retry in {wait}s; waiting")
+        time.sleep(wait)
+    return resp
+
+
 def check(cond, msg):
     if not cond:
         print(f"  FAIL  {msg}")
@@ -50,7 +62,7 @@ def main():
     for log in LOGS:
         print(f"▶ {log.name}")
         start = time.monotonic()
-        resp = requests.post(f"{API}/api/analyze", json={"content": log.read_text()}, headers=alice, timeout=120)
+        resp = analyze(log.read_text(), alice)
         elapsed = time.monotonic() - start
         durations.append(elapsed)
         check(resp.status_code == 200, f"analyze → 200 in {elapsed:.1f}s (got {resp.status_code}: {resp.text[:200]})")

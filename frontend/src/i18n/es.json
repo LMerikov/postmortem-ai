@@ -42,7 +42,9 @@
         "desc": "Descarga en PDF o Markdown, o copia el resultado para tu herramienta de tickets."
       }
     },
-    "footer": "Hecho por Luis Merino · Formato inspirado en el Google SRE Book"
+    "footer": "Hecho por Luis Merino · Formato inspirado en el Google SRE Book",
+    "rateLimited": "El servicio gratuito alcanzó su límite por minuto. Inténtalo de nuevo en {{seconds}} s.",
+    "analyzeError": "No se pudo generar el postmortem. Revisa la conexión e inténtalo de nuevo."
   },
   "input": {
     "label": "Logs o descripción del incidente",

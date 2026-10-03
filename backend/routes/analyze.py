@@ -7,7 +7,7 @@ Route /api/analyze — Phase 1+2+3 integrados:
 import json
 import logging
 from flask import Blueprint, request, jsonify, Response, stream_with_context
-from services.llm_service import analyze_logs, analyze_logs_stream
+from services.llm_service import analyze_logs, analyze_logs_stream, RateLimitedError
 from services.local_filtering import process_with_local_filter
 from services.cache_service import normalize_for_cache, find_in_cache, save_to_cache
 from models.postmortem import save_postmortem
@@ -96,6 +96,11 @@ def _phase3_non_stream(content, normalized, phase1_error, owner):
         if phase1_error:
             resp["_phase1_error"] = phase1_error
         return jsonify(resp)
+    except RateLimitedError as e:
+        logger.warning("Phase3 rate limited, retry after %ss", e.retry_after)
+        response = jsonify({"error": "rate_limited", "retry_after": e.retry_after})
+        response.headers["Retry-After"] = str(e.retry_after)
+        return response, 429
     except Exception:
         logger.exception("Phase3 non-stream failed")
         return jsonify({"error": "Analysis failed", "_phase1_error": phase1_error}), 500
