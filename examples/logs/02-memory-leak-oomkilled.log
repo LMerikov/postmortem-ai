@@ -1,0 +1,17 @@
+2026-09-20 14:02:10 INFO  [deploy] Rolled out search-service v3.8.0 (image sha 9be1c2) to 6 replicas
+2026-09-20 14:02:44 INFO  [search-service] Cache warmup complete, entries=12000 heap_used=410MB heap_limit=1536MB
+2026-09-20 15:10:03 INFO  [search-service] heap_used=780MB gc_pause_p99=48ms
+2026-09-20 16:22:51 WARN  [search-service] heap_used=1190MB gc_pause_p99=310ms (old-gen 87%)
+2026-09-20 16:41:17 WARN  [search-service] Full GC took 2.4s, reclaimed 12MB
+2026-09-20 16:41:20 ERROR [api-gateway] upstream search-service timeout after 2000ms GET /search?q=zapatillas
+2026-09-20 16:44:02 ERROR [search-service] java.lang.OutOfMemoryError: Java heap space
+        at com.acme.search.QueryCache.put(QueryCache.java:88)
+        at com.acme.search.SearchController.search(SearchController.java:142)
+2026-09-20 16:44:03 WARN  [kubelet] search-service-5d8b-2hqzt container "app" OOMKilled (exit code 137), restarting
+2026-09-20 16:44:41 WARN  [kubelet] search-service-5d8b-7mnc1 container "app" OOMKilled (exit code 137), restarting
+2026-09-20 16:45:10 ERROR [api-gateway] 503 Service Unavailable GET /search - no healthy upstream (healthy=1/6)
+2026-09-20 16:45:30 WARN  [alertmanager] FIRING SearchAvailabilityLow availability=41%
+2026-09-20 16:51:12 INFO  [ops] Heap dump: QueryCache holds 2.1M entries, no eviction since v3.8.0 (maxSize config ignored)
+2026-09-20 16:55:40 INFO  [deploy] Rolled back search-service to v3.7.4
+2026-09-20 16:58:02 INFO  [search-service] heap_used=420MB gc_pause_p99=35ms
+2026-09-20 17:00:00 INFO  [alertmanager] RESOLVED SearchAvailabilityLow availability=99.9%

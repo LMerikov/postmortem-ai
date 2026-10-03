@@ -1,0 +1,18 @@
+2026-09-14T02:58:01.112Z INFO  [orders-api] pod=orders-api-7c9f4-xk2lp GET /api/orders/88213 200 41ms
+2026-09-14T03:00:00.004Z INFO  [cron] Starting job "monthly-invoice-report" (batch_size=50000)
+2026-09-14T03:00:02.871Z INFO  [reports-worker] Opened 30 connections to postgres-primary:5432 for report export
+2026-09-14T03:00:09.402Z WARN  [orders-api] HikariPool-1 - Connection is not available, request timed out after 3000ms (active=20, idle=0, waiting=37)
+2026-09-14T03:00:09.415Z ERROR [orders-api] POST /api/checkout 500 3021ms - SQLTransientConnectionException: HikariPool-1 - Connection is not available
+2026-09-14T03:00:11.090Z WARN  [postgres-primary] FATAL: remaining connection slots are reserved for non-replication superuser connections
+2026-09-14T03:00:11.233Z ERROR [payments-api] could not obtain connection: too many clients already (max_connections=100)
+2026-09-14T03:00:12.004Z ERROR [orders-api] POST /api/checkout 500 3008ms - SQLTransientConnectionException
+2026-09-14T03:00:14.551Z WARN  [alertmanager] FIRING CheckoutErrorRateHigh error_rate=38.2% threshold=5% for=1m
+2026-09-14T03:00:19.870Z ERROR [orders-api] readiness probe failed: db check timeout after 2000ms
+2026-09-14T03:00:20.112Z WARN  [kubelet] orders-api-7c9f4-xk2lp Readiness probe failed, removing from service endpoints
+2026-09-14T03:00:31.008Z INFO  [pagerduty] Incident #4471 triggered, assigned to on-call: platform-team
+2026-09-14T03:04:12.330Z INFO  [ops] On-call acknowledged #4471, investigating postgres connections
+2026-09-14T03:07:45.019Z INFO  [ops] pg_stat_activity: 64 idle-in-transaction connections from reports-worker
+2026-09-14T03:08:02.441Z INFO  [ops] Paused cron job "monthly-invoice-report"; terminated reports-worker connections
+2026-09-14T03:08:05.900Z INFO  [orders-api] HikariPool-1 - Pool stats (active=6, idle=14, waiting=0)
+2026-09-14T03:08:30.004Z INFO  [alertmanager] RESOLVED CheckoutErrorRateHigh error_rate=0.4%
+2026-09-14T03:09:00.120Z INFO  [kubelet] orders-api-7c9f4-xk2lp Readiness probe succeeded
