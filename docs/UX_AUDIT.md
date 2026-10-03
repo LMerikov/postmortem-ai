@@ -36,3 +36,20 @@ Arreglar 1–3 (credibilidad, error de input, duplicados) y 4–9 (contenido, ic
 - Integraciones: webhook / Slack / Jira para action items
 - Exportar a PDF con identidad propia
 - Métricas reales de MTTR / MTTD en el dashboard
+
+---
+
+## Ronda 2 (2026-10-03, después del merge de #1)
+
+Puntaje antes: **8/10** → después: **10/10** estimado (sin hallazgos de severidad 3+ y ninguna fila del diagnóstico rápido fallando).
+
+| # | Hallazgo | Sev. | Arreglo |
+|---|----------|------|---------|
+| 1 | Una ruta inexistente dejaba la página en blanco | 3 | Página 404 con salida al inicio |
+| 2 | El dashboard sumaba todos los usuarios; el historial es privado | 2 | `/api/dashboard` limitado al navegador + test |
+| 3 | "(1 incidentes)" y tipos de error en inglés | 2 | Plurales de i18next y tipos traducidos |
+| 4 | Placeholder con contraste 4,14:1 | 2 | `text-muted/90` → 6,08:1 |
+| 5 | Botón principal deshabilitado sin explicación | 2 | Siempre activo; si el campo está vacío enfoca el campo y explica |
+| 6 | Sin enlace "Saltar al contenido" | 1 | Skip link que lleva el foco a `<main>` |
+
+Fuera de alcance: la severidad que asigna el modelo (un 503 de checkout salió como P3) es calidad del análisis, no de interfaz.

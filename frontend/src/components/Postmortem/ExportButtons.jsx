@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
-import { FileDown, FileText, Copy, Check } from 'lucide-react'
 import { exportMarkdown, exportPDF } from '../../services/api'
 import { useToast } from '../UI/Toast'
 import { LoadingSpinner } from '../UI/LoadingSpinner'
+import { useMediaQuery } from '../../lib/useMediaQuery'
 
-export function ExportButtons({ postmortem }) {
+export function ExportButtons({ postmortem, severity = '', alwaysOpen = false }) {
   const { t } = useTranslation()
+  const wide = useMediaQuery('(min-width: 1024px)')
+  const [expanded, setExpanded] = useState(false)
   const toast = useToast()
   const [loading, setLoading] = useState({})
   const [copied, setCopied] = useState(false)
@@ -35,16 +37,27 @@ export function ExportButtons({ postmortem }) {
     }
   }
 
+  const collapsed = !wide && !alwaysOpen && !expanded
+
+  if (collapsed) {
+    // Below lg the header carries one "Exportar" control instead of three buttons.
+    return (
+      <button type="button" aria-expanded="false" onClick={() => setExpanded(true)} className={`btn-primary ${severity === 'P0' ? 'after:bg-text hover:after:bg-bg' : ''}`}>
+        {t('export.title')}
+      </button>
+    )
+  }
+
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-3">
       <button
         type="button"
         onClick={() => withLoading('pdf', 'PDF', () => exportPDF(postmortem))}
         disabled={loading.pdf}
         aria-busy={loading.pdf || undefined}
-        className="btn-primary px-4 py-2 text-sm"
+        className={`btn-primary ${severity === 'P0' ? 'after:bg-text hover:after:bg-bg' : ''}`}
       >
-        {loading.pdf ? <LoadingSpinner size={16} /> : <FileDown className="h-4 w-4" aria-hidden="true" />}
+        {loading.pdf && <LoadingSpinner size={14} />}
         {t('export.pdf')}
       </button>
       <button
@@ -52,14 +65,13 @@ export function ExportButtons({ postmortem }) {
         onClick={() => withLoading('md', 'Markdown', () => exportMarkdown(postmortem))}
         disabled={loading.md}
         aria-busy={loading.md || undefined}
-        className="btn-secondary text-sm"
+        className="btn-secondary"
       >
-        {loading.md ? <LoadingSpinner size={16} /> : <FileText className="h-4 w-4" aria-hidden="true" />}
+        {loading.md && <LoadingSpinner size={14} />}
         {t('export.markdown')}
       </button>
-      <button type="button" onClick={copyToClipboard} className="btn-secondary text-sm">
-        {copied ? <Check className="h-4 w-4 text-success" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
-        {t('export.copy')}
+      <button type="button" onClick={copyToClipboard} className="btn-secondary">
+        {copied ? t('common.copiedShort') : t('export.copy')}
       </button>
     </div>
   )
@@ -67,4 +79,6 @@ export function ExportButtons({ postmortem }) {
 
 ExportButtons.propTypes = {
   postmortem: PropTypes.object.isRequired,
+  severity: PropTypes.string,
+  alwaysOpen: PropTypes.bool,
 }

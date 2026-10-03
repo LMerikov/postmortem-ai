@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { ChevronRight, FileQuestion } from 'lucide-react'
 import { PostmortemView, PM_SECTIONS } from '../components/Postmortem/PostmortemView'
 import { PostmortemSkeleton } from '../components/UI/SkeletonLoader'
 import { getPostmortem } from '../services/api'
@@ -37,20 +36,21 @@ function TableOfContents({ sections }) {
   const active = useActiveSection(sections.map(s => s.id))
   return (
     <nav aria-label={t('result.contents')} className="sticky top-24 hidden self-start lg:block">
-      <p className="mb-3 text-xs font-medium text-muted">{t('result.contents')}</p>
-      <ul className="space-y-0.5 border-l border-border">
+      <p className="caps mb-4 text-muted">{t('result.contents')}</p>
+      <ul className="border-t border-border">
         {sections.map(({ id, label }) => {
           const isActive = active === id
           return (
-            <li key={id}>
+            <li key={id} className="border-b border-border">
               <a
                 href={`#${id}`}
                 aria-current={isActive ? 'location' : undefined}
-                className={`-ml-px block border-l py-1.5 pl-4 text-sm transition-colors ${
-                  isActive ? 'border-accent-strong text-text' : 'border-transparent text-muted hover:text-text'
+                className={`flex items-center justify-between gap-3 px-3 py-2.5 text-sm transition-colors ${
+                  isActive ? 'bg-text text-bg' : 'text-muted hover:bg-subtle hover:text-text'
                 }`}
               >
-                {t(label)}
+                <span>{t(label)}</span>
+                {isActive && <span className="h-2 w-2 shrink-0 bg-fac-red" aria-hidden="true" />}
               </a>
             </li>
           )
@@ -80,36 +80,36 @@ export function ResultPage() {
   const sections = pm ? PM_SECTIONS.filter(s => s.has(pm)) : []
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center gap-1.5 text-sm text-muted">
-          <li><Link to="/history" className="rounded hover:text-text">{t('result.back')}</Link></li>
-          <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
-          <li aria-current="page" className="max-w-[60vw] truncate text-text">{pm?.title || t('result.current')}</li>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <nav aria-label="Breadcrumb" className="mb-8">
+        <ol className="caps flex items-center gap-3 text-muted">
+          <li><Link to="/history" className="hover:text-text">{t('result.back')}</Link></li>
+          <li aria-hidden="true">/</li>
+          <li aria-current="page" className="max-w-[60vw] truncate font-sans text-sm normal-case tracking-normal text-text [font-stretch:100%]">{pm?.title || t('result.current')}</li>
         </ol>
       </nav>
 
       {status === 'loading' && <div className="max-w-3xl"><PostmortemSkeleton /></div>}
 
       {status === 'missing' && (
-        <div className="card mx-auto max-w-md space-y-4 text-center">
-          <FileQuestion className="mx-auto h-10 w-10 text-muted" aria-hidden="true" />
-          <p className="text-text">{t('result.notFound')}</p>
+        <div className="max-w-xl space-y-6 border border-line/70 p-8">
+          <p className="display-wide text-6xl" aria-hidden="true">INC 404</p>
+          <p className="text-muted">{t('result.notFound')}</p>
           <Link to="/history" className="btn-secondary">{t('dashboard.history')}</Link>
         </div>
       )}
 
       {status === 'ready' && pm && (
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_200px]">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[190px_minmax(0,1fr)]">
+          <TableOfContents sections={sections} />
           <motion.div
+            className="min-w-0"
             initial={{ y: 8 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="card sm:p-8"
           >
-            <PostmortemView postmortem={pm} showExport />
+            <PostmortemView postmortem={pm} id={id} showExport />
           </motion.div>
-          <TableOfContents sections={sections} />
         </div>
       )}
     </div>

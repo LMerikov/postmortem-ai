@@ -23,9 +23,10 @@ El modelo propone; el equipo valida. El documento separa el disparador inicial d
 1. Pega logs, arrastra un archivo `.log`, `.txt` o `.json`, o describe lo que pasó.
 2. Pulsa **Generar postmortem** o `Ctrl/⌘ + Enter`.
 3. El servidor filtra ruido, busca un análisis similar previo de tu navegador y, si no lo hay, consulta al modelo.
-4. Revisa el resultado con su índice lateral: resumen, timeline, causa raíz, impacto, acciones, tareas, lecciones y monitoreo.
-5. Marca tareas, exporta a PDF o Markdown, o copia el JSON a tu herramienta de tickets.
-6. Vuelve a él desde **Historial**, que solo muestra lo que generaste en este navegador.
+4. Revisa el resultado: la cabecera muestra la severidad y la causa raíz; debajo van resumen, timeline, causa raíz (con la conclusión primero y la evidencia línea a línea), impacto y tareas. Lecciones, monitoreo y acciones tomadas vienen plegadas. En móvil, un selector salta entre secciones.
+5. Es un borrador del modelo: verifica cada punto contra los logs, marca las tareas y pulsa **Marcar como revisado**. Esas marcas se guardan solo en tu navegador.
+6. Exporta a PDF o Markdown, o copia el JSON a tu herramienta de tickets.
+7. Vuelve a él desde **Historial**, que solo muestra lo que generaste en este navegador e indica cuáles faltan por revisar.
 
 ![Página principal](docs/screenshots/homepage.jpg)
 
@@ -94,6 +95,7 @@ Flujo, límites de confianza y decisiones en [docs/ARQUITECTURA.md](docs/ARQUITE
 
 - **Historial privado por navegador.** Cada navegador tiene un identificador anónimo; el servidor guarda solo su hash. Nadie ve ni borra los postmortems de otra persona, y la caché no mezcla resultados entre navegadores.
 - **Enlaces compartibles.** Quien tenga el enlace de un postmortem puede abrirlo, como en un documento compartido.
+- **La revisión es local.** Las tareas marcadas y el estado "revisado" viven en el `localStorage` de cada navegador (solo identificadores y marcas, nunca el contenido). No se comparten con quien abra el enlace ni aparecen en las exportaciones.
 - **Tus logs salen hacia Groq o Anthropic** para generar el análisis. Quita contraseñas, tokens y datos personales antes de pegar.
 - Las claves de API viven solo en `backend/.env`, que Git ignora.
 - CSP estricta, sin cookies, límite de peticiones por IP y fuentes servidas desde el propio dominio.
@@ -108,7 +110,8 @@ Flujo, límites de confianza y decisiones en [docs/ARQUITECTURA.md](docs/ARQUITE
 | DELETE | `/api/postmortems/:id` | Borra si pertenece al navegador |
 | POST | `/api/export/markdown` | Exporta a Markdown |
 | POST | `/api/export/pdf` | Exporta a PDF |
-| GET | `/api/stats` · `/api/dashboard` | Estadísticas agregadas, sin contenido |
+| GET | `/api/dashboard` | Resumen del navegador (`X-Client-Id`): totales, severidades y tipos de error |
+| GET | `/api/stats` | Contador global de postmortems generados, sin contenido |
 | GET | `/api/health` | Estado del servicio |
 
 ## Verificación

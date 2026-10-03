@@ -2,15 +2,11 @@ import PropTypes from 'prop-types'
 import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react'
+import { X } from 'lucide-react'
 
 const ToastContext = createContext(null)
 
-const ICONS = {
-  success: <CheckCircle className="h-5 w-5 shrink-0 text-success" aria-hidden="true" />,
-  error: <XCircle className="h-5 w-5 shrink-0 text-p0" aria-hidden="true" />,
-  info: <AlertCircle className="h-5 w-5 shrink-0 text-p3" aria-hidden="true" />,
-}
+const BLOCK = { success: 'bg-fac-white', error: 'bg-fac-red', info: 'bg-fac-grey' }
 
 /**
  * toast(message, type?, options?)
@@ -50,15 +46,15 @@ export function ToastProvider({ children }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="flex w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.6)] sm:w-auto sm:min-w-72 sm:max-w-sm"
+              className="flex w-full items-stretch gap-3 border border-line/70 bg-bg pr-2 sm:w-auto sm:min-w-72 sm:max-w-sm"
             >
-              {ICONS[item.type]}
-              <span className="flex-1 text-sm text-text">{item.message}</span>
+              <span className={`w-1.5 self-stretch ${BLOCK[item.type]}`} aria-hidden="true" />
+              <span className="flex-1 py-3 text-sm text-text">{item.message}</span>
               {item.action && (
                 <button
                   type="button"
                   onClick={() => { item.action.onClick(); remove(item.id) }}
-                  className="rounded-md px-2 py-1 text-sm font-medium text-accent-strong hover:bg-subtle"
+                  className="self-center px-2 py-1 caps text-text underline underline-offset-4 hover:bg-subtle"
                 >
                   {item.action.label}
                 </button>
@@ -66,7 +62,7 @@ export function ToastProvider({ children }) {
               <button
                 type="button"
                 onClick={() => remove(item.id)}
-                className="rounded-md p-1 text-muted hover:text-text"
+                className="self-center p-1 text-muted hover:text-text"
                 aria-label={t('common.close')}
               >
                 <X className="h-4 w-4" />

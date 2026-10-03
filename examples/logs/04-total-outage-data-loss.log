@@ -1,0 +1,15 @@
+2026-10-02T11:42:07Z INFO  [deploy] Applying migration 0147_drop_legacy_orders on postgres-primary (prod)
+2026-10-02T11:42:09Z WARN  [migrator] 0147 runs "DROP TABLE orders_legacy CASCADE" - 3 dependent views and 2 foreign keys will be dropped
+2026-10-02T11:42:11Z ERROR [postgres-primary] relation "orders" does not exist (CASCADE removed foreign key target orders -> orders_legacy)
+2026-10-02T11:42:11Z ERROR [orders-api] 500 GET /api/orders/88213 - relation "orders" does not exist
+2026-10-02T11:42:12Z ERROR [checkout-api] 500 POST /api/checkout - relation "orders" does not exist
+2026-10-02T11:42:14Z ERROR [payments-api] cannot record payment: relation "orders" does not exist; 214 charges captured but not stored
+2026-10-02T11:42:20Z ERROR [alertmanager] FIRING AllServicesDown availability=0% for=1m (orders-api, checkout-api, payments-api, web)
+2026-10-02T11:42:31Z ERROR [pagerduty] Incident #5120 SEV-1 triggered, escalating to engineering manager
+2026-10-02T11:44:50Z INFO  [ops] Confirmed: migration 0147 was approved with the wrong environment target (prod instead of staging)
+2026-10-02T11:46:10Z ERROR [ops] Last full backup is 6h old (05:42Z); point-in-time recovery enabled but WAL archive gap between 09:10Z and 09:55Z
+2026-10-02T11:52:03Z INFO  [ops] Maintenance page enabled; public traffic blocked
+2026-10-02T12:10:44Z INFO  [dba] Restore started from backup 05:42Z + WAL replay to 11:42:08Z
+2026-10-02T13:35:19Z INFO  [dba] Restore complete; orders table recovered up to 09:10Z, orders 09:10Z-09:55Z lost (1,284 orders), 09:55Z-11:42Z recovered
+2026-10-02T13:41:02Z INFO  [payments-api] Reconciling 214 captured charges against Stripe; 1,284 lost orders exported from Stripe events for manual replay
+2026-10-02T14:05:30Z INFO  [ops] Traffic restored; availability back to 100%

@@ -1,30 +1,36 @@
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 
-const SEVERITY_COLOR = {
-  P0: 'text-p0 border-p0/35 bg-p0/10',
-  P1: 'text-p1 border-p1/35 bg-p1/10',
-  P2: 'text-p2 border-p2/35 bg-p2/10',
-  P3: 'text-p3 border-p3/35 bg-p3/10',
-  P4: 'text-p4 border-p4/35 bg-p4/10',
-}
-
-const DOT = { P0: 'bg-p0', P1: 'bg-p1', P2: 'bg-p2', P3: 'bg-p3', P4: 'bg-p4' }
+// Colour is the code, the words are the meaning: never colour alone.
+const BLOCK = { P0: 'bg-fac-red', P1: 'bg-fac-yellow', P2: 'bg-fac-blue', P3: 'bg-fac-white', P4: 'bg-fac-grey' }
 
 export function SeverityBadge({ severity = 'P3', size = 'md' }) {
   const { t } = useTranslation()
-  const sev = SEVERITY_COLOR[severity] ? severity : 'P3'
-  const sizeClass = size === 'lg' ? 'text-sm px-3 py-1' : 'text-xs px-2 py-0.5'
+  const sev = BLOCK[severity] ? severity : 'P3'
+  const big = size === 'lg'
+  if (size === 'xl') {
+    // Header block: the loudest, most meaningful element. Code and word travel together.
+    // The code is mono with a slashed zero: in wide Archivo "P0" reads as "PO".
+    return (
+      <span className="inline-flex items-stretch border border-line/70 whitespace-nowrap">
+        <span className={`flex items-center px-5 py-3 font-mono text-[clamp(2.25rem,4.2vw,3.5rem)] font-semibold leading-none tracking-[-0.04em] [font-feature-settings:'zero'] ${BLOCK[sev]} ${sev === 'P0' || sev === 'P2' ? 'text-white' : 'text-black'}`}>
+          {sev}
+        </span>
+        <span className="caps-lg flex items-center px-5 text-text">{t(`severity.${sev}`)}</span>
+      </span>
+    )
+  }
   return (
-    <span className={`severity-badge whitespace-nowrap ${SEVERITY_COLOR[sev]} ${sizeClass}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${DOT[sev]}`} aria-hidden="true" />
-      <span className="font-mono font-semibold">{sev}</span>
-      <span>{t(`severity.${sev}`)}</span>
+    <span className={`inline-flex items-stretch border border-line/70 ${big ? 'caps-lg' : 'caps'} whitespace-nowrap`}>
+      <span className={`flex items-center px-2.5 font-mono font-semibold tracking-normal ${BLOCK[sev]} ${sev === 'P0' || sev === 'P2' ? 'text-white' : 'text-black'} ${big ? 'py-1.5 text-sm' : 'py-1 text-xs'}`}>
+        {sev}
+      </span>
+      <span className={`flex items-center ${big ? 'px-3.5' : 'px-2.5'}`}>{t(`severity.${sev}`)}</span>
     </span>
   )
 }
 
 SeverityBadge.propTypes = {
   severity: PropTypes.string,
-  size: PropTypes.oneOf(['md', 'lg']),
+  size: PropTypes.oneOf(['md', 'lg', 'xl']),
 }

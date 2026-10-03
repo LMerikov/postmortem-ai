@@ -12,7 +12,7 @@ def stats():
 
 @history_bp.route("/api/dashboard", methods=["GET"])
 def dashboard():
-    return jsonify(get_dashboard_stats())
+    return jsonify(get_dashboard_stats(owner_hash_from_request()))
 
 
 @history_bp.route("/api/postmortems", methods=["GET"])

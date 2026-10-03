@@ -47,6 +47,17 @@ def test_history_only_lists_own_postmortems(app_ctx):
     assert client.get("/api/postmortems").get_json() == []
 
 
+def test_history_items_carry_a_compact_timeline_only(app_ctx):
+    client, save, _, _ = app_ctx
+    save({**PM, "root_cause": "x" * 500, "timeline": [
+        {"time": "03:10:13", "type": "warning", "event": "long text that must not ship"},
+        {"time": "03:10:20", "type": "error", "event": "another"},
+    ]}, owner_hash=_hash(ALICE))
+    item = client.get("/api/postmortems", headers=ALICE).get_json()[0]
+    assert item["timeline"] == [{"time": "03:10:13", "type": "warning"}, {"time": "03:10:20", "type": "error"}]
+    assert "data" not in item and "root_cause" not in item
+
+
 def test_cannot_delete_someone_elses_postmortem(app_ctx):
     client, save, _, _ = app_ctx
     pm_id = save(PM, owner_hash=_hash(ALICE))
@@ -106,3 +117,18 @@ def test_migrates_existing_database_without_owner_column(tmp_path, monkeypatch):
     assert client.get("/api/postmortems/old").status_code == 200
     assert client.get("/api/postmortems", headers=ALICE).get_json() == []
     assert client.delete("/api/postmortems/old", headers=ALICE).status_code == 404
+
+
+def test_dashboard_only_counts_own_postmortems(app_ctx):
+    client, save, _, _ = app_ctx
+    save({**PM, "severity": "P0"}, owner_hash=_hash(ALICE))
+    save({**PM, "severity": "P2"}, owner_hash=_hash(ALICE))
+    save({**PM, "severity": "P0"}, owner_hash=_hash(BOB))
+
+    alice = client.get("/api/dashboard", headers=ALICE).get_json()
+    assert alice["total_postmortems"] == 2
+    assert alice["severity_distribution"]["P0"] == 1
+    assert alice["severity_distribution"]["P2"] == 1
+
+    assert client.get("/api/dashboard", headers=BOB).get_json()["total_postmortems"] == 1
+    assert client.get("/api/dashboard").get_json()["total_postmortems"] == 0

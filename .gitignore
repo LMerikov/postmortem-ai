@@ -27,3 +27,10 @@ Thumbs.db
 
 # Logs de ejemplo versionados a propósito
 !examples/logs/*.log
+
+# Impeccable: working files, captures and third-party references stay local
+.impeccable/refs/
+.impeccable/review/
+.impeccable/questions/
+.impeccable/direction-round-*.json
+.impeccable/brief-body.md

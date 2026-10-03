@@ -2,6 +2,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import '@fontsource-variable/geist'
 import '@fontsource-variable/geist-mono'
+import '@fontsource-variable/archivo/wdth.css'
 import './i18n'
 import './index.css'
 
