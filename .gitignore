@@ -24,3 +24,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Logs de ejemplo versionados a propósito
+!examples/logs/*.log

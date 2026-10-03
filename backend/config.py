@@ -11,7 +11,12 @@ class Config:
     DATABASE_PATH = os.getenv("DATABASE_PATH", "postmortems.db")
     DATABASE_URL = os.getenv("DATABASE_URL", "")  # PostgreSQL en producción
     GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")   # Groq — ultra-rápido (primario)
-    GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+    # Tokens por minuto del plan de Groq (gratis: 8000). 0 desactiva el ajuste.
+    GROQ_TPM_LIMIT = int(os.getenv("GROQ_TPM_LIMIT", "8000"))
+    # Segundo modelo de Groq si el principal llega a su límite. En el plan gratuito
+    # cada modelo tiene su propio cupo, así que esto duplica la capacidad. "" lo desactiva.
+    GROQ_FALLBACK_MODEL = os.getenv("GROQ_FALLBACK_MODEL", "openai/gpt-oss-20b")
     CACHE_TTL_HOURS = int(os.getenv("CACHE_TTL_HOURS", "24"))
     MAX_LOG_TOKENS = int(os.getenv("MAX_LOG_TOKENS", "4000"))
     DEBUG = os.getenv("FLASK_ENV", "production") == "development"

@@ -3,6 +3,9 @@ Phase 2: Cache de postmortems por similitud de logs.
 - Hash exacto → hit inmediato (<0.2s)
 - Similitud Jaccard ≥70% → reutilizar resultado cacheado
 - Si no hay match → llamar LLM y guardar en cache
+
+La cache está aislada por propietario (owner_hash): un visitante nunca recibe
+un postmortem generado a partir de los logs de otra persona.
 """
 import re
 import hashlib
@@ -36,9 +39,9 @@ def normalize_for_cache(content: str) -> str:
     return text.strip()
 
 
-def content_hash(normalized: str) -> str:
-    """SHA-256 del contenido normalizado."""
-    return hashlib.sha256(normalized.encode('utf-8')).hexdigest()
+def content_hash(normalized: str, owner: str | None = None) -> str:
+    """SHA-256 del contenido normalizado, con el propietario como prefijo."""
+    return hashlib.sha256(f"{owner or ''}:{normalized}".encode('utf-8')).hexdigest()
 
 
 def _extract_keywords(text: str) -> set:
@@ -105,6 +108,10 @@ def init_cache_table():
                 )
             """)
         conn.commit()
+        from models.postmortem import _add_column_if_missing
+        _add_column_if_missing(conn, cur, "postmortem_cache", "owner_hash", "TEXT")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_cache_owner ON postmortem_cache(owner_hash, last_used_at)")
+        conn.commit()
         cur.close()
         conn.close()
         logger.info("Cache table initialized OK")
@@ -168,15 +175,18 @@ def _exact_hash_search(h: str):
     return None
 
 
-def _similarity_search(kws: set, threshold: float = 0.70):
-    """Búsqueda por similitud Jaccard. Retorna postmortem dict o None."""
-    from models.postmortem import get_db
+def _similarity_search(kws: set, owner: str, threshold: float = 0.70):
+    """Búsqueda por similitud Jaccard dentro de la cache del propietario. Retorna postmortem dict o None."""
+    from models.postmortem import get_db, USE_POSTGRES
 
     try:
         conn = get_db()
         cur = conn.cursor()
+        ph = "%s" if USE_POSTGRES else "?"
         cur.execute(
-            "SELECT content_hash, keywords, postmortem_json FROM postmortem_cache ORDER BY last_used_at DESC LIMIT 200"
+            "SELECT content_hash, keywords, postmortem_json FROM postmortem_cache "
+            f"WHERE owner_hash = {ph} ORDER BY last_used_at DESC LIMIT 200",
+            (owner,),
         )
         rows = cur.fetchall()
         cur.close()
@@ -206,14 +216,16 @@ def _similarity_search(kws: set, threshold: float = 0.70):
     return None
 
 
-def find_in_cache(normalized: str, threshold: float = 0.70) -> dict | None:
+def find_in_cache(normalized: str, owner: str | None, threshold: float = 0.70) -> dict | None:
     """
-    Busca en cache:
+    Busca en la cache del propietario:
     1. Primero por hash exacto
     2. Luego por similitud Jaccard ≥ threshold
-    Retorna el postmortem dict si hay hit, None si no.
+    Sin propietario no hay cache. Retorna el postmortem dict si hay hit, None si no.
     """
-    h = content_hash(normalized)
+    if not owner:
+        return None
+    h = content_hash(normalized, owner)
     kws = _extract_keywords(normalized)
 
     # Búsqueda exacta por hash
@@ -222,14 +234,16 @@ def find_in_cache(normalized: str, threshold: float = 0.70) -> dict | None:
         return result
 
     # Búsqueda por similitud Jaccard
-    return _similarity_search(kws, threshold)
+    return _similarity_search(kws, owner, threshold)
 
 
-def save_to_cache(normalized: str, postmortem: dict) -> None:
-    """Guarda un postmortem en cache para reutilización futura."""
+def save_to_cache(normalized: str, postmortem: dict, owner: str | None) -> None:
+    """Guarda un postmortem en la cache del propietario para reutilización futura."""
     from models.postmortem import get_db, USE_POSTGRES
 
-    h = content_hash(normalized)
+    if not owner:
+        return
+    h = content_hash(normalized, owner)
     kws = list(_extract_keywords(normalized))
     now = datetime.now(timezone.utc).isoformat()
 
@@ -239,18 +253,18 @@ def save_to_cache(normalized: str, postmortem: dict) -> None:
         if USE_POSTGRES:
             cur.execute("""
                 INSERT INTO postmortem_cache
-                    (content_hash, normalized_content, keywords, postmortem_json, hit_count, created_at, last_used_at)
-                VALUES (%s, %s, %s, %s, 1, %s, %s)
+                    (content_hash, normalized_content, keywords, postmortem_json, hit_count, created_at, last_used_at, owner_hash)
+                VALUES (%s, %s, %s, %s, 1, %s, %s, %s)
                 ON CONFLICT (content_hash) DO UPDATE SET
                     hit_count = postmortem_cache.hit_count + 1,
                     last_used_at = EXCLUDED.last_used_at
-            """, (h, normalized[:2000], json.dumps(kws), json.dumps(postmortem), now, now))
+            """, (h, normalized[:2000], json.dumps(kws), json.dumps(postmortem), now, now, owner))
         else:
             cur.execute("""
                 INSERT OR REPLACE INTO postmortem_cache
-                    (content_hash, normalized_content, keywords, postmortem_json, hit_count, created_at, last_used_at)
-                VALUES (?, ?, ?, ?, 1, ?, ?)
-            """, (h, normalized[:2000], json.dumps(kws), json.dumps(postmortem), now, now))
+                    (content_hash, normalized_content, keywords, postmortem_json, hit_count, created_at, last_used_at, owner_hash)
+                VALUES (?, ?, ?, ?, 1, ?, ?, ?)
+            """, (h, normalized[:2000], json.dumps(kws), json.dumps(postmortem), now, now, owner))
         conn.commit()
         cur.close()
         conn.close()

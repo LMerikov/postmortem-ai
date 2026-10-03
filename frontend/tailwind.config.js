@@ -12,7 +12,9 @@ export default {
         cyan: '#00D2D3',
         border: '#2D3142',
         text: '#E4E6EB',
-        muted: '#8B95A5',
+        muted: '#9AA3B2',
+        subtle: '#232634',
+        'accent-strong': '#8B7CF6',
         success: '#00E676',
         code: '#0D0F15',
         p0: '#FF6B6B',
@@ -22,7 +24,11 @@ export default {
         p4: '#A4B0BD',
       },
       fontFamily: {
-        mono: ['Consolas', 'Monaco', 'Courier New', 'monospace'],
+        sans: ['"Geist Variable"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['"Geist Mono Variable"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+      },
+      transitionTimingFunction: {
+        'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
       animation: {
         'pulse-slow': 'pulse 3s ease-in-out infinite',

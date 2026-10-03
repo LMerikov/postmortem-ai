@@ -10,7 +10,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from config import Config
 from models.postmortem import init_db
 from routes.analyze import analyze_bp
-from routes.simulate import simulate_bp
 from routes.history import history_bp
 from routes.export import export_bp
 
@@ -42,7 +41,6 @@ limiter = Limiter(
 )
 
 app.register_blueprint(analyze_bp)
-app.register_blueprint(simulate_bp)
 app.register_blueprint(history_bp)
 app.register_blueprint(export_bp)
 
@@ -76,7 +74,11 @@ def add_security_headers(response):
 @app.route("/api/health", methods=["GET"])
 @limiter.exempt
 def health():
-    return jsonify({"status": "ok", "model": Config.CLAUDE_MODEL})
+    return jsonify({
+        "status": "ok",
+        "primary": {"provider": "groq", "model": Config.GROQ_MODEL} if Config.GROQ_API_KEY else None,
+        "fallback": {"provider": "anthropic", "model": Config.CLAUDE_MODEL} if Config.ANTHROPIC_API_KEY else None,
+    })
 
 
 # Debug endpoint — solo disponible en development
@@ -148,4 +150,5 @@ if __name__ == "__main__":
     # Security: bind to localhost in dev; gunicorn handles 0.0.0.0 in Docker behind Traefik
     import os
     bind_host = os.getenv("BIND_HOST", "127.0.0.1")
-    app.run(debug=Config.DEBUG, host=bind_host, port=5000, use_reloader=False)
+    port = int(os.getenv("PORT", "5000"))
+    app.run(debug=Config.DEBUG, host=bind_host, port=port, use_reloader=False)

@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify
+from services.owner import owner_hash_from_request
 from models.postmortem import get_all_postmortems, get_postmortem_by_id, delete_postmortem, get_total_count, get_dashboard_stats
 
 history_bp = Blueprint("history", __name__)
@@ -16,7 +17,7 @@ def dashboard():
 
 @history_bp.route("/api/postmortems", methods=["GET"])
 def list_postmortems():
-    return jsonify(get_all_postmortems())
+    return jsonify(get_all_postmortems(owner_hash_from_request()))
 
 
 @history_bp.route("/api/postmortems/<postmortem_id>", methods=["GET"])
@@ -29,7 +30,7 @@ def get_postmortem(postmortem_id):
 
 @history_bp.route("/api/postmortems/<postmortem_id>", methods=["DELETE"])
 def delete(postmortem_id):
-    deleted = delete_postmortem(postmortem_id)
+    deleted = delete_postmortem(postmortem_id, owner_hash_from_request())
     if not deleted:
         return jsonify({"error": "Not found"}), 404
     return jsonify({"message": "Deleted successfully"})

@@ -1,107 +1,61 @@
-# 🔥 Postmortem.ai
+# Postmortem.ai
 
-> De logs caóticos a postmortems profesionales en segundos.
+![Postmortem.ai convierte logs caóticos en un postmortem listo para revisar](./frontend/public/og.png)
 
-**Postmortem.ai** es una plataforma impulsada por IA que genera documentos de postmortem profesionales a partir de logs de servidor, stacktraces o descripciones de incidentes. Incluye un **Modo Simulación** para entrenar equipos DevOps y SRE con incidentes ficticios realistas.
+[![CI](https://github.com/LMerikov/postmortem-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/LMerikov/postmortem-ai/actions/workflows/ci.yml)
 
-🌐 **Demo:** [https://postmortem-ai.xyz](https://postmortem-ai.xyz)
+> De logs caóticos a un postmortem listo para revisar.
 
----
+Postmortem.ai convierte logs, stacktraces o una descripción del incidente en un postmortem estructurado: timeline, causa raíz, impacto, tareas de seguimiento y recomendaciones de monitoreo. El resultado se exporta en PDF o Markdown.
 
-## 📸 Capturas de Pantalla
+**Demo:** [postmortem-ai.xyz](https://postmortem-ai.xyz) · Español e inglés · Sin registro
 
-### Página Principal — Análisis de Logs
-![Homepage](docs/screenshots/homepage.jpg)
+*English summary: paste logs or a stack trace, get a structured incident postmortem (timeline, root cause, impact, follow-ups) you can export as PDF or Markdown. The UI is available in Spanish and English.*
 
-### Modo Simulación — Genera Incidentes Realistas
-![Modo Simulación](docs/screenshots/simulate.jpg)
+## Por qué existe
 
-### Historial — 574+ Postmortems Analizados
-![Historial](docs/screenshots/historial.jpg)
+Después de un incidente, el equipo tiene logs, mensajes de chat y memoria. Escribir el postmortem lleva horas y suele quedarse a medias, justo cuando más importa aprender. Postmortem.ai hace el primer borrador para que el equipo dedique su tiempo a revisarlo y decidir, no a transcribir.
 
-### Resultado de Análisis — Postmortem P1 Completo
-![Resultado Análisis](docs/screenshots/resultado.jpg)
+El modelo propone; el equipo valida. El documento separa el disparador inicial de los síntomas que provocó, para que la discusión empiece por la causa y no por el ruido.
 
----
+## Recorrido
 
-## ✨ Funcionalidades
+1. Pega logs, arrastra un archivo `.log`, `.txt` o `.json`, o describe lo que pasó.
+2. Pulsa **Generar postmortem** o `Ctrl/⌘ + Enter`.
+3. El servidor filtra ruido, busca un análisis similar previo de tu navegador y, si no lo hay, consulta al modelo.
+4. Revisa el resultado con su índice lateral: resumen, timeline, causa raíz, impacto, acciones, tareas, lecciones y monitoreo.
+5. Marca tareas, exporta a PDF o Markdown, o copia el JSON a tu herramienta de tickets.
+6. Vuelve a él desde **Historial**, que solo muestra lo que generaste en este navegador.
 
-- 📋 **Análisis automático** — Pega logs o arrastra archivos, obtén un postmortem completo en segundos
-- 🎲 **Modo Simulación** — Genera incidentes realistas para entrenar a tu equipo SRE
-- 📅 **Timeline interactiva** — Línea de tiempo cronológica del incidente con severidad por evento
-- 🔍 **Análisis de causa raíz** — Root Cause Analysis con detección de cascadas de fallos
-- ✅ **Action Items** — Tareas post-incidente con prioridad y responsable sugerido
-- 📄 **Exportación PDF y Markdown** — Postmortems profesionales listos para stakeholders
-- 🧠 **Sistema multi-proveedor** — Groq (Llama 3.3) + Anthropic Claude como fallback
-- ⚡ **Cache inteligente** — Similaridad semántica para evitar análisis redundantes
-- 🌙 **Dark Mode** — Interfaz oscura temática DevOps
-- 📱 **Responsive** — Funciona en móvil y escritorio
+![Página principal](docs/screenshots/homepage.jpg)
 
----
+![Resultado con índice lateral](docs/screenshots/resultado.jpg)
 
-## 🛠️ Stack Tecnológico
+![Historial privado por navegador](docs/screenshots/historial.jpg)
 
-| Capa | Tecnología |
-|------|------------|
-| Backend | Flask 3, Python 3.11 |
-| Frontend | React 18, Vite, TailwindCSS, Framer Motion |
-| IA Principal | Groq API + Llama 3.3 70B (análisis en <5s) |
-| IA Fallback | Anthropic Claude (multi-provider resilience) |
-| Cache | PostgreSQL (similitud semántica entre incidentes) |
-| Infraestructura | CubePath VPS — gp.micro (Miami, USA) |
-| Reverse Proxy | Nginx + SSL/TLS |
-| Contenedores | Docker + Dokploy |
+## Inicio rápido
 
----
+### Requisitos
 
-## ☁️ Desplegado en CubePath
-
-Este proyecto fue desarrollado y desplegado íntegramente sobre la infraestructura de **CubePath** como parte de la Hackathon CubePath 2026.
-
-### Especificaciones del VPS
-
-| Recurso | Especificación |
-|---------|---------------|
-| Plan | **gp.micro** |
-| vCPU | 2 vCPU |
-| Memoria RAM | 4 GB |
-| Almacenamiento | 80 GB SSD |
-| Ancho de Banda | 5 TB / mes |
-| Región | Miami, USA 🇺🇸 |
-| Hostname | `vps22365.cubepath.net` |
-| Costo | ~$9.51/mo (dentro del crédito de la hackathon) |
-
-### Por qué CubePath
-
-- 🚀 **Setup en minutos** — VPS listo en segundos, sin configuración compleja
-- 🐳 **Dokploy integrado** — Deploy de contenedores Docker directamente desde el panel
-- 🔒 **SSL automático** — Certbot + Nginx configurado sin fricciones
-- 📊 **Métricas en tiempo real** — Monitoreo de CPU, RAM y red desde el dashboard
-- 💰 **Precio accesible** — $9.51/mes para una app full-stack con backend + frontend + PostgreSQL
-- 🌎 **Baja latencia** — Nodo en Miami ideal para usuarios de Latinoamérica
-
-### Arquitectura en CubePath
-
-```
-Internet → Nginx (SSL) → Docker
-                           ├── Frontend (React/Vite) :80
-                           ├── Backend (Flask/Gunicorn) :5000
-                           └── PostgreSQL :5432
-```
-
----
-
-## 🚀 Desarrollo Local
+- Python 3.11 o posterior y Node.js 20 o posterior.
+- Una clave de [Groq](https://console.groq.com) o de [Anthropic](https://console.anthropic.com). Con las dos, Claude actúa como respaldo de Groq.
 
 ### Backend
 
 ```bash
 cd backend
 python3 -m venv venv
-source venv/bin/activate       # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env           # Agregar GROQ_API_KEY y/o ANTHROPIC_API_KEY
-flask run
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements-dev.txt
+cp .env.example .env            # Agrega GROQ_API_KEY y/o ANTHROPIC_API_KEY
+python app.py                   # http://127.0.0.1:5000
+```
+
+En macOS el puerto 5000 lo ocupa el Receptor AirPlay. Usa otro puerto en el backend y apunta el frontend a él:
+
+```bash
+PORT=5050 python app.py
+VITE_API_TARGET=http://127.0.0.1:5050 npm run dev   # en frontend/
 ```
 
 ### Frontend
@@ -109,52 +63,80 @@ flask run
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev                     # http://localhost:5173
 ```
 
-Abrir [http://localhost:5173](http://localhost:5173)
+Usa **Cargar ejemplo** para probar con un incidente de pagos ficticio.
 
----
+## Cómo usa la IA
 
-## 📡 Endpoints de la API
+- **Groq con GPT-OSS 120B** (`openai/gpt-oss-120b`) es el proveedor principal: rápido, con JSON fiable y razonamiento en esfuerzo bajo. Se cambia con `GROQ_MODEL`.
+- **Anthropic Claude** entra como respaldo si Groq falla o no está configurado.
+- Antes de llamar al modelo, un **filtro local** quita líneas `INFO`/`DEBUG`, hashes, UUIDs y direcciones de memoria. Si no queda señal de incidente, responde sin gastar una llamada.
+- Una **caché por similitud** reutiliza un análisis previo cuando los logs son casi iguales, solo dentro del mismo navegador.
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/analyze` | Analiza logs → genera postmortem |
-| POST | `/api/simulate` | Genera incidente simulado con IA |
-| GET | `/api/postmortems` | Lista el historial |
-| GET | `/api/postmortems/:id` | Obtiene un postmortem específico |
-| DELETE | `/api/postmortems/:id` | Elimina un postmortem |
+La respuesta del modelo debe ser JSON con un esquema fijo. Si no lo es, el análisis falla con un error visible; la interfaz nunca rellena huecos con contenido inventado.
+
+## Arquitectura
+
+| Capa | Tecnología |
+|------|------------|
+| Interfaz | React 18, Vite, Tailwind CSS, i18next, Framer Motion |
+| API | Flask 3, Gunicorn, Flask-Limiter |
+| IA | Groq (GPT-OSS 120B) y Anthropic Claude |
+| Datos | PostgreSQL en producción, SQLite en local |
+| Exportación | ReportLab (PDF) y Markdown |
+| Despliegue | VPS de CubePath con Docker, Dokploy y Nginx |
+
+Flujo, límites de confianza y decisiones en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
+
+## Privacidad y seguridad
+
+- **Historial privado por navegador.** Cada navegador tiene un identificador anónimo; el servidor guarda solo su hash. Nadie ve ni borra los postmortems de otra persona, y la caché no mezcla resultados entre navegadores.
+- **Enlaces compartibles.** Quien tenga el enlace de un postmortem puede abrirlo, como en un documento compartido.
+- **Tus logs salen hacia Groq o Anthropic** para generar el análisis. Quita contraseñas, tokens y datos personales antes de pegar.
+- Las claves de API viven solo en `backend/.env`, que Git ignora.
+- CSP estricta, sin cookies, límite de peticiones por IP y fuentes servidas desde el propio dominio.
+
+## API
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/analyze` | Analiza logs y devuelve `{ id, postmortem }` |
+| GET | `/api/postmortems` | Historial del navegador (`X-Client-Id`) |
+| GET | `/api/postmortems/:id` | Un postmortem por enlace |
+| DELETE | `/api/postmortems/:id` | Borra si pertenece al navegador |
 | POST | `/api/export/markdown` | Exporta a Markdown |
 | POST | `/api/export/pdf` | Exporta a PDF |
-| GET | `/api/stats` | Estadísticas globales |
-| GET | `/api/health` | Health check |
+| GET | `/api/stats` · `/api/dashboard` | Estadísticas agregadas, sin contenido |
+| GET | `/api/health` | Estado del servicio |
 
----
-
-## 📦 Deploy en CubePath
+## Verificación
 
 ```bash
-# En tu VPS de CubePath:
-bash deploy/setup.sh
-# Editar /opt/postmortem-ai/backend/.env con tu API key
-# SSL automático: certbot --nginx -d tu-dominio.cubepath.app
+cd frontend && npm run check          # ESLint + build de producción
+cd backend && python -m pytest tests  # Aislamiento entre navegadores y migración
 ```
 
----
+GitHub Actions ejecuta ambos en cada push y pull request.
 
-## 🏆 Hackathon CubePath 2026
+## Despliegue
 
-Creado para la **Hackathon CubePath 2026** organizada por [midudev](https://github.com/midudev) x CubePath.
+Desplegado en un VPS de **CubePath** (plan gp.micro, 2 vCPU, 4 GB, Miami) para la Hackathon CubePath 2026 de [midudev](https://github.com/midudev) × CubePath.
 
-- ✅ Desplegado en VPS CubePath (plan gp.micro, Miami)
-- ✅ Proyecto nuevo, sin usuarios previos
-- ✅ Repositorio público con demo funcional
-- ✅ Crédito de $15 utilizado para el VPS
+```
+Internet → Nginx (TLS) → Docker
+                          ├── Flask + Gunicorn (sirve también el build del frontend)
+                          └── PostgreSQL
+```
 
----
+```bash
+bash deploy/setup.sh   # en el VPS
+# Configura /opt/postmortem-ai/backend/.env con tus claves
+```
 
-## 👨‍💻 Autor
+La tabla de postmortems y la caché se migran solas al arrancar (columna `owner_hash`).
 
-**© 2026 Postmortem.ai**
-Engineered by Luis Merino • Inspirado en Google SRE Book
+## Autor
+
+Hecho por **Luis Merino**. Formato inspirado en el [Google SRE Book](https://sre.google/sre-book/postmortem-culture/).

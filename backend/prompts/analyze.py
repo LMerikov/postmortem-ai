@@ -90,7 +90,7 @@ CRITICAL RULES:
    - You MUST select ONLY ONE TRUE ROOT CAUSE (the underlying reason that explains WHY the incident happened, NOT necessarily the first event in the timeline).
    - If multiple possibilities exist, choose the one BEST supported by evidence and discard others.
    - STRUCTURE root_cause as:
-     * TRIGGER INICIAL: [first HIGH-PRIORITY failure in the causal chain — prioritize fatal/crash errors over early warnings, even if warnings appear earlier in time]
+     * TRIGGER INICIAL: [the change or condition that STARTED the causal chain and whose fix prevents the incident — e.g. a deploy/version, config change, scheduled job, permission removed, resource left to grow or expire. Not the loudest error.]
      * CASCADA: [how failure propagated: A→B→C→D, list each step]
      * EVIDENCIA: [specific log excerpts with timestamps and numbers]
      * CONCLUSIÓN: [technical root reason - architectural weakness that allowed propagation]
@@ -104,14 +104,18 @@ CRITICAL RULES:
    - The root cause is the deepest underlying issue that, if fixed, would prevent the incident entirely.
    - Always trace BACKWARDS from the final failure to identify the causal chain.
 
-4. ERROR PRIORITY RULE:
-   - When multiple errors exist, prioritize for TRIGGER INICIAL selection:
+4. TRIGGER vs SYMPTOM RULE:
+   - Fatal errors (OutOfMemoryError, crash, OOMKilled, 5xx, timeouts) are usually SYMPTOMS. Name them in CASCADA, not as TRIGGER INICIAL, when the logs show what caused them.
+   - Diagnostic findings in the logs (memory/thread dumps, database or session inspection, operator investigation notes, lines attributing a change) explain WHY and outrank error severity for TRIGGER INICIAL.
+   - If a deploy, config change or job precedes the degradation and a finding links them, that change is the TRIGGER INICIAL (e.g. "release 2.4 dropped the HTTP client timeout" → threads pile up → pool exhausted → 503).
+   - Only when the logs give no deeper cause, fall back to the highest-priority error below.
+   - Error priority (for ranking SYMPTOMS, or as a last-resort trigger):
      1. Fatal runtime errors (OutOfMemoryError, crash, unhandled exception)
      2. Application exceptions (NullPointerException, etc.)
      3. Infrastructure errors (timeouts, connection failures)
      4. Warnings
 
-   - The root cause should be selected from the HIGHEST PRIORITY category present in the causal chain, NOT the earliest timestamp.
+   - Never pick a trigger just because it is the earliest timestamp.
    - Exception: if a WARNING directly and provably caused a higher-priority error (e.g., "memory growing" WARNING → OOMKill), the WARNING IS the TRIGGER INICIAL because fixing it prevents the cascade.
 
 5. CAUSALITY RULE:

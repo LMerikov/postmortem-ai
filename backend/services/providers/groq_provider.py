@@ -1,8 +1,28 @@
-"""Groq provider — ultra-rápido con Llama-3.3-70b (~3-5s por postmortem)."""
+"""Groq provider — GPT-OSS 120B por defecto (rápido, JSON fiable, precio publicado)."""
 import re
 import json
+import math
 import requests
 from .base import LLMProvider
+
+
+# Estimación conservadora: ~3,2 caracteres por token en logs y prompts mixtos ES/EN.
+_CHARS_PER_TOKEN = 3.2
+# Mínimo de tokens de salida para que quepa un postmortem completo.
+_MIN_COMPLETION = 2500
+_SAFETY_MARGIN = 300
+
+
+def _retry_after_seconds(value) -> int:
+    """Groq envía retry-after en segundos (puede traer decimales). Por defecto 60."""
+    try:
+        return max(1, math.ceil(float(value)))
+    except (TypeError, ValueError):
+        return 60
+
+
+def _estimate_tokens(text: str) -> int:
+    return int(len(text) / _CHARS_PER_TOKEN) + 1
 
 
 class GroqProvider(LLMProvider):
@@ -11,9 +31,41 @@ class GroqProvider(LLMProvider):
     BASE_URL = "https://api.groq.com/openai/v1"
     CHAT_URL = f"{BASE_URL}/chat/completions"
 
-    def __init__(self, api_key: str, model: str = "llama-3.3-70b-versatile"):
+    DEFAULT_MODEL = "openai/gpt-oss-120b"
+
+    def __init__(self, api_key: str, model: str = DEFAULT_MODEL, tpm_limit: int = 8000):
         self.api_key = api_key
         self.model = model
+        # Límite de tokens por minuto del plan. El plan gratuito de Groq es 8K y
+        # rechaza la petición entera si entrada + max_tokens lo supera. 0 = sin límite.
+        self.tpm_limit = tpm_limit
+
+    def _fit_budget(self, system: str, user: str, max_tokens: int) -> tuple[str, int]:
+        """Ajusta max_tokens y, si hace falta, recorta el mensaje del usuario para
+        que entrada + salida quepan en el límite de tokens por minuto."""
+        if not self.tpm_limit:
+            return user, max_tokens
+
+        budget = self.tpm_limit - _SAFETY_MARGIN
+        available_for_user = budget - _estimate_tokens(system) - _MIN_COMPLETION
+        if _estimate_tokens(user) > available_for_user:
+            keep = max(int(available_for_user * _CHARS_PER_TOKEN), 1000)
+            head, tail = user[: keep * 2 // 3], user[-(keep // 3):]
+            user = f"{head}\n\n[... logs recortados para el límite del plan ...]\n\n{tail}"
+
+        remaining = budget - _estimate_tokens(system) - _estimate_tokens(user)
+        return user, max(min(max_tokens, remaining), _MIN_COMPLETION)
+
+    def _model_params(self) -> dict:
+        """Parámetros específicos del modelo.
+
+        Los modelos GPT-OSS razonan antes de responder. Con esfuerzo bajo y sin
+        devolver el razonamiento, el contenido es solo el JSON y la latencia se
+        mantiene en pocos segundos.
+        """
+        if self.model.startswith("openai/gpt-oss"):
+            return {"reasoning_effort": "low", "include_reasoning": False}
+        return {}
 
     def _headers(self) -> dict:
         return {
@@ -23,6 +75,7 @@ class GroqProvider(LLMProvider):
 
     def call(self, system: str, user: str, max_tokens: int = 4096, **kwargs) -> dict:
         try:
+            user, max_tokens = self._fit_budget(system, user, max_tokens)
             payload = {
                 "model": self.model,
                 "messages": [
@@ -31,7 +84,8 @@ class GroqProvider(LLMProvider):
                 ],
                 "temperature": kwargs.get("temperature", 0.3),
                 "max_tokens": min(max_tokens, 8000),
-                "response_format": {"type": "json_object"}
+                "response_format": {"type": "json_object"},
+                **self._model_params(),
             }
 
             resp = requests.post(
@@ -41,8 +95,14 @@ class GroqProvider(LLMProvider):
                 timeout=(5, 25)  # (connect_timeout, read_timeout) — falla rápido si Groq no responde
             )
 
-            if resp.status_code == 429:
-                return {'content': None, 'error': 'Groq rate limit (429) — switching to fallback', 'provider': self.name}
+            if resp.status_code in (413, 429):
+                return {
+                    'content': None,
+                    'error': f'Groq rate limit ({resp.status_code}) on {self.model}',
+                    'rate_limited': True,
+                    'retry_after': _retry_after_seconds(resp.headers.get('retry-after')),
+                    'provider': self.name,
+                }
 
             if resp.status_code != 200:
                 err = resp.json().get("error", {}).get("message", resp.text[:200])
@@ -95,6 +155,7 @@ class GroqProvider(LLMProvider):
     def stream(self, system: str, user: str, max_tokens: int = 4096, **kwargs):
         """Stream text completions from Groq (OpenAI-compatible API)."""
         try:
+            user, max_tokens = self._fit_budget(system, user, max_tokens)
             payload = {
                 "model": self.model,
                 "messages": [
@@ -103,7 +164,8 @@ class GroqProvider(LLMProvider):
                 ],
                 "temperature": kwargs.get("temperature", 0.3),
                 "max_tokens": min(max_tokens, 8000),
-                "stream": True
+                "stream": True,
+                **self._model_params(),
             }
 
             resp = requests.post(
@@ -153,4 +215,4 @@ class GroqProvider(LLMProvider):
 
     @property
     def cost_per_1k_input(self) -> float:
-        return 0.00059  # ~$0.59 por 1M tokens
+        return 0.00015  # GPT-OSS 120B: $0.15 por 1M tokens de entrada

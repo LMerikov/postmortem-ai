@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import PropTypes from 'prop-types'
-import { CheckSquare, Square } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import { Check } from 'lucide-react'
 
 const PRIORITY_STYLES = {
   HIGH:   'text-p0 bg-p0/10 border-p0/30',
@@ -10,48 +10,56 @@ const PRIORITY_STYLES = {
 }
 
 export function ActionItems({ items = [] }) {
+  const { t } = useTranslation()
   const [checked, setChecked] = useState({})
 
   const toggle = (i) => setChecked(prev => ({ ...prev, [i]: !prev[i] }))
 
   return (
-    <div className="space-y-2">
-      {items.map((item, i) => (
-        <motion.div
-          key={item.description}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.06 }}
-          className={`flex items-start gap-3 p-3 rounded-lg border border-border bg-input transition-opacity ${checked[i] ? 'opacity-50' : ''}`}
-        >
-          <button onClick={() => toggle(i)} className="mt-0.5 text-muted hover:text-accent transition-colors flex-shrink-0">
-            {checked[i] ? <CheckSquare className="w-5 h-5 text-success" /> : <Square className="w-5 h-5" />}
-          </button>
-          <div className="flex-1 min-w-0">
-            <p className={`text-sm ${checked[i] ? 'line-through text-muted' : 'text-text'}`}>
-              {item.description}
-            </p>
-            <p className="text-xs text-muted mt-0.5">Owner: {item.owner || 'TBD'}</p>
-          </div>
-          <span className={`text-xs font-bold px-2 py-0.5 rounded border flex-shrink-0 ${PRIORITY_STYLES[item.priority] || PRIORITY_STYLES.MEDIUM}`}>
-            {item.priority}
-          </span>
-        </motion.div>
-      ))}
-    </div>
+    <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-input">
+      {items.map((item, i) => {
+        const done = Boolean(checked[i])
+        const priority = PRIORITY_STYLES[item.priority] ? item.priority : 'MEDIUM'
+        return (
+          <li key={`${i}-${item.description}`} className="flex items-start gap-3 p-4">
+            <span className="relative mt-0.5 flex h-5 w-5 shrink-0">
+              <input
+                type="checkbox"
+                checked={done}
+                onChange={() => toggle(i)}
+                aria-labelledby={`action-item-${i}`}
+                title={done ? t('pm.markPending') : t('pm.markDone')}
+                className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-muted/50 transition-colors hover:border-accent-strong checked:border-success checked:bg-success/20"
+              />
+              <Check
+                className="pointer-events-none absolute inset-0 m-auto hidden h-3.5 w-3.5 text-success peer-checked:block"
+                aria-hidden="true"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p id={`action-item-${i}`} className={`text-sm leading-relaxed ${done ? 'text-muted line-through' : 'text-text'}`}>
+                {item.description}
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                {t('pm.owner', { owner: item.owner || t('pm.ownerTbd') })}
+              </p>
+            </div>
+            <span className={`shrink-0 rounded border px-2 py-0.5 text-xs font-medium ${PRIORITY_STYLES[priority]}`}>
+              {t(`pm.priority.${priority}`)}
+            </span>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 
 ActionItems.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.shape({
-      description: PropTypes.string.isRequired,
+      description: PropTypes.string,
       owner: PropTypes.string,
-      priority: PropTypes.oneOf(['HIGH', 'MEDIUM', 'LOW']),
+      priority: PropTypes.string,
     })
   ),
-}
-
-ActionItems.defaultProps = {
-  items: [],
 }

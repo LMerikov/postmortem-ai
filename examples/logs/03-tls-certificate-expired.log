@@ -1,0 +1,11 @@
+2026-10-01T00:00:01Z INFO  [cert-checker] api.example.com certificate expires in 0 days (notAfter=2026-10-01T00:00:00Z)
+2026-10-01T00:00:03Z ERROR [mobile-app-ios] NSURLErrorDomain -1202: The certificate for this server is invalid (api.example.com)
+2026-10-01T00:00:05Z ERROR [partner-webhooks] x509: certificate has expired or is not yet valid: current time 2026-10-01T00:00:05Z is after 2026-10-01T00:00:00Z
+2026-10-01T00:00:09Z WARN  [ingress-nginx] SSL handshake failed for 4,812 clients in last 60s
+2026-10-01T00:02:30Z WARN  [cert-manager] Certificate api-example-tls: renewal failed 14 times since 2026-09-01: ACME DNS-01 challenge failed: Route53 AccessDenied for role cert-manager-dns
+2026-10-01T00:05:00Z WARN  [alertmanager] FIRING ApiSuccessRateLow success_rate=12%
+2026-10-01T00:11:42Z INFO  [ops] On-call confirms expired certificate on api.example.com
+2026-10-01T00:19:10Z INFO  [ops] Restored IAM policy route53:ChangeResourceRecordSets for cert-manager-dns (removed by terraform PR #2231 on 2026-08-30)
+2026-10-01T00:21:55Z INFO  [cert-manager] Certificate api-example-tls issued, notAfter=2026-12-30T00:21:00Z
+2026-10-01T00:22:30Z INFO  [ingress-nginx] Reloaded TLS secret api-example-tls
+2026-10-01T00:25:00Z INFO  [alertmanager] RESOLVED ApiSuccessRateLow success_rate=99.7%

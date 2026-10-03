@@ -44,6 +44,17 @@ def release_db(conn):
         conn.close()
 
 
+def _add_column_if_missing(conn, cur, table: str, column: str, col_type: str) -> None:
+    """Additive migration that works on both PostgreSQL and SQLite."""
+    if USE_POSTGRES:
+        cur.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {col_type}")
+    else:
+        existing = {row[1] for row in cur.execute(f"PRAGMA table_info({table})").fetchall()}
+        if column not in existing:
+            cur.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+    conn.commit()
+
+
 def init_db():
     """Initialize postmortems table (compatible with PostgreSQL and SQLite)."""
     conn = get_db()
@@ -62,6 +73,9 @@ def init_db():
         )
     """)
     conn.commit()
+    _add_column_if_missing(conn, cur, "postmortems", "owner_hash", "TEXT")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_postmortems_owner ON postmortems(owner_hash, created_at)")
+    conn.commit()
     cur.close()
     release_db(conn)
 
@@ -74,7 +88,7 @@ def init_db():
         logging.getLogger(__name__).warning(f"init_cache_table failed: {e}")
 
 
-def save_postmortem(postmortem_data: dict, source: str = "analyze") -> str:
+def save_postmortem(postmortem_data: dict, source: str = "analyze", owner_hash: str | None = None) -> str:
     """Save postmortem to database. Returns ID (persists even if DB is unavailable)."""
     postmortem_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
@@ -97,19 +111,21 @@ def save_postmortem(postmortem_data: dict, source: str = "analyze") -> str:
             json.dumps(postmortem_data),
             source,
             now,
+            owner_hash,
         )
 
         # Use appropriate placeholder syntax for each database
         placeholders = "%s" if USE_POSTGRES else "?"
-        placeholder_list = ", ".join([placeholders] * 7)
+        placeholder_list = ", ".join([placeholders] * 8)
         cur.execute(
-            f"INSERT INTO postmortems (id, title, severity, summary, data, source, created_at) VALUES ({placeholder_list})",
+            f"INSERT INTO postmortems (id, title, severity, summary, data, source, created_at, owner_hash) "
+            f"VALUES ({placeholder_list})",
             values,
         )
         conn.commit()
         logger.debug(f"Postmortem saved: {postmortem_id} (source={source})")
-    except Exception as e:
-        logger.error(f"Failed to save postmortem {postmortem_id}: {e}")
+    except Exception:
+        logger.exception("Failed to save postmortem %s", postmortem_id)
     finally:
         cur.close()
         release_db(conn)
@@ -117,20 +133,26 @@ def save_postmortem(postmortem_data: dict, source: str = "analyze") -> str:
     return postmortem_id
 
 
-def get_all_postmortems():
-    """Get all postmortems ordered by creation date (newest first)."""
+def get_all_postmortems(owner_hash: str | None):
+    """Get the owner's postmortems, newest first. Without an owner, returns nothing."""
+    if not owner_hash:
+        return []
     conn = get_db()
-    query = "SELECT id, title, severity, summary, source, created_at FROM postmortems ORDER BY created_at DESC"
+    ph = "%s" if USE_POSTGRES else "?"
+    query = (
+        "SELECT id, title, severity, summary, source, created_at FROM postmortems "
+        f"WHERE owner_hash = {ph} ORDER BY created_at DESC LIMIT 200"
+    )
 
     try:
         if USE_POSTGRES:
             cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            cur.execute(query)
+            cur.execute(query, (owner_hash,))
             rows = cur.fetchall()
             cur.close()
             return [dict(r) for r in rows]
         else:
-            rows = conn.execute(query).fetchall()
+            rows = conn.execute(query, (owner_hash,)).fetchall()
             return [dict(r) for r in rows]
     finally:
         release_db(conn)
@@ -154,6 +176,7 @@ def get_postmortem_by_id(postmortem_id: str):
         if row:
             data = dict(row)
             data["data"] = json.loads(data["data"])
+            data.pop("owner_hash", None)
             return data
         return None
     finally:
@@ -275,25 +298,27 @@ def get_dashboard_stats() -> dict:
             "error_types": error_types,
             "avg_confidence": avg_confidence,
         }
-    except Exception as e:
-        logger.error(f"Error getting dashboard stats: {e}")
+    except Exception:
+        logger.exception("Error getting dashboard stats")
         return _empty_dashboard_stats()
     finally:
         release_db(conn)
 
 
-def delete_postmortem(postmortem_id: str) -> bool:
-    """Delete postmortem by ID. Returns True if a row was deleted."""
+def delete_postmortem(postmortem_id: str, owner_hash: str | None) -> bool:
+    """Delete a postmortem only if it belongs to owner_hash. Returns True if a row was deleted."""
+    if not owner_hash:
+        return False
     conn = get_db()
 
     try:
         if USE_POSTGRES:
             cur = conn.cursor()
-            cur.execute("DELETE FROM postmortems WHERE id = %s", (postmortem_id,))
+            cur.execute("DELETE FROM postmortems WHERE id = %s AND owner_hash = %s", (postmortem_id, owner_hash))
             affected = cur.rowcount
             cur.close()
         else:
-            cur = conn.execute("DELETE FROM postmortems WHERE id = ?", (postmortem_id,))
+            cur = conn.execute("DELETE FROM postmortems WHERE id = ? AND owner_hash = ?", (postmortem_id, owner_hash))
             affected = cur.rowcount
 
         conn.commit()

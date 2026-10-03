@@ -1,113 +1,145 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, FlaskConical, History, Github, Menu, X, BarChart2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Helmet } from 'react-helmet'
+import { Zap, History, Github, Menu, X, BarChart2 } from 'lucide-react'
+
+const LANGS = ['es', 'en']
+
+function LanguageSwitch() {
+  const { t, i18n } = useTranslation()
+  return (
+    <fieldset className="flex items-center rounded-lg border border-border p-0.5">
+      <legend className="sr-only">{t('nav.language')}</legend>
+      {LANGS.map((lng) => {
+        const active = i18n.resolvedLanguage === lng
+        return (
+          <button
+            key={lng}
+            type="button"
+            onClick={() => i18n.changeLanguage(lng)}
+            aria-pressed={active}
+            className={`rounded-md px-2 py-1 font-mono text-xs uppercase transition-colors ${
+              active ? 'bg-subtle text-text' : 'text-muted hover:text-text'
+            }`}
+          >
+            {lng}
+          </button>
+        )
+      })}
+    </fieldset>
+  )
+}
 
 export function Navbar() {
+  const { t, i18n } = useTranslation()
   const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
+  useEffect(() => setMenuOpen(false), [pathname])
+
   const links = [
-    { to: '/',          label: 'Analizar',   icon: <Zap          className="w-4 h-4" /> },
-    { to: '/simulate',  label: 'Simular',    icon: <FlaskConical className="w-4 h-4" /> },
-    { to: '/history',   label: 'Historial',  icon: <History      className="w-4 h-4" /> },
-    { to: '/dashboard', label: 'Dashboard',  icon: <BarChart2    className="w-4 h-4" /> },
+    { to: '/',          label: t('nav.analyze'),   Icon: Zap },
+    { to: '/history',   label: t('nav.history'),   Icon: History },
+    { to: '/dashboard', label: t('nav.dashboard'), Icon: BarChart2 },
   ]
 
   const isActive = (to) =>
-    to === '/' ? pathname === '/' : pathname.startsWith(to)
+    to === '/' ? pathname === '/' : pathname.startsWith(to) || (to === '/history' && pathname.startsWith('/result'))
 
   return (
-    <nav className="border-b border-border bg-bg/80 backdrop-blur-md sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <>
+    <Helmet>
+      <html lang={i18n.language} />
+      <title>{t('home.metaTitle')}</title>
+    </Helmet>
+    <nav aria-label={t('nav.primary')} className="sticky top-0 z-40 border-b border-border bg-bg/85 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group" onClick={() => setMenuOpen(false)}>
-          <div className="relative w-8 h-8">
-            <div className="absolute inset-0 bg-accent/20 rounded-lg group-hover:bg-accent/30 transition-colors" />
-            <div className="absolute inset-0 flex items-center justify-center text-accent font-bold text-sm font-mono">
-              PM
-            </div>
-          </div>
-          <span className="font-bold text-lg">
-            <span className="text-gradient">Postmortem</span>
-            <span className="text-muted">.ai</span>
+        <Link to="/" className="flex items-center gap-2.5 rounded-lg">
+          <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="#6C5CE7" fillOpacity="0.16" />
+            <path d="M6 18h5l2.5-7 4 12 2.5-5H26" fill="none" stroke="#8B7CF6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="text-[17px] font-semibold tracking-tight">
+            Postmortem<span className="text-muted">.ai</span>
           </span>
         </Link>
 
-        {/* Desktop nav links */}
-        <div className="hidden sm:flex items-center gap-1">
-          {links.map(({ to, label, icon }) => {
+        <div className="hidden items-center gap-1 md:flex">
+          {links.map(({ to, label, Icon }) => {
             const active = isActive(to)
             return (
               <Link
                 key={to}
                 to={to}
-                className="relative px-4 py-2 flex items-center gap-2 text-sm font-medium transition-colors rounded-lg hover:bg-card"
+                aria-current={active ? 'page' : undefined}
+                className="relative flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors hover:bg-card"
               >
                 {active && (
-                  <motion.div
+                  <motion.span
                     layoutId="navbar-indicator"
-                    className="absolute inset-0 bg-card rounded-lg border border-border"
-                    transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
+                    className="absolute inset-0 rounded-lg border border-border bg-card"
+                    transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
                   />
                 )}
                 <span className={`relative flex items-center gap-2 ${active ? 'text-text' : 'text-muted'}`}>
-                  {icon}{label}
+                  <Icon className="h-4 w-4" aria-hidden="true" />{label}
                 </span>
               </Link>
             )
           })}
         </div>
 
-        {/* GitHub + Hamburguesa */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <LanguageSwitch />
           <a
             href="https://github.com/LMerikov/postmortem-ai"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted hover:text-text transition-colors p-2 rounded-lg hover:bg-card"
-            title="Ver en GitHub"
+            className="icon-btn"
+            aria-label={t('nav.github')}
+            title={t('nav.github')}
           >
-            <Github className="w-5 h-5" />
+            <Github className="h-5 w-5" />
           </a>
-
-          {/* Hamburguesa — solo mobile */}
           <button
-            className="sm:hidden p-2 rounded-lg hover:bg-card text-muted hover:text-text transition-colors"
+            type="button"
+            className="icon-btn md:hidden"
             onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Abrir menú"
+            aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
           >
-            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile dropdown */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
+            id="mobile-menu"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="sm:hidden border-t border-border overflow-hidden"
+            className="overflow-hidden border-t border-border md:hidden"
           >
-            <div className="px-4 py-3 space-y-1">
-              {links.map(({ to, label, icon }) => {
+            <div className="space-y-1 px-4 py-3">
+              {links.map(({ to, label, Icon }) => {
                 const active = isActive(to)
                 return (
                   <Link
                     key={to}
                     to={to}
-                    onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                      active
-                        ? 'bg-card border border-border text-text'
-                        : 'text-muted hover:bg-card hover:text-text'
+                    aria-current={active ? 'page' : undefined}
+                    className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                      active ? 'border border-border bg-card text-text' : 'text-muted hover:bg-card hover:text-text'
                     }`}
                   >
-                    {icon}{label}
+                    <Icon className="h-4 w-4" aria-hidden="true" />{label}
                   </Link>
                 )
               })}
@@ -116,5 +148,6 @@ export function Navbar() {
         )}
       </AnimatePresence>
     </nav>
+    </>
   )
 }

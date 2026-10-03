@@ -1,43 +1,40 @@
 import { useCallback, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { useDropzone } from 'react-dropzone'
-import { Zap, ArrowRight, Shield, Terminal, FolderOpen, AlertCircle, Upload } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { ArrowRight, ShieldCheck, FileText, FolderOpen, AlertCircle, Upload, X } from 'lucide-react'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 
-export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
-  const [uploadedFiles, setUploadedFiles] = useState([])
-  const [focused, setFocused] = useState(false)
-  const [error, setError] = useState('')
+export function LogInput({ value, onChange, disabled = false, onAnalyze, onExample, error: externalError = '' }) {
+  const { t, i18n } = useTranslation()
+  const [fileName, setFileName] = useState('')
+  const [fileError, setFileError] = useState('')
   const textareaRef = useRef(null)
   const fileInputRef = useRef(null)
+  const error = fileError || externalError
 
   const handleFileRead = useCallback(async (file) => {
     if (file.size > MAX_FILE_SIZE) {
-      const sizeMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(0)
-      const fileMB = (file.size / 1024 / 1024).toFixed(1)
-      setError(`Archivo demasiado grande: ${fileMB}MB. Máximo permitido: ${sizeMB}MB`)
-      return false
+      setFileError(t('input.tooLarge', {
+        size: (file.size / 1024 / 1024).toFixed(1),
+        max: (MAX_FILE_SIZE / 1024 / 1024).toFixed(0),
+      }))
+      return
     }
     try {
-      const text = await file.text()
-      onChange(text)
-      setUploadedFiles(prev =>
-        [file.name, ...prev.filter(n => n !== file.name)].slice(0, 2)
-      )
-      setError('')
+      onChange(await file.text())
+      setFileName(file.name)
+      setFileError('')
       setTimeout(() => textareaRef.current?.focus(), 0)
-      return true
     } catch (err) {
-      setError(`Error al leer archivo: ${err.message}`)
-      return false
+      setFileError(t('input.readError', { message: err.message }))
     }
-  }, [onChange])
+  }, [onChange, t])
 
   const onDrop = useCallback(async (files) => {
-    const file = files[0]
-    if (!file) return
-    await handleFileRead(file)
+    if (files[0]) await handleFileRead(files[0])
   }, [handleFileRead])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -49,54 +46,57 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
     noKeyboard: true,
   })
 
-  const handleFileTabClick = () => {
-    fileInputRef.current?.click()
-  }
-
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0]
-    if (!file) return
-    await handleFileRead(file)
+    if (file) await handleFileRead(file)
     e.target.value = ''
   }
 
-  const showOverlay = !value && !focused && !isDragActive
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      onAnalyze()
+    }
+  }
+
+  const clear = () => {
+    onChange('')
+    setFileName('')
+    setFileError('')
+    textareaRef.current?.focus()
+  }
+
+  const hasValue = Boolean(value?.trim())
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-border shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+    <div className="overflow-hidden rounded-2xl border border-border bg-input shadow-[0_24px_48px_-24px_rgba(0,0,0,0.7)]">
 
-      {/* Title bar — macOS style */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#1a1a2e] border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-          <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
-          <div className="w-3 h-3 rounded-full bg-[#28c840]" />
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          {uploadedFiles.length > 0 ? (
-            uploadedFiles.map(name => (
-              <span
-                key={name}
-                className="flex items-center gap-1.5 text-xs text-text/80 px-3 py-1 rounded-md bg-card/70 border border-border/60 font-mono"
-              >
-                <Terminal className="w-3 h-3 text-accent" />
-                {name}
-              </span>
-            ))
-          ) : null}
-
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5">
+        <label htmlFor="log-input" className="text-sm font-medium text-text">
+          {t('input.label')}
+        </label>
+        <div className="flex min-w-0 items-center gap-1">
+          {fileName && (
+            <span className="flex min-w-0 items-center gap-1.5 rounded-md border border-border bg-input px-2.5 py-1 font-mono text-xs text-text/80">
+              <FileText className="h-3.5 w-3.5 shrink-0 text-accent-strong" aria-hidden="true" />
+              <span className="truncate">{fileName}</span>
+            </span>
+          )}
           <button
             type="button"
-            onClick={handleFileTabClick}
+            onClick={() => fileInputRef.current?.click()}
             disabled={disabled}
-            title="Abrir archivo"
-            className="flex items-center gap-1.5 text-xs text-muted/60 hover:text-text/80 px-3 py-1 rounded-md hover:bg-white/5 border border-transparent hover:border-border/40 font-mono transition-all duration-150"
+            className="btn-ghost py-1.5 text-xs"
           >
-            <FolderOpen className="w-3.5 h-3.5" />
-            <span>Abrir archivo</span>
+            <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="hidden sm:inline">{t('input.openFile')}</span>
           </button>
-
+          {hasValue && (
+            <button type="button" onClick={clear} disabled={disabled} className="btn-ghost py-1.5 text-xs">
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="hidden sm:inline">{t('input.clear')}</span>
+            </button>
+          )}
           <input
             ref={fileInputRef}
             type="file"
@@ -104,82 +104,66 @@ export function LogInput({ value, onChange, disabled, onAnalyze, onExample }) {
             onChange={handleFileChange}
             disabled={disabled}
             className="hidden"
+            tabIndex={-1}
           />
         </div>
       </div>
 
-      {/* Error message */}
       {error && (
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border-b border-red-500/20 text-red-400 text-sm">
-          <AlertCircle className="w-4 h-4 shrink-0" />
+        <div id="log-input-error" role="alert" className="flex items-center gap-2 border-b border-p0/20 bg-p0/10 px-4 py-2.5 text-sm text-p0">
+          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Main area — drag & drop + textarea */}
-      <div
-        {...getRootProps()}
-        className={`relative bg-[#10101a] transition-all duration-200 ${
-          isDragActive ? 'bg-accent/5' : ''
-        } ${focused ? 'ring-2 ring-inset ring-accent/30' : ''}`}
-      >
+      <div {...getRootProps()} className={`relative ${isDragActive ? 'drag-active bg-accent/5' : ''}`}>
         <input {...getInputProps()} />
-
         <textarea
+          id="log-input"
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onKeyDown={handleKeyDown}
           disabled={disabled}
-          className="w-full h-40 bg-transparent resize-none px-5 py-4 text-sm font-mono text-text/90 focus:outline-none leading-relaxed relative z-10 placeholder-transparent"
+          placeholder={t('input.placeholder')}
+          aria-describedby={`log-input-hint${error ? ' log-input-error' : ''}`}
+          aria-invalid={Boolean(error) || undefined}
+          className="block h-56 w-full resize-y bg-transparent px-5 py-4 font-mono text-[13px] leading-relaxed text-text/90 placeholder:font-sans placeholder:text-sm placeholder:text-muted/70 focus:outline-none focus-visible:outline-none"
           spellCheck={false}
         />
-
-        {/* Watermark overlay */}
-        {showOverlay && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none select-none">
-            <span className="text-5xl font-mono text-muted/15 tracking-widest">&gt;_</span>
-            <div className="text-center space-y-1">
-              <p className="text-sm text-muted/50">Pega logs, arrastra un archivo, o escribe aquí</p>
-              <p className="text-xs text-muted/30">Soporta .log, .txt, .json o texto libre</p>
-            </div>
-          </div>
-        )}
-
-        {/* Drag active overlay */}
         {isDragActive && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 pointer-events-none border-2 border-accent drag-active">
-            <Upload className="w-10 h-10 text-accent animate-bounce" />
-            <p className="text-sm font-semibold text-accent">Suelta el archivo aquí</p>
+          <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-input/90">
+            <Upload className="h-8 w-8 text-accent-strong" aria-hidden="true" />
+            <p className="text-sm font-medium text-accent-strong">{t('input.dropHere')}</p>
           </div>
         )}
       </div>
 
-      {/* Bottom bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#0d0d1a] border-t border-border gap-3">
-        <div className="hidden sm:flex items-center gap-2 text-xs text-muted/50 shrink-0">
-          <Shield className="w-3.5 h-3.5 text-success/60 shrink-0" />
-          <span>Privacidad garantizada. No usamos tus logs para entrenar modelos.</span>
+      <div className="flex flex-col gap-3 border-t border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div id="log-input-hint" className="space-y-0.5 text-xs text-muted">
+          <p className="flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-success" aria-hidden="true" />
+            {t('input.privacy')}
+          </p>
+          <p className="pl-5">
+            {hasValue
+              ? <span className="tabular">{t('input.chars', { n: value.length.toLocaleString(i18n.language) })}</span>
+              : t('input.formats')}
+          </p>
         </div>
-        <div className="flex items-center gap-2 ml-auto">
-          <button
-            type="button"
-            onClick={onExample}
-            disabled={disabled}
-            className="text-sm text-muted hover:text-text transition-colors px-4 py-2 rounded-lg hover:bg-white/5 border border-border/50 whitespace-nowrap"
-          >
-            Probar ejemplo
+        <div className="flex shrink-0 items-center gap-2">
+          <button type="button" onClick={onExample} disabled={disabled} className="btn-secondary text-sm">
+            {t('input.example')}
           </button>
           <button
             type="button"
             onClick={onAnalyze}
-            disabled={disabled || !value?.trim()}
-            className="btn-primary text-sm py-2 whitespace-nowrap"
+            disabled={disabled || !hasValue}
+            className="btn-primary flex-1 text-sm sm:flex-none"
           >
-            <Zap className="w-4 h-4" />
-            Generar Postmortem
-            <ArrowRight className="w-3.5 h-3.5" />
+            {t('input.generate')}
+            <kbd className="kbd hidden sm:inline" aria-hidden="true">{t('input.shortcut', { key: IS_MAC ? '⌘' : 'Ctrl' })}</kbd>
+            <ArrowRight className="h-4 w-4 sm:hidden" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -193,8 +177,5 @@ LogInput.propTypes = {
   onAnalyze: PropTypes.func.isRequired,
   onExample: PropTypes.func.isRequired,
   disabled: PropTypes.bool,
-}
-
-LogInput.defaultProps = {
-  disabled: false,
+  error: PropTypes.string,
 }
