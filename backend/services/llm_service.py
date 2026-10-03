@@ -6,7 +6,6 @@ import json
 import logging
 from config import Config
 from prompts.analyze import ANALYZE_SYSTEM_PROMPT, ANALYZE_USER_PROMPT
-from prompts.simulate import SIMULATE_SYSTEM_PROMPT, SIMULATE_USER_PROMPT
 from services.log_parser import preprocess
 from services.providers.factory import ProviderFactory
 
@@ -49,31 +48,6 @@ def analyze_logs(content: str) -> dict:
     parsed = preprocess(content)
     user_prompt = ANALYZE_USER_PROMPT.format(user_input=parsed["content"])
     raw = _call_llm(ANALYZE_SYSTEM_PROMPT, user_prompt)
-    if isinstance(raw, str):
-        clean = raw.strip()
-        if clean.startswith("```"):
-            clean = re.sub(MARKDOWN_CODE_BLOCK_START, "", clean)
-            clean = re.sub(MARKDOWN_CODE_BLOCK_END, "", clean)
-        return json.loads(clean)
-    return raw
-
-
-def generate_simulation(
-    incident_type: str,
-    severity: str,
-    tech_stack: str,
-    infrastructure: str,
-    complexity: str,
-) -> dict:
-    """Generate a simulated incident with logs + postmortem."""
-    user_prompt = SIMULATE_USER_PROMPT.format(
-        incident_type=incident_type,
-        severity=severity,
-        tech_stack=tech_stack,
-        infrastructure=infrastructure,
-        complexity=complexity,
-    )
-    raw = _call_llm(SIMULATE_SYSTEM_PROMPT, user_prompt, max_tokens=6000)
     if isinstance(raw, str):
         clean = raw.strip()
         if clean.startswith("```"):

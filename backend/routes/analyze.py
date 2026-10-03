@@ -11,6 +11,7 @@ from services.llm_service import analyze_logs, analyze_logs_stream
 from services.local_filtering import process_with_local_filter
 from services.cache_service import normalize_for_cache, find_in_cache, save_to_cache
 from models.postmortem import save_postmortem
+from services.owner import owner_hash_from_request
 
 logger = logging.getLogger(__name__)
 
@@ -46,13 +47,13 @@ def _phase1_filter(content):
     return postmortem_local, should_call_llm, cleaned_content, phase1_error
 
 
-def _phase2_cache(cleaned_content):
-    """PHASE 2: Cache por similitud. Retorna (postmortem_cached, postmortem_id) o (None, None)."""
+def _phase2_cache(cleaned_content, owner):
+    """PHASE 2: Cache por similitud, aislada por propietario. Retorna (postmortem, id, normalized)."""
     normalized = normalize_for_cache(cleaned_content)
     try:
-        cached = find_in_cache(normalized, threshold=0.70)
+        cached = find_in_cache(normalized, owner, threshold=0.70)
         if cached:
-            postmortem_id = save_postmortem(cached, source="cache")
+            postmortem_id = save_postmortem(cached, source="cache", owner_hash=owner)
             return cached, postmortem_id, normalized
     except Exception as e:
         logger.warning(f"Phase2 cache lookup error: {e}")
@@ -60,17 +61,17 @@ def _phase2_cache(cleaned_content):
     return None, None, normalized
 
 
-def _phase3_stream(content, normalized):
+def _phase3_stream(content, normalized, owner):
     """PHASE 3 con streaming. Retorna Response."""
     def generate():
         for chunk in analyze_logs_stream(content):
             parsed = json.loads(chunk)
             if parsed.get("status") == "complete":
                 postmortem_data = parsed["postmortem"]
-                postmortem_id = save_postmortem(postmortem_data, source="analyze")
+                postmortem_id = save_postmortem(postmortem_data, source="analyze", owner_hash=owner)
                 parsed["id"] = postmortem_id
                 try:
-                    save_to_cache(normalized, postmortem_data)
+                    save_to_cache(normalized, postmortem_data, owner)
                 except Exception:
                     pass
             yield f"data: {json.dumps(parsed)}\n\n"
@@ -82,14 +83,14 @@ def _phase3_stream(content, normalized):
     )
 
 
-def _phase3_non_stream(content, normalized, phase1_error):
+def _phase3_non_stream(content, normalized, phase1_error, owner):
     """PHASE 3 sin streaming. Retorna jsonify response."""
     try:
         postmortem = analyze_logs(content)
-        postmortem_id = save_postmortem(postmortem, source="analyze")
+        postmortem_id = save_postmortem(postmortem, source="analyze", owner_hash=owner)
 
         try:
-            save_to_cache(normalized, postmortem)
+            save_to_cache(normalized, postmortem, owner)
         except Exception as e:
             logger.warning(f"Cache save error (non-blocking): {e}")
 
@@ -111,11 +112,13 @@ def analyze():
     if not content:
         return jsonify({"error": "content is required"}), 400
 
+    owner = owner_hash_from_request()
+
     # PHASE 1: Filtrado local
     postmortem_local, should_call_llm, cleaned_content, phase1_error = _phase1_filter(content)
 
     if not should_call_llm:
-        local_id = save_postmortem(postmortem_local, source="local_filter")
+        local_id = save_postmortem(postmortem_local, source="local_filter", owner_hash=owner)
         payload = {
             "id": local_id,
             "status": "complete",
@@ -125,7 +128,7 @@ def analyze():
         return _sse(payload) if stream else jsonify(payload)
 
     # PHASE 2: Cache por similitud
-    cached, postmortem_id, normalized = _phase2_cache(cleaned_content)
+    cached, postmortem_id, normalized = _phase2_cache(cleaned_content, owner)
     if cached:
         payload = {
             "id": postmortem_id,
@@ -138,6 +141,6 @@ def analyze():
 
     # PHASE 3: LLM (Groq → Claude fallback)
     if stream:
-        return _phase3_stream(content, normalized)
+        return _phase3_stream(content, normalized, owner)
 
-    return _phase3_non_stream(content, normalized, phase1_error)
+    return _phase3_non_stream(content, normalized, phase1_error, owner)

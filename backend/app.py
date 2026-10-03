@@ -10,7 +10,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from config import Config
 from models.postmortem import init_db
 from routes.analyze import analyze_bp
-from routes.simulate import simulate_bp
 from routes.history import history_bp
 from routes.export import export_bp
 
@@ -42,7 +41,6 @@ limiter = Limiter(
 )
 
 app.register_blueprint(analyze_bp)
-app.register_blueprint(simulate_bp)
 app.register_blueprint(history_bp)
 app.register_blueprint(export_bp)
 
