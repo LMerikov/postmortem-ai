@@ -1,25 +1,24 @@
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
-import { Users, Clock, Server, DollarSign } from 'lucide-react'
+
+// The model answers "Unknown" in English whatever the UI language; treat it as missing.
+const MISSING = /^(unknown|desconocido|n\/?a|none|ninguno)$/i
+const clean = (v) => (v == null || MISSING.test(String(v).trim()) ? '' : v)
 
 export function ImpactCard({ impact = {} }) {
   const { t } = useTranslation()
   const items = [
-    { Icon: Users,      label: t('pm.usersAffected'), value: impact.users_affected },
-    { Icon: Clock,      label: t('pm.duration'),      value: impact.duration },
-    { Icon: Server,     label: t('pm.services'),      value: (impact.services_affected || []).join(', ') },
-    { Icon: DollarSign, label: t('pm.revenue'),       value: impact.revenue_impact },
+    { label: t('pm.usersAffected'), value: clean(impact.users_affected) },
+    { label: t('pm.duration'), value: clean(impact.duration) },
+    { label: t('pm.services'), value: (impact.services_affected || []).filter(s => !MISSING.test(String(s).trim())).join(', ') },
+    { label: t('pm.revenue'), value: clean(impact.revenue_impact) },
   ]
   return (
-    <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
-      {items.map(({ Icon, label, value }) => (
-        <div key={label} className="space-y-1 bg-input p-4">
-          <dt className="flex items-center gap-2 text-xs text-muted">
-            <Icon className="h-3.5 w-3.5" aria-hidden="true" />{label}
-          </dt>
-          <dd className={`text-sm font-medium leading-snug ${value ? 'text-text' : 'text-muted'}`}>
-            {value || t('pm.unknown')}
-          </dd>
+    <dl className="grid border-t border-border sm:grid-cols-2 sm:gap-x-10">
+      {items.map(({ label, value }) => (
+        <div key={label} className="rule-row">
+          <dt className="caps shrink-0 text-muted">{label}</dt>
+          <dd className={`text-right text-[15px] ${value ? 'text-text' : 'text-muted'}`}>{value || t('pm.unknown')}</dd>
         </div>
       ))}
     </dl>

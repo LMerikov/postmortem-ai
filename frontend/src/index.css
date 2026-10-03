@@ -10,7 +10,7 @@
   body {
     @apply bg-bg text-text antialiased font-sans;
     font-feature-settings: 'ss01', 'cv11';
-    caret-color: theme('colors.accent-strong');
+    caret-color: theme('colors.fac-red');
   }
   * {
     @apply border-border;
@@ -24,13 +24,12 @@
     text-wrap: pretty;
   }
   ::selection {
-    background: rgba(108, 92, 231, 0.45);
+    background: theme('colors.fac-red');
     color: #fff;
   }
   :focus-visible {
-    outline: 2px solid theme('colors.accent-strong');
-    outline-offset: 2px;
-    border-radius: 6px;
+    outline: 2px solid theme('colors.text');
+    outline-offset: 3px;
   }
   a {
     text-underline-offset: 3px;
@@ -43,12 +42,10 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
-    border: 2px solid transparent;
-    background-clip: padding-box;
+    background: theme('colors.border');
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted;
+    background: theme('colors.muted');
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -61,37 +58,61 @@
 }
 
 @layer components {
+  /* Engraved caps: the system's label voice. Display face, small, wide-tracked. */
+  .caps {
+    @apply font-display text-xs font-medium uppercase tracking-[0.2em];
+    font-stretch: 112%;
+  }
+  .caps-lg {
+    @apply font-display text-[13px] font-medium uppercase tracking-[0.18em];
+    font-stretch: 112%;
+  }
+  /* The incident code and other wide display figures. */
+  .display-wide {
+    @apply font-display font-medium leading-[0.92] tracking-[-0.02em];
+    font-stretch: 125%;
+  }
+
+  /* Primary action: hairline frame; the red block is the "active" marker. */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 font-medium text-white
-      shadow-[0_1px_0_rgba(255,255,255,0.12)_inset,0_6px_16px_-6px_rgba(108,92,231,0.6)]
-      transition-[background-color,box-shadow,transform] duration-200 ease-out-expo
-      hover:bg-accent-strong active:translate-y-px
-      disabled:cursor-not-allowed disabled:bg-subtle disabled:text-muted disabled:shadow-none;
+    @apply relative inline-flex items-center justify-between gap-6 border border-line bg-bg py-3 pl-5 pr-14 caps-lg text-text
+      transition-colors duration-150 hover:bg-text hover:text-bg
+      disabled:cursor-not-allowed disabled:border-border disabled:text-muted disabled:hover:bg-bg disabled:hover:text-muted;
+  }
+  .btn-primary::after {
+    content: '';
+    @apply absolute inset-y-[-1px] right-[-1px] w-12 origin-right scale-x-75 bg-fac-red transition-transform duration-150;
+  }
+  .btn-primary:hover::after {
+    @apply scale-x-100;
+  }
+  .btn-primary:disabled::after {
+    @apply bg-border;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2 font-medium text-text
-      transition-colors duration-200 hover:border-muted/40 hover:bg-subtle
+    @apply inline-flex items-center justify-center gap-2 border border-border bg-bg px-4 py-2.5 caps text-text
+      transition-colors duration-150 hover:border-line hover:bg-subtle
       disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm text-muted
-      transition-colors duration-200 hover:bg-subtle hover:text-text disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 px-3 py-2 caps text-muted transition-colors duration-150 hover:text-text disabled:opacity-50;
   }
   .icon-btn {
-    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors duration-200 hover:bg-subtle hover:text-text;
+    @apply inline-flex h-10 w-10 items-center justify-center text-muted transition-colors duration-150 hover:bg-subtle hover:text-text;
   }
   .card {
-    @apply rounded-xl border border-border bg-card p-6;
+    @apply border border-border bg-card p-6;
   }
   .input-base {
-    @apply rounded-lg border border-border bg-input px-4 py-2.5 text-text placeholder-muted
-      transition-colors duration-200 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40;
-  }
-  .severity-badge {
-    @apply inline-flex items-center gap-1.5 rounded-md border font-medium;
+    @apply border border-border bg-input px-4 py-2.5 text-text placeholder-muted
+      transition-colors duration-150 focus:border-line focus:outline-none;
   }
   .kbd {
-    @apply rounded border border-white/20 bg-white/10 px-1.5 py-px font-mono text-[11px] leading-4;
+    @apply border border-line/60 px-1.5 py-px font-mono text-xs leading-4 tracking-normal;
+  }
+  /* Ruled rows: label left, value right, hairline between. */
+  .rule-row {
+    @apply flex items-baseline justify-between gap-4 border-b border-border py-2.5;
   }
 }
 
@@ -101,15 +122,23 @@
   }
 }
 
-/* Drag & drop */
-.drag-active {
-  box-shadow: inset 0 0 0 2px theme('colors.accent');
+/* Plot: slow pulse traverse while the server is working. */
+@keyframes sweep {
+  to { transform: rotate(360deg); }
+}
+.plot-sweep {
+  transform-origin: 200px 200px;
+  animation: sweep 7s linear infinite;
 }
 
-/* Code block */
+/* Drag & drop */
+.drag-active {
+  box-shadow: inset 0 0 0 2px theme('colors.text');
+}
+
 pre {
-  @apply overflow-x-auto rounded-lg bg-code p-4 font-mono text-sm;
+  @apply overflow-x-auto bg-code p-4 font-mono text-sm;
 }
 code {
-  @apply font-mono text-cyan;
+  @apply font-mono;
 }

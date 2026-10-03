@@ -7,7 +7,8 @@
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "language": "Idioma",
-    "primary": "Navegación principal"
+    "primary": "Navegación principal",
+    "skip": "Saltar al contenido"
   },
   "home": {
     "metaTitle": "Postmortem.ai — Postmortems de incidentes con IA",
@@ -18,36 +19,18 @@
     "analyzed_other": "{{n}} postmortems generados hasta hoy",
     "emptyInput": "Pega logs o describe el incidente para generar el postmortem.",
     "loading": "Analizando el incidente",
-    "steps": {
-      "read": "Leyendo logs y detectando eventos",
-      "cause": "Separando síntomas de la causa raíz",
-      "write": "Redactando timeline y tareas"
-    },
-    "howTitle": "Qué incluye cada postmortem",
-    "how": {
-      "timeline": {
-        "title": "Timeline del incidente",
-        "desc": "Eventos ordenados con su tipo: alerta, detección, escalamiento, acción y resolución."
-      },
-      "cause": {
-        "title": "Causa raíz y cascada",
-        "desc": "Distingue el disparador inicial de los síntomas que provocó en otros servicios."
-      },
-      "actions": {
-        "title": "Tareas de seguimiento",
-        "desc": "Acciones con prioridad y responsable sugerido, más recomendaciones de monitoreo."
-      },
-      "export": {
-        "title": "Exportación",
-        "desc": "Descarga en PDF o Markdown, o copia el resultado para tu herramienta de tickets."
-      }
-    },
     "footer": "Hecho por Luis Merino · Formato inspirado en el Google SRE Book",
     "rateLimited": "El servicio gratuito alcanzó su límite por minuto. Inténtalo de nuevo en {{seconds}} s.",
-    "analyzeError": "No se pudo generar el postmortem. Revisa la conexión e inténtalo de nuevo."
+    "analyzeError": "No se pudo generar el postmortem. Revisa la conexión e inténtalo de nuevo.",
+    "analyzing": "Analizando el incidente",
+    "elapsed": "Tiempo transcurrido",
+    "cancel": "Cancelar",
+    "waitHint": "Suele tardar unos segundos. En el plan gratuito, a veces hay que esperar hasta un minuto.",
+    "rateWait": "Límite del servicio gratuito. Reintento en {{seconds}} s",
+    "includes": "Cada postmortem incluye timeline, causa raíz y cascada, tareas de seguimiento y exportación a PDF o Markdown."
   },
   "input": {
-    "label": "Logs o descripción del incidente",
+    "label": "Logs del incidente",
     "placeholder": "Pega logs, arrastra un archivo o describe qué pasó",
     "formats": "Admite .log, .txt, .json o texto libre · máx. 5 MB",
     "openFile": "Abrir archivo",
@@ -59,13 +42,18 @@
     "clear": "Limpiar",
     "chars": "{{n}} caracteres",
     "tooLarge": "El archivo pesa {{size}} MB. El máximo es {{max}} MB.",
-    "readError": "No se pudo leer el archivo: {{message}}"
+    "readError": "No se pudo leer el archivo: {{message}}",
+    "sent": "Logs enviados",
+    "sentCount": "{{lines}} líneas · {{chars}} caracteres"
   },
   "result": {
     "back": "Historial",
     "current": "Postmortem",
     "notFound": "No encontramos ese postmortem. Puede que se haya eliminado.",
-    "contents": "Contenido"
+    "contents": "Contenido",
+    "seeRootCause": "Ver causa raíz",
+    "jumpTo": "Ir a",
+    "jumpPlaceholder": "Elige una sección"
   },
   "pm": {
     "summary": "Resumen ejecutivo",
@@ -100,6 +88,12 @@
       "warning": "Aviso",
       "error": "Error",
       "critical": "Crítico"
+    },
+    "rc": {
+      "trigger": "Disparador",
+      "cascade": "Cascada",
+      "evidence": "Evidencia",
+      "conclusion": "Conclusión"
     }
   },
   "severity": {
@@ -115,7 +109,8 @@
     "copy": "Copiar JSON",
     "copied": "JSON copiado al portapapeles",
     "downloaded": "{{format}} descargado",
-    "error": "No se pudo exportar. Revisa la conexión e inténtalo de nuevo."
+    "error": "No se pudo exportar. Revisa la conexión e inténtalo de nuevo.",
+    "title": "Exportar"
   },
   "history": {
     "title": "Historial",
@@ -130,11 +125,13 @@
     "deleted": "Postmortem eliminado",
     "undo": "Deshacer",
     "deleteError": "No se pudo eliminar el postmortem.",
-    "privacy": "Solo este navegador ve tu historial. Quien tenga el enlace de un postmortem puede abrirlo."
+    "privacy": "Solo este navegador ve tu historial. Quien tenga el enlace de un postmortem puede abrirlo.",
+    "pendingCount_one": "{{count}} por revisar",
+    "pendingCount_other": "{{count}} por revisar"
   },
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Resumen de todos los postmortems generados",
+    "subtitle": "Resumen de los postmortems de este navegador",
     "loading": "Cargando estadísticas…",
     "empty": "Todavía no hay datos",
     "emptyHint": "Analiza tus primeros logs para ver estadísticas aquí.",
@@ -147,9 +144,20 @@
     "bySeverity": "Por severidad",
     "byType": "Tipos de error más frecuentes",
     "noData": "Sin datos suficientes",
-    "topType": "Más frecuente: {{type}} ({{count}} incidentes)",
     "analyze": "Analizar nuevos logs",
-    "history": "Ver historial"
+    "history": "Ver historial",
+    "topType_one": "Más frecuente: {{type}} ({{count}} incidente)",
+    "topType_other": "Más frecuente: {{type}} ({{count}} incidentes)",
+    "errorTypes": {
+      "Database": "Base de datos",
+      "Performance": "Rendimiento",
+      "Security": "Seguridad",
+      "Network": "Red",
+      "Code": "Código",
+      "Infrastructure": "Infraestructura",
+      "Auth": "Autenticación",
+      "Unknown": "Sin clasificar"
+    }
   },
   "common": {
     "close": "Cerrar",
@@ -158,5 +166,50 @@
     "errorTitle": "Algo salió mal",
     "errorUnknown": "Error desconocido",
     "retry": "Reintentar"
+  },
+  "notFound": {
+    "title": "No encontramos esta página",
+    "body": "La dirección no existe o se movió. Vuelve al inicio para analizar tus logs.",
+    "cta": "Ir al inicio"
+  },
+  "catalog": {
+    "severityScale": "Escala de severidad",
+    "current": "actual",
+    "firstFailure": "Primer fallo",
+    "incident": "Incidente",
+    "plotLabel_one": "Traza polar de {{count}} evento del incidente",
+    "plotLabel_other": "Traza polar de {{count}} eventos del incidente",
+    "events_one": "{{count}} evento",
+    "events_other": "{{count}} eventos",
+    "inputPlotLabel": "Traza polar de {{lines}} líneas de log",
+    "inputSignal_one": "{{count}} línea",
+    "inputSignal_other": "{{count}} líneas",
+    "noSignal": "Sin señal",
+    "errWarn": "{{errors}} err · {{warnings}} warn",
+    "example": "Ejemplo",
+    "exampleHint": "Así se dibuja un incidente de ejemplo. Pega tus logs y verás el tuyo.",
+    "howToRead": "Cada línea del log es un radio, en orden de arriba hacia la derecha. Cuanto más largo, más grave: error, aviso, info.",
+    "howToReadResult": "Cada marca es un evento, en orden de tiempo alrededor del reloj. Cuanto más largo el radio, más grave el evento. El número coincide con el del timeline."
+  },
+  "draft": {
+    "note": "Borrador generado por IA. Verifica cada punto contra los logs antes de compartirlo."
+  },
+  "severityGuide": {
+    "title": "Escala de severidad",
+    "P0": "Servicio caído o pérdida de datos.",
+    "P1": "Degradación grave de un servicio importante.",
+    "P2": "Afecta a parte de los usuarios o a una función.",
+    "P3": "Impacto menor, con alternativa.",
+    "P4": "Sin impacto para los usuarios.",
+    "note": "Definiciones habituales en SRE; cada equipo ajusta las suyas."
+  },
+  "review": {
+    "markReviewed": "Marcar como revisado",
+    "reviewed": "Revisado",
+    "pending": "Por revisar",
+    "reviewedNote": "Revisado por ti el {{date}}. Solo se guarda en este navegador.",
+    "closeHint": "¿Verificaste los puntos contra los logs? La marca se guarda solo en este navegador.",
+    "undoHint": "Pulsa de nuevo para quitar la marca.",
+    "localNote": "Las tareas marcadas se guardan solo en este navegador; quien abra el enlace verá las suyas."
   }
 }

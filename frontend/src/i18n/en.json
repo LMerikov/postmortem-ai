@@ -7,7 +7,8 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "language": "Language",
-    "primary": "Main navigation"
+    "primary": "Main navigation",
+    "skip": "Skip to content"
   },
   "home": {
     "metaTitle": "Postmortem.ai — AI incident postmortems",
@@ -18,36 +19,18 @@
     "analyzed_other": "{{n}} postmortems generated so far",
     "emptyInput": "Paste logs or describe the incident to generate the postmortem.",
     "loading": "Analyzing the incident",
-    "steps": {
-      "read": "Reading logs and detecting events",
-      "cause": "Separating symptoms from the root cause",
-      "write": "Writing timeline and tasks"
-    },
-    "howTitle": "What every postmortem includes",
-    "how": {
-      "timeline": {
-        "title": "Incident timeline",
-        "desc": "Ordered events tagged as alert, detection, escalation, action or resolution."
-      },
-      "cause": {
-        "title": "Root cause and cascade",
-        "desc": "Tells the initial trigger apart from the symptoms it caused in other services."
-      },
-      "actions": {
-        "title": "Follow-up tasks",
-        "desc": "Actions with priority and a suggested owner, plus monitoring recommendations."
-      },
-      "export": {
-        "title": "Export",
-        "desc": "Download as PDF or Markdown, or copy the result into your ticketing tool."
-      }
-    },
     "footer": "Built by Luis Merino · Format inspired by the Google SRE Book",
     "rateLimited": "The free service hit its per-minute limit. Try again in {{seconds}} s.",
-    "analyzeError": "Couldn't generate the postmortem. Check your connection and try again."
+    "analyzeError": "Couldn't generate the postmortem. Check your connection and try again.",
+    "analyzing": "Analyzing the incident",
+    "elapsed": "Elapsed time",
+    "cancel": "Cancel",
+    "waitHint": "It usually takes a few seconds. On the free plan you may sometimes wait up to a minute.",
+    "rateWait": "Free service limit. Retrying in {{seconds}} s",
+    "includes": "Every postmortem includes a timeline, root cause and cascade, follow-up tasks, and PDF or Markdown export."
   },
   "input": {
-    "label": "Logs or incident description",
+    "label": "Incident logs",
     "placeholder": "Paste logs, drop a file or describe what happened",
     "formats": "Accepts .log, .txt, .json or plain text · max 5 MB",
     "openFile": "Open file",
@@ -59,13 +42,18 @@
     "clear": "Clear",
     "chars": "{{n}} characters",
     "tooLarge": "The file is {{size}} MB. The maximum is {{max}} MB.",
-    "readError": "Couldn't read the file: {{message}}"
+    "readError": "Couldn't read the file: {{message}}",
+    "sent": "Logs sent",
+    "sentCount": "{{lines}} lines · {{chars}} characters"
   },
   "result": {
     "back": "History",
     "current": "Postmortem",
     "notFound": "We couldn't find that postmortem. It may have been deleted.",
-    "contents": "Contents"
+    "contents": "Contents",
+    "seeRootCause": "See root cause",
+    "jumpTo": "Jump to",
+    "jumpPlaceholder": "Choose a section"
   },
   "pm": {
     "summary": "Executive summary",
@@ -100,6 +88,12 @@
       "warning": "Warning",
       "error": "Error",
       "critical": "Critical"
+    },
+    "rc": {
+      "trigger": "Trigger",
+      "cascade": "Cascade",
+      "evidence": "Evidence",
+      "conclusion": "Conclusion"
     }
   },
   "severity": {
@@ -115,7 +109,8 @@
     "copy": "Copy JSON",
     "copied": "JSON copied to clipboard",
     "downloaded": "{{format}} downloaded",
-    "error": "Export failed. Check your connection and try again."
+    "error": "Export failed. Check your connection and try again.",
+    "title": "Export"
   },
   "history": {
     "title": "History",
@@ -130,11 +125,13 @@
     "deleted": "Postmortem deleted",
     "undo": "Undo",
     "deleteError": "Couldn't delete the postmortem.",
-    "privacy": "Only this browser can see your history. Anyone with a postmortem's link can open it."
+    "privacy": "Only this browser can see your history. Anyone with a postmortem's link can open it.",
+    "pendingCount_one": "{{count}} to review",
+    "pendingCount_other": "{{count}} to review"
   },
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Overview of every generated postmortem",
+    "subtitle": "Summary of this browser's postmortems",
     "loading": "Loading stats…",
     "empty": "No data yet",
     "emptyHint": "Analyze your first logs to see stats here.",
@@ -147,9 +144,20 @@
     "bySeverity": "By severity",
     "byType": "Most frequent error types",
     "noData": "Not enough data",
-    "topType": "Most frequent: {{type}} ({{count}} incidents)",
     "analyze": "Analyze new logs",
-    "history": "View history"
+    "history": "View history",
+    "topType_one": "Most frequent: {{type}} ({{count}} incident)",
+    "topType_other": "Most frequent: {{type}} ({{count}} incidents)",
+    "errorTypes": {
+      "Database": "Database",
+      "Performance": "Performance",
+      "Security": "Security",
+      "Network": "Network",
+      "Code": "Code",
+      "Infrastructure": "Infrastructure",
+      "Auth": "Authentication",
+      "Unknown": "Unclassified"
+    }
   },
   "common": {
     "close": "Close",
@@ -158,5 +166,50 @@
     "errorTitle": "Something went wrong",
     "errorUnknown": "Unknown error",
     "retry": "Retry"
+  },
+  "notFound": {
+    "title": "We couldn't find this page",
+    "body": "The address does not exist or has moved. Go back home to analyze your logs.",
+    "cta": "Go home"
+  },
+  "catalog": {
+    "severityScale": "Severity scale",
+    "current": "current",
+    "firstFailure": "First failure",
+    "incident": "Incident",
+    "plotLabel_one": "Polar trace of {{count}} incident event",
+    "plotLabel_other": "Polar trace of {{count}} incident events",
+    "events_one": "{{count}} event",
+    "events_other": "{{count}} events",
+    "inputPlotLabel": "Polar trace of {{lines}} log lines",
+    "inputSignal_one": "{{count}} line",
+    "inputSignal_other": "{{count}} lines",
+    "noSignal": "No signal",
+    "errWarn": "{{errors}} err · {{warnings}} warn",
+    "example": "Example",
+    "exampleHint": "This is how an example incident draws. Paste your logs to see yours.",
+    "howToRead": "Each log line is a spoke, running clockwise from the top. Longer means worse: error, warning, info.",
+    "howToReadResult": "Each mark is an event, placed around the dial in time order. A longer spoke means a more severe event. The number matches the timeline."
+  },
+  "draft": {
+    "note": "AI-generated draft. Check every point against the logs before sharing it."
+  },
+  "severityGuide": {
+    "title": "Severity scale",
+    "P0": "Service down or data loss.",
+    "P1": "Serious degradation of an important service.",
+    "P2": "Affects some users or one feature.",
+    "P3": "Minor impact, with a workaround.",
+    "P4": "No impact on users.",
+    "note": "Common SRE definitions; each team tunes its own."
+  },
+  "review": {
+    "markReviewed": "Mark as reviewed",
+    "reviewed": "Reviewed",
+    "pending": "To review",
+    "reviewedNote": "Reviewed by you on {{date}}. Saved only in this browser.",
+    "closeHint": "Did you check the points against the logs? The mark is saved only in this browser.",
+    "undoHint": "Press again to remove the mark.",
+    "localNote": "Ticked tasks are saved only in this browser; whoever opens the link sees their own."
   }
 }
